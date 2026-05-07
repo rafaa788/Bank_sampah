@@ -1,4 +1,4 @@
-// ADMIN SCRIPT - VERSI UNTUK ANDROID
+// ADMIN SCRIPT - VERSI DIPERBAIKI UNTUK ANDROID
 
 document.addEventListener('DOMContentLoaded', function() {
     // ==================== SIDEBAR ====================
@@ -52,15 +52,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 closeSidebar();
             }
         }, false);
-        
-        var menuItems = document.querySelectorAll('.menu-item');
-        for (var i = 0; i < menuItems.length; i++) {
-            menuItems[i].addEventListener('click', function() {
-                if (window.innerWidth <= 768) {
-                    closeSidebar();
-                }
-            });
-        }
     }
     
     // ==================== CEK LOGIN ====================
@@ -583,12 +574,12 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('Nama sampah wajib diisi!', true);
             return;
         }
-        if (berat <= 0) {
+        if (isNaN(berat) || berat <= 0) {
             showToast('Berat harus lebih dari 0 kg!', true);
             return;
         }
         
-        if (!harga || harga <= 0) {
+        if (isNaN(harga) || harga <= 0) {
             harga = getHargaOtomatis(nama, jenis);
         }
         
@@ -695,6 +686,7 @@ document.addEventListener('DOMContentLoaded', function() {
             jenisSelect[i].addEventListener('click', function() {
                 var jenis = this.getAttribute('data-type');
                 var nama = namaInput ? namaInput.value : '';
+                document.getElementById('jenisSampah').value = jenis;
                 var hargaOtomatisValue = getHargaOtomatis(nama, jenis);
                 if (hargaInput && hargaOtomatisValue) {
                     hargaInput.value = hargaOtomatisValue;
@@ -710,24 +702,47 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function navigateTo(page) {
+        // Sembunyikan semua page
         var pages = ['dashboardPage', 'kelolaPage', 'statistikPage'];
         for (var i = 0; i < pages.length; i++) {
             var el = document.getElementById(pages[i]);
             if (el) el.classList.remove('active');
         }
+        
+        // Tampilkan page yang dipilih
         var targetPage = document.getElementById(page + 'Page');
         if (targetPage) targetPage.classList.add('active');
         
-        var menuItems = document.querySelectorAll('.menu-item, .nav-bot-item');
+        // Update active menu di sidebar
+        var menuItems = document.querySelectorAll('.menu-item');
         for (var i = 0; i < menuItems.length; i++) {
             menuItems[i].classList.remove('active');
             if (menuItems[i].getAttribute('data-page') === page) {
                 menuItems[i].classList.add('active');
             }
         }
+        
+        // Update active menu di bottom nav        var navBotItems = document.querySelectorAll('.nav-bot-item');
+        for (var i = 0; i < navBotItems.length; i++) {
+            navBotItems[i].classList.remove('active');
+            if (navBotItems[i].getAttribute('data-page') === page) {
+                navBotItems[i].classList.add('active');
+            }
+        }
+        
+        // Update title
         var titles = { dashboard: 'Dashboard', kelola: 'Kelola Sampah', statistik: 'Statistik' };
         var pageTitle = document.getElementById('pageTitle');
         if (pageTitle) pageTitle.innerText = titles[page];
+        
+        // Tutup sidebar di mobile
+        if (window.innerWidth <= 768) {
+            var sidebar = document.getElementById('sidebar');
+            var overlay = document.getElementById('sidebarOverlay');
+            if (sidebar) sidebar.classList.remove('open');
+            if (overlay) overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
     }
     
     function setupFilters() {
@@ -773,21 +788,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Event listeners
-    var menuItems = document.querySelectorAll('.menu-item, .nav-bot-item');
+    // ==================== EVENT LISTENERS ====================
+    
+    // Sidebar menu items
+    var menuItems = document.querySelectorAll('.menu-item');
     for (var i = 0; i < menuItems.length; i++) {
         menuItems[i].addEventListener('click', function(e) {
             e.preventDefault();
             var page = this.getAttribute('data-page');
-            if (page && page !== 'keluar') navigateTo(page);
+            if (page) {
+                navigateTo(page);
+            }
         });
     }
     
+    // Bottom navigation items
+    var navBotItems = document.querySelectorAll('.nav-bot-item');
+    for (var i = 0; i < navBotItems.length; i++) {
+        navBotItems[i].addEventListener('click', function(e) {
+            e.preventDefault();
+            var page = this.getAttribute('data-page');
+            if (page && page !== 'keluar') {
+                navigateTo(page);
+            }
+        });
+    }
+    
+    // Tombol tambah sampah
     var tambahBtn = document.getElementById('tambahSampahBtn');
     if (tambahBtn) {
         tambahBtn.addEventListener('click', window.tambahSampah);
     }
     
+    // Filter jenis di halaman kelola
     var filterJenis = document.getElementById('filterJenis');
     if (filterJenis) {
         filterJenis.addEventListener('change', function(e) {
@@ -796,6 +829,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Type options untuk jenis sampah
     var typeOptions = document.querySelectorAll('.type-option');
     for (var i = 0; i < typeOptions.length; i++) {
         typeOptions[i].addEventListener('click', function() {
@@ -808,6 +842,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Tombol logout
     var logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
@@ -817,9 +852,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Tombol logout mobile
     var logoutMobileBtn = document.getElementById('logoutMobileBtn');
     if (logoutMobileBtn) {
-        logoutMobileBtn.addEventListener('click', function() {
+        logoutMobileBtn.addEventListener('click', function(e) {
+            e.preventDefault();
             sessionStorage.removeItem('isLoggedIn');
             sessionStorage.removeItem('adminName');
             window.location.href = 'menu_login.html';
