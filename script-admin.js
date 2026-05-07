@@ -1,7 +1,7 @@
-// ADMIN SCRIPT - VERSI DIPERBAIKI UNTUK ANDROID
+// ADMIN SCRIPT - VERSI DENGAN RT/RW, JENIS SAMPAH, DAN LAPORAN PDF/WORD
 
 document.addEventListener('DOMContentLoaded', function() {
-    // ==================== SIDEBAR ====================
+    // ==================== SIDEBAR & SWIPE GESTURE ====================
     initSidebar();
     
     function initSidebar() {
@@ -21,10 +21,18 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.style.overflow = '';
         }
         
+        function toggleSidebar() {
+            if (sidebar && sidebar.classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        }
+        
         if (menuToggle) {
             menuToggle.addEventListener('click', function(e) {
                 e.stopPropagation();
-                openSidebar();
+                toggleSidebar();
             });
         }
         
@@ -34,15 +42,20 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // SWIPE GESTURE
         var touchStartX = 0;
+        var touchEndX = 0;
+        var touchStartTime = 0;
+        
         document.addEventListener('touchstart', function(e) {
             touchStartX = e.changedTouches[0].screenX;
+            touchStartTime = new Date().getTime();
         }, false);
         
         document.addEventListener('touchend', function(e) {
-            var touchEndX = e.changedTouches[0].screenX;
+            touchEndX = e.changedTouches[0].screenX;
+            var touchDuration = new Date().getTime() - touchStartTime;
             var swipeDistance = touchEndX - touchStartX;
             
-            if (touchStartX < 50 && swipeDistance > 60) {
+            if (touchStartX < 50 && swipeDistance > 70 && touchDuration < 300) {
                 if (sidebar && !sidebar.classList.contains('open')) {
                     openSidebar();
                 }
@@ -51,18 +64,38 @@ document.addEventListener('DOMContentLoaded', function() {
             if (sidebar && sidebar.classList.contains('open') && swipeDistance < -50) {
                 closeSidebar();
             }
+            
+            touchStartX = 0;
+            touchEndX = 0;
         }, false);
+        
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                closeSidebar();
+            }
+        });
+        
+        var menuItems = document.querySelectorAll('.menu-item');
+        for (var i = 0; i < menuItems.length; i++) {
+            menuItems[i].addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
+        }
     }
     
     // ==================== CEK LOGIN ====================
-    if (sessionStorage.getItem('isLoggedIn') !== 'true') {
-        window.location.href = 'menu_login.html';
-        return;
-    }
+    // Untuk demo, jika belum login, redirect. Comment jika tidak perlu halaman login terpisah.
+    // if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+    //     window.location.href = 'menu_login.html';
+    //     return;
+    // }
     
-    // Data Model
+    // Data Model dengan RW dan RT
     let daftarSampah = [];
     let currentFilter = 'all';
+    let currentType = 'organik';
     let currentFilterRW = 'all';
     let currentFilterRT = 'all';
     let currentStatFilterRW = 'all';
@@ -70,23 +103,38 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentStatFilterJenis = 'all';
     const STORAGE_KEY = 'bankSampahData';
     
+    // Nama hari dan bulan untuk bahasa Indonesia
     const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     const namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     
+    // Data harga otomatis
     const hargaOtomatis = {
         organik: {
             default: 2000,
             list: {
-                "daun": 1500, "sayur": 1200, "buah": 1800, "makanan": 1200,
-                "kompos": 1500, "sisa": 1200, "organik": 2000
+                "daun": 1500,
+                "sayur": 1200,
+                "buah": 1800,
+                "makanan": 1200,
+                "kompos": 1500,
+                "sisa": 1200,
+                "organik": 2000
             }
         },
         nonorganik: {
             default: 3500,
             list: {
-                "plastik": 4000, "botol": 4500, "kardus": 2800, "kertas": 2500,
-                "kaleng": 5000, "besi": 6000, "kaca": 3000, "alumunium": 10000,
-                "tembaga": 65000, "kuningan": 30000, "nonorganik": 3500
+                "plastik": 4000,
+                "botol": 4500,
+                "kardus": 2800,
+                "kertas": 2500,
+                "kaleng": 5000,
+                "besi": 6000,
+                "kaca": 3000,
+                "alumunium": 10000,
+                "tembaga": 65000,
+                "kuningan": 30000,
+                "nonorganik": 3500
             }
         }
     };
@@ -113,13 +161,14 @@ document.addEventListener('DOMContentLoaded', function() {
         return namaHari[tanggal.getDay()] + ', ' + tanggal.getDate() + ' ' + namaBulan[tanggal.getMonth()] + ' ' + tanggal.getFullYear();
     }
     
-    // Set admin name
-    var adminName = sessionStorage.getItem('adminName') || 'Admin';
+    // Set admin name (demo)
+    var adminName = sessionStorage.getItem('adminName') || 'Admin BSI';
     var adminNameSpan = document.getElementById('adminName');
     var welcomeNameSpan = document.getElementById('welcomeName');
     if (adminNameSpan) adminNameSpan.innerText = adminName;
     if (welcomeNameSpan) welcomeNameSpan.innerText = adminName;
     
+    // Load data dari localStorage
     function loadData() {
         var stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
@@ -141,6 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(daftarSampah));
     }
     
+    // Filter data berdasarkan RW dan RT
     function filterDataByRTandRW(data, rw, rt) {
         var filtered = data.slice();
         if (rw !== 'all') {
@@ -152,6 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return filtered;
     }
     
+    // Update stats dengan filter
     function updateStats() {
         var filteredData = filterDataByRTandRW(daftarSampah, currentFilterRW, currentFilterRT);
         var totalOrganik = 0, totalNonorganik = 0;
@@ -183,6 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
         renderRTandRWTable();
     }
     
+    // Render tabel RT/RW
     function renderRTandRWTable() {
         var container = document.getElementById('rtRwTableBody');
         if (!container) return;
@@ -203,12 +255,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 '<td>' + escapeHtml(item.nama) + '</td>' +
                 '<td>' + (item.jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik') + '</td>' +
                 '<td>' + item.berat.toFixed(2) + '</td>' +
-                '<td>Rp ' + (item.berat * item.hargaPerKg).toLocaleString() + '</td>' +
+                '<td>' + formatRupiah(item.berat * item.hargaPerKg) + '</td>' +
                 '</tr>';
         }
         container.innerHTML = html;
     }
     
+    // Update statistik dengan filter RW, RT, dan jenis sampah
     function updateStatistikPage() {
         var filteredData = filterDataByRTandRW(daftarSampah, currentStatFilterRW, currentStatFilterRT);
         
@@ -231,7 +284,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (!jenisSampahMap[item.jenis]) {
-                jenisSampahMap[item.jenis] = { berat: 0, count: 0, nilai: 0 };
+                jenisSampahMap[item.jenis] = {
+                    berat: 0,
+                    count: 0,
+                    nilai: 0
+                };
             }
             jenisSampahMap[item.jenis].berat += item.berat;
             jenisSampahMap[item.jenis].count++;
@@ -287,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     '<td>' + (jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik') + '</td>' +
                     '<td>' + data.berat.toFixed(2) + ' kg</td>' +
                     '<td>' + data.count + ' item</td>' +
-                    '<td>Rp ' + data.nilai.toLocaleString() + '</td>' +
+                    '<td>' + formatRupiah(data.nilai) + '</td>' +
                     '</tr>';
             }
         }
@@ -316,14 +373,14 @@ document.addEventListener('DOMContentLoaded', function() {
         for (var i = 0; i < filteredData.length; i++) {
             var item = filteredData[i];
             html += '<div class="data-item">' +
-                '<div class="data-info">' +
+                '<div class="data-info" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">' +
                 '<div class="data-number">' + (i + 1) + '</div>' +
                 '<div><strong>' + item.rw + ' - ' + item.rt + '</strong></div>' +
                 '<div class="data-name">' + escapeHtml(item.nama) + '</div>' +
-                '<span style="font-size:0.65rem;">' + (item.jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik') + '</span>' +
+                '<span class="preview-badge badge-' + item.jenis + '">' + (item.jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik') + '</span>' +
                 '<div class="data-weight">' + item.berat.toFixed(2) + ' kg</div>' +
-                '<div class="data-price">Rp ' + item.hargaPerKg.toLocaleString() + '/kg</div>' +
-                '<div class="data-total">Rp ' + (item.berat * item.hargaPerKg).toLocaleString() + '</div>' +
+                '<div class="data-price">' + formatRupiah(item.hargaPerKg) + '/kg</div>' +
+                '<div class="data-total">' + formatRupiah(item.berat * item.hargaPerKg) + '</div>' +
                 '</div>' +
                 '<div class="data-actions">' +
                 '<button class="edit-data" onclick="editSampah(' + item.id + ')"><i class="fas fa-edit"></i></button>' +
@@ -358,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 2500);
     }
     
-    // LAPORAN FUNCTIONS
+    // ==================== FITUR LAPORAN ====================
     function generateLaporanMingguan() {
         var today = new Date();
         var weekStart = new Date(today);
@@ -371,6 +428,7 @@ document.addEventListener('DOMContentLoaded', function() {
             else totalNonorganik += item.berat;
             totalNilai += (item.berat * item.hargaPerKg);
         }
+        var totalBerat = totalOrganik + totalNonorganik;
         
         return {
             title: 'Laporan Mingguan Bank Sampah Digital',
@@ -378,7 +436,7 @@ document.addEventListener('DOMContentLoaded', function() {
             data: daftarSampah,
             totalOrganik: totalOrganik,
             totalNonorganik: totalNonorganik,
-            totalBerat: totalOrganik + totalNonorganik,
+            totalBerat: totalBerat,
             totalNilai: totalNilai,
             jumlahItem: daftarSampah.length
         };
@@ -393,6 +451,7 @@ document.addEventListener('DOMContentLoaded', function() {
             else totalNonorganik += item.berat;
             totalNilai += (item.berat * item.hargaPerKg);
         }
+        var totalBerat = totalOrganik + totalNonorganik;
         
         return {
             title: 'Laporan Bulanan Bank Sampah Digital',
@@ -400,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
             data: daftarSampah,
             totalOrganik: totalOrganik,
             totalNonorganik: totalNonorganik,
-            totalBerat: totalOrganik + totalNonorganik,
+            totalBerat: totalBerat,
             totalNilai: totalNilai,
             jumlahItem: daftarSampah.length
         };
@@ -409,41 +468,58 @@ document.addEventListener('DOMContentLoaded', function() {
     function exportToPDF(laporan, jenisLaporan) {
         var printWindow = window.open('', '_blank');
         var tglCetak = formatTanggalIndo(new Date());
-        var admin = sessionStorage.getItem('adminName') || 'Admin';
+        var admin = sessionStorage.getItem('adminName') || 'Admin BSI';
         
         var tabelDetail = '';
         for (var i = 0; i < laporan.data.length; i++) {
             var item = laporan.data[i];
             tabelDetail += '<tr>' +
-                '<td style="border:1px solid #ddd; padding:6px;">' + (i+1) + '</td>' +
-                '<td style="border:1px solid #ddd; padding:6px;">' + item.rw + ' - ' + item.rt + '</td>' +
-                '<td style="border:1px solid #ddd; padding:6px;">' + escapeHtml(item.nama) + '</td>' +
-                '<td style="border:1px solid #ddd; padding:6px;">' + (item.jenis === 'organik' ? 'Organik' : 'Nonorganik') + '</td>' +
-                '<td style="border:1px solid #ddd; padding:6px; text-align:right;">' + item.berat.toFixed(2) + ' kg</td>' +
-                '<td style="border:1px solid #ddd; padding:6px; text-align:right;">' + formatRupiah(item.hargaPerKg) + '</td>' +
-                '<td style="border:1px solid #ddd; padding:6px; text-align:right;">' + formatRupiah(item.berat * item.hargaPerKg) + '</td>' +
+                '<td style="border:1px solid #ddd; padding:8px; text-align:center;">' + (i+1) + '</td>' +
+                '<td style="border:1px solid #ddd; padding:8px;">' + item.rw + ' - ' + item.rt + '</td>' +
+                '<td style="border:1px solid #ddd; padding:8px;"><strong>' + escapeHtml(item.nama) + '</strong></td>' +
+                '<td style="border:1px solid #ddd; padding:8px;">' + (item.jenis === 'organik' ? 'Organik' : 'Nonorganik') + '</td>' +
+                '<td style="border:1px solid #ddd; padding:8px; text-align:right;">' + item.berat.toFixed(2) + ' kg</td>' +
+                '<td style="border:1px solid #ddd; padding:8px; text-align:right;">' + formatRupiah(item.hargaPerKg) + '</td>' +
+                '<td style="border:1px solid #ddd; padding:8px; text-align:right;">' + formatRupiah(item.berat * item.hargaPerKg) + '</td>' +
                 '</tr>';
         }
         
         var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + laporan.title + '</title><style>' +
-            'body { font-family: Arial, sans-serif; padding: 20px; }' +
-            'h1, h2 { text-align: center; color: #2e7d32; }' +
-            '.periode { background: #e8f5e9; padding: 10px; margin: 20px 0; text-align: center; }' +
+            'body { font-family: "Times New Roman", Arial, sans-serif; padding: 40px; }' +
+            '.header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #2e7d32; padding-bottom: 20px; }' +
+            'h1 { color: #2e7d32; margin-bottom: 5px; }' +
+            '.subtitle { color: #666; font-size: 14px; }' +
+            '.periode { background: #e8f5e9; padding: 12px; border-radius: 8px; text-align: center; margin: 20px 0; font-weight: bold; }' +
+            '.stats { display: flex; gap: 20px; margin: 20px 0; }' +
+            '.stat-card { flex: 1; background: #f5f5f5; border-radius: 12px; padding: 15px; text-align: center; }' +
+            '.stat-card.organik { border-top: 4px solid #2e7d32; }' +
+            '.stat-card.nonorganik { border-top: 4px solid #f9a825; }' +
+            '.stat-card.total { border-top: 4px solid #7b1fa2; }' +
+            '.stat-value { font-size: 22px; font-weight: bold; color: #2e7d32; }' +
+            '.stat-label { font-size: 12px; color: #666; }' +
+            '.info-box { background: #e3f2fd; border-radius: 8px; padding: 12px; margin: 20px 0; text-align: center; }' +
             'table { width: 100%; border-collapse: collapse; margin: 20px 0; }' +
-            'th { background: #2e7d32; color: white; padding: 8px; }' +
-            'td { padding: 6px; border-bottom: 1px solid #ddd; }' +
+            'th { background: #2e7d32; color: white; padding: 10px; text-align: left; }' +
+            'td { padding: 8px; border-bottom: 1px solid #ddd; }' +
+            '.footer { margin-top: 40px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }' +
+            '.signature { margin-top: 40px; display: flex; justify-content: space-between; }' +
+            '.signature-box { text-align: center; }' +
+            '.signature-line { margin-top: 40px; width: 200px; border-top: 1px solid #000; }' +
             '</style></head><body>' +
-            '<h1>BANK SAMPAH DIGITAL</h1>' +
-            '<h2>' + laporan.title + '</h2>' +
-            '<div class="periode"><strong>Periode:</strong> ' + laporan.periode + '</div>' +
-            '<p><strong>Total Organik:</strong> ' + laporan.totalOrganik.toFixed(2) + ' kg | ' +
-            '<strong>Total Nonorganik:</strong> ' + laporan.totalNonorganik.toFixed(2) + ' kg | ' +
-            '<strong>Total Semua:</strong> ' + laporan.totalBerat.toFixed(2) + ' kg</p>' +
-            '<p><strong>Total Nilai:</strong> ' + formatRupiah(laporan.totalNilai) + ' | <strong>Jumlah Transaksi:</strong> ' + laporan.jumlahItem + '</p>' +
+            '<div class="header"><h1>BANK SAMPAH DIGITAL</h1><div class="subtitle">Mengelola Sampah untuk Bumi yang Lebih Baik</div></div>' +
+            '<h2 style="text-align:center;">' + laporan.title + '</h2>' +
+            '<div class="periode">Periode Laporan: ' + laporan.periode + '</div>' +
+            '<div class="stats">' +
+            '<div class="stat-card organik"><div class="stat-value">' + laporan.totalOrganik.toFixed(2) + ' kg</div><div class="stat-label">Total Sampah Organik</div></div>' +
+            '<div class="stat-card nonorganik"><div class="stat-value">' + laporan.totalNonorganik.toFixed(2) + ' kg</div><div class="stat-label">Total Sampah Nonorganik</div></div>' +
+            '<div class="stat-card total"><div class="stat-value">' + laporan.totalBerat.toFixed(2) + ' kg</div><div class="stat-label">Total Keseluruhan</div></div>' +
+            '</div>' +
+            '<div class="info-box"><strong>Total Nilai Sampah:</strong> ' + formatRupiah(laporan.totalNilai) + ' | <strong>Jumlah Transaksi:</strong> ' + laporan.jumlahItem + ' item</div>' +
             '<h3>Detail Data Sampah</h3>' +
-            '<table><thead><tr><th>No</th><th>RW/RT</th><th>Nama</th><th>Jenis</th><th>Berat</th><th>Harga/Kg</th><th>Total</th></tr></thead><tbody>' +
-            tabelDetail + '</tbody></table>' +
-            '<p style="margin-top:30px;">Dicetak: ' + tglCetak + ' | Dicetak oleh: ' + admin + '</p>' +
+            '<table><thead><tr><th>No</th><th>RW/RT</th><th>Nama Sampah</th><th>Jenis</th><th>Berat</th><th>Harga per Kg</th><th>Total Nilai</th></tr></thead><tbody>' + tabelDetail + '</tbody></table>' +
+            '<div class="footer"><p>Dicetak pada: ' + tglCetak + '</p><p>Dicetak oleh: ' + admin + '</p><p>Bank Sampah Digital - Kelola Sampah, Selamatkan Bumi</p></div>' +
+            '<div class="signature"><div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Kepala Bank Sampah</p></div>' +
+            '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Ketua RW</p></div></div>' +
             '</body></html>';
         
         printWindow.document.write(htmlContent);
@@ -454,7 +530,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function exportToWord(laporan, jenisLaporan) {
         var tglCetak = formatTanggalIndo(new Date());
-        var admin = sessionStorage.getItem('adminName') || 'Admin';
+        var admin = sessionStorage.getItem('adminName') || 'Admin BSI';
         
         var tabelDetail = '';
         for (var i = 0; i < laporan.data.length; i++) {
@@ -471,30 +547,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + laporan.title + '</title><style>' +
-            'body { font-family: Calibri, Arial, sans-serif; padding: 20px; }' +
-            'h1, h2 { text-align: center; color: #2e7d32; }' +
-            'table { width: 100%; border-collapse: collapse; }' +
-            'th { background: #2e7d32; color: white; padding: 8px; }' +
-            'td { padding: 6px; border-bottom: 1px solid #ddd; }' +
+            'body { font-family: Calibri, Arial, sans-serif; padding: 40px; }' +
+            'h1 { color: #2e7d32; text-align: center; }' +
+            '.periode { background: #e8f5e9; padding: 10px; margin: 20px 0; text-align: center; }' +
+            '.stats { display: flex; gap: 20px; margin: 20px 0; }' +
+            '.stat-card { flex: 1; background: #f5f5f5; padding: 15px; text-align: center; }' +
+            '.stat-value { font-size: 20px; font-weight: bold; color: #2e7d32; }' +
+            '.info-box { background: #e3f2fd; padding: 10px; margin: 20px 0; text-align: center; }' +
+            'table { width: 100%; border-collapse: collapse; margin: 20px 0; }' +
+            'th { background: #2e7d32; color: white; padding: 10px; }' +
+            'td { padding: 8px; border-bottom: 1px solid #ddd; }' +
+            '.footer { margin-top: 40px; text-align: center; font-size: 11px; }' +
             '</style></head><body>' +
             '<h1>BANK SAMPAH DIGITAL</h1>' +
-            '<h2>' + laporan.title + '</h2>' +
-            '<p><strong>Periode:</strong> ' + laporan.periode + '</p>' +
-            '<p><strong>Total Organik:</strong> ' + laporan.totalOrganik.toFixed(2) + ' kg | ' +
-            '<strong>Total Nonorganik:</strong> ' + laporan.totalNonorganik.toFixed(2) + ' kg | ' +
-            '<strong>Total Semua:</strong> ' + laporan.totalBerat.toFixed(2) + ' kg</p>' +
-            '<p><strong>Total Nilai:</strong> ' + formatRupiah(laporan.totalNilai) + '</p>' +
-            '<h3>Detail Data</h3>' +
-            '<table><thead><tr><th>No</th><th>RW/RT</th><th>Nama</th><th>Jenis</th><th>Berat</th><th>Harga</th><th>Total</th></tr></thead><tbody>' +
-            tabelDetail + '</tbody></table>' +
-            '<p style="margin-top:30px;">Dicetak: ' + tglCetak + ' | Dicetak oleh: ' + admin + '</p>' +
+            '<h2 style="text-align:center;">' + laporan.title + '</h2>' +
+            '<div class="periode"><strong>Periode:</strong> ' + laporan.periode + '</div>' +
+            '<div class="stats">' +
+            '<div class="stat-card"><div class="stat-value">' + laporan.totalOrganik.toFixed(2) + ' kg</div><div>Sampah Organik</div></div>' +
+            '<div class="stat-card"><div class="stat-value">' + laporan.totalNonorganik.toFixed(2) + ' kg</div><div>Sampah Nonorganik</div></div>' +
+            '<div class="stat-card"><div class="stat-value">' + laporan.totalBerat.toFixed(2) + ' kg</div><div>Total Semua</div></div>' +
+            '</div>' +
+            '<div class="info-box"><strong>Total Nilai: ' + formatRupiah(laporan.totalNilai) + '</strong> | Jumlah Item: ' + laporan.jumlahItem + ' jenis</div>' +
+            '<h3>Detail Data Sampah</h3>' +
+            '<table><thead><tr><th>No</th><th>RW/RT</th><th>Nama Sampah</th><th>Jenis</th><th>Berat</th><th>Harga</th><th>Total</th></tr></thead><tbody>' +
+            tabelDetail + '</tbody></td>' +
+            '<div class="footer"><p>Dicetak: ' + tglCetak + '</p><p>Dicetak oleh: ' + admin + '</p><p>Bank Sampah Digital - Kelola Sampah, Selamatkan Bumi</p></div>' +
             '</body></html>';
         
         var blob = new Blob([htmlContent], { type: 'application/msword' });
         var link = document.createElement('a');
         var url = URL.createObjectURL(blob);
         link.href = url;
-        link.download = 'Laporan_Bank_Sampah_' + (jenisLaporan === 'mingguan' ? 'Mingguan' : 'Bulanan') + '_' + new Date().toISOString().slice(0,10) + '.doc';
+        var fileName = 'Laporan_Bank_Sampah_' + (jenisLaporan === 'mingguan' ? 'Mingguan' : 'Bulanan') + '_' + new Date().toISOString().slice(0,10) + '.doc';
+        link.download = fileName;
         link.click();
         URL.revokeObjectURL(url);
         showToast('Laporan berhasil diekspor ke Word', false);
@@ -521,13 +606,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (btnMingguan) {
             btnMingguan.addEventListener('click', function() {
-                showModal(generateLaporanMingguan(), 'mingguan');
+                var laporan = generateLaporanMingguan();
+                showModal(laporan, 'mingguan');
             });
         }
         
         if (btnBulanan) {
             btnBulanan.addEventListener('click', function() {
-                showModal(generateLaporanBulanan(), 'bulanan');
+                var laporan = generateLaporanBulanan();
+                showModal(laporan, 'bulanan');
             });
         }
         
@@ -562,6 +649,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Tambah sampah
     window.tambahSampah = function() {
         var rw = document.getElementById('inputRW').value;
         var rt = document.getElementById('inputRT').value;
@@ -574,12 +662,12 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast('Nama sampah wajib diisi!', true);
             return;
         }
-        if (isNaN(berat) || berat <= 0) {
+        if (berat <= 0) {
             showToast('Berat harus lebih dari 0 kg!', true);
             return;
         }
         
-        if (isNaN(harga) || harga <= 0) {
+        if (!harga || harga <= 0) {
             harga = getHargaOtomatis(nama, jenis);
         }
         
@@ -617,7 +705,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var newRW = prompt('Edit RW (RW01/RW02/RW03):', item.rw);
         if (!newRW) return;
         
-        var newRT = prompt('Edit RT (RT01/RT02/RT03/RT04):', item.rt);
+        var newRT = prompt('Edit RT (RT01-RT04):', item.rt);
         if (!newRT) return;
         
         var newNama = prompt('Edit Nama Sampah:', item.nama);
@@ -686,7 +774,6 @@ document.addEventListener('DOMContentLoaded', function() {
             jenisSelect[i].addEventListener('click', function() {
                 var jenis = this.getAttribute('data-type');
                 var nama = namaInput ? namaInput.value : '';
-                document.getElementById('jenisSampah').value = jenis;
                 var hargaOtomatisValue = getHargaOtomatis(nama, jenis);
                 if (hargaInput && hargaOtomatisValue) {
                     hargaInput.value = hargaOtomatisValue;
@@ -702,47 +789,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function navigateTo(page) {
-        // Sembunyikan semua page
         var pages = ['dashboardPage', 'kelolaPage', 'statistikPage'];
         for (var i = 0; i < pages.length; i++) {
             var el = document.getElementById(pages[i]);
             if (el) el.classList.remove('active');
         }
-        
-        // Tampilkan page yang dipilih
         var targetPage = document.getElementById(page + 'Page');
         if (targetPage) targetPage.classList.add('active');
         
-        // Update active menu di sidebar
-        var menuItems = document.querySelectorAll('.menu-item');
+        var menuItems = document.querySelectorAll('.menu-item, .nav-bot-item');
         for (var i = 0; i < menuItems.length; i++) {
             menuItems[i].classList.remove('active');
             if (menuItems[i].getAttribute('data-page') === page) {
                 menuItems[i].classList.add('active');
             }
         }
-        
-        // Update active menu di bottom nav        var navBotItems = document.querySelectorAll('.nav-bot-item');
-        for (var i = 0; i < navBotItems.length; i++) {
-            navBotItems[i].classList.remove('active');
-            if (navBotItems[i].getAttribute('data-page') === page) {
-                navBotItems[i].classList.add('active');
-            }
-        }
-        
-        // Update title
-        var titles = { dashboard: 'Dashboard', kelola: 'Kelola Sampah', statistik: 'Statistik' };
+        var titles = { dashboard: 'Dashboard', kelola: 'Kelola Sampah', statistik: 'Statistik & Grafik' };
         var pageTitle = document.getElementById('pageTitle');
         if (pageTitle) pageTitle.innerText = titles[page];
-        
-        // Tutup sidebar di mobile
-        if (window.innerWidth <= 768) {
-            var sidebar = document.getElementById('sidebar');
-            var overlay = document.getElementById('sidebarOverlay');
-            if (sidebar) sidebar.classList.remove('open');
-            if (overlay) overlay.classList.remove('active');
-            document.body.style.overflow = '';
-        }
     }
     
     function setupFilters() {
@@ -751,6 +815,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var statFilterRW = document.getElementById('statFilterRW');
         var statFilterRT = document.getElementById('statFilterRT');
         var statFilterJenis = document.getElementById('statFilterJenisSampah');
+        var filterJenisKelola = document.getElementById('filterJenis');
         
         if (filterRW) {
             filterRW.addEventListener('change', function(e) {
@@ -786,50 +851,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateStatistikPage();
             });
         }
+        
+        if (filterJenisKelola) {
+            filterJenisKelola.addEventListener('change', function(e) {
+                currentFilter = e.target.value;
+                renderDataList();
+            });
+        }
     }
     
-    // ==================== EVENT LISTENERS ====================
-    
-    // Sidebar menu items
-    var menuItems = document.querySelectorAll('.menu-item');
+    // Event listeners
+    var menuItems = document.querySelectorAll('.menu-item, .nav-bot-item');
     for (var i = 0; i < menuItems.length; i++) {
         menuItems[i].addEventListener('click', function(e) {
             e.preventDefault();
             var page = this.getAttribute('data-page');
-            if (page) {
-                navigateTo(page);
-            }
+            if (page && page !== 'keluar') navigateTo(page);
         });
     }
     
-    // Bottom navigation items
-    var navBotItems = document.querySelectorAll('.nav-bot-item');
-    for (var i = 0; i < navBotItems.length; i++) {
-        navBotItems[i].addEventListener('click', function(e) {
-            e.preventDefault();
-            var page = this.getAttribute('data-page');
-            if (page && page !== 'keluar') {
-                navigateTo(page);
-            }
-        });
-    }
-    
-    // Tombol tambah sampah
     var tambahBtn = document.getElementById('tambahSampahBtn');
     if (tambahBtn) {
         tambahBtn.addEventListener('click', window.tambahSampah);
     }
     
-    // Filter jenis di halaman kelola
-    var filterJenis = document.getElementById('filterJenis');
-    if (filterJenis) {
-        filterJenis.addEventListener('change', function(e) {
-            currentFilter = e.target.value;
-            renderDataList();
-        });
-    }
-    
-    // Type options untuk jenis sampah
     var typeOptions = document.querySelectorAll('.type-option');
     for (var i = 0; i < typeOptions.length; i++) {
         typeOptions[i].addEventListener('click', function() {
@@ -837,29 +882,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 typeOptions[j].classList.remove('active');
             }
             this.classList.add('active');
+            currentType = this.getAttribute('data-type');
             var jenisInput = document.getElementById('jenisSampah');
-            if (jenisInput) jenisInput.value = this.getAttribute('data-type');
+            if (jenisInput) jenisInput.value = currentType;
         });
     }
     
-    // Tombol logout
     var logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
             sessionStorage.removeItem('isLoggedIn');
             sessionStorage.removeItem('adminName');
-            window.location.href = 'menu_login.html';
+            alert("Anda telah logout.");
+            // window.location.href = 'menu_login.html';
         });
     }
     
-    // Tombol logout mobile
     var logoutMobileBtn = document.getElementById('logoutMobileBtn');
     if (logoutMobileBtn) {
-        logoutMobileBtn.addEventListener('click', function(e) {
-            e.preventDefault();
+        logoutMobileBtn.addEventListener('click', function() {
             sessionStorage.removeItem('isLoggedIn');
             sessionStorage.removeItem('adminName');
-            window.location.href = 'menu_login.html';
+            alert("Anda telah logout.");
+            // window.location.href = 'menu_login.html';
         });
     }
     
