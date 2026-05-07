@@ -12,30 +12,29 @@
 </head>
 <body>
     <div class="app">
-        <!-- Overlay untuk menutup sidebar saat klik di luar -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- Bottom Navigation untuk Mobile -->
+        <!-- Bottom Navigation -->
         <nav class="bottom-nav" id="bottomNav">
-            <a href="#" class="nav-bot-item active" data-page="dashboard">
+            <button class="nav-bot-item active" data-page="dashboard">
                 <i class="fas fa-tachometer-alt"></i>
                 <span>Dashboard</span>
-            </a>
-            <a href="#" class="nav-bot-item" data-page="kelola">
+            </button>
+            <button class="nav-bot-item" data-page="kelola">
                 <i class="fas fa-recycle"></i>
                 <span>Kelola</span>
-            </a>
-            <a href="#" class="nav-bot-item" data-page="statistik">
+            </button>
+            <button class="nav-bot-item" data-page="statistik">
                 <i class="fas fa-chart-line"></i>
                 <span>Statistik</span>
-            </a>
-            <a href="#" class="nav-bot-item" id="logoutMobileBtn">
+            </button>
+            <button class="nav-bot-item" id="logoutMobileBtn">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Keluar</span>
-            </a>
+            </button>
         </nav>
 
-        <!-- Sidebar untuk Desktop -->
+        <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-gradient"></div>
             <div class="sidebar-header">
@@ -50,18 +49,18 @@
                 </div>
             </div>
             <div class="sidebar-menu">
-                <a href="#" class="menu-item active" data-page="dashboard">
+                <button class="menu-item active" data-page="dashboard">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
-                </a>
-                <a href="#" class="menu-item" data-page="kelola">
+                </button>
+                <button class="menu-item" data-page="kelola">
                     <i class="fas fa-recycle"></i>
                     <span>Kelola Sampah</span>
-                </a>
-                <a href="#" class="menu-item" data-page="statistik">
+                </button>
+                <button class="menu-item" data-page="statistik">
                     <i class="fas fa-chart-line"></i>
                     <span>Statistik</span>
-                </a>
+                </button>
             </div>
             <div class="sidebar-footer">
                 <button id="logoutBtn" class="logout-btn">
@@ -72,7 +71,7 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content" id="mainContent">
+        <main class="main-content">
             <header class="app-header">
                 <button class="menu-toggle" id="menuToggle">
                     <i class="fas fa-bars"></i>
@@ -100,7 +99,6 @@
                         </div>
                     </div>
                     
-                    <!-- RT/RW Filter -->
                     <div class="filter-card">
                         <div class="filter-header">
                             <i class="fas fa-filter"></i>
@@ -129,7 +127,6 @@
                         </div>
                     </div>
 
-                    <!-- Statistik Cards -->
                     <div class="stat-grid">
                         <div class="stat-card stat-organik">
                             <div class="stat-icon"><i class="fas fa-seedling"></i></div>
@@ -169,7 +166,6 @@
                         </div>
                     </div>
 
-                    <!-- Tombol Laporan -->
                     <div class="laporan-buttons">
                         <button id="btnLaporanMingguan" class="btn-laporan mingguan">
                             <i class="fas fa-calendar-week"></i> Laporan Mingguan
@@ -179,7 +175,6 @@
                         </button>
                     </div>
 
-                    <!-- Data per RT/RW Table -->
                     <div class="data-table-card">
                         <div class="card-header">
                             <div class="header-left">
@@ -200,9 +195,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="rtRwTableBody">
-                                    <tr>
-                                        <td colspan="6" style="text-align: center;">Memuat data...</td>
-                                    </tr>
+                                    <tr><td colspan="6" style="text-align: center;">Memuat data...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -417,9 +410,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="jenisSampahTableBody">
-                                    <tr>
-                                        <td colspan="4" style="text-align: center;">Memuat data...</td>
-                                    </tr>
+                                    <tr><td colspan="4" style="text-align: center;">Memuat data...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -429,7 +420,7 @@
         </main>
     </div>
 
-    <!-- Modal Laporan -->
+    <!-- Modal -->
     <div id="laporanModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -452,7 +443,6 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast" class="toast">
         <i class="fas fa-check-circle"></i>
         <span id="toastMessage"></span>
