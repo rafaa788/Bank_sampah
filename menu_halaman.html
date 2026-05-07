@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title>Admin Dashboard - Bank Sampah Digital</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -39,14 +39,13 @@
             <div class="sidebar-header">
                 <div class="logo">
                     <div class="logo-badge">
-                        <img src="BSI MANDIRI.jpeg" alt="Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 14px;">
+                        <i class="fas fa-trash-alt"></i>
                     </div>
                     <div class="logo-text">
-                        <h2>Bank sampah<span></span></h2>
-                        <h2>Induk mandiri<span></span></h2>
-                        <p>Desa gunung putri</p>
+                        <h2>Bank Sampah<span></span></h2>
+                        <h2>Induk Mandiri<span></span></h2>
+                        <p>Desa Gunung Putri</p>
                         <p>Kabupaten Bogor</p>
-
                     </div>
                 </div>
             </div>
@@ -84,7 +83,7 @@
                 </div>
                 <div class="header-profile">
                     <div class="profile-avatar">
-                        <i class="fas fa-trash-alt"></i>
+                        <i class="fas fa-user-circle"></i>
                         <div class="online-dot"></div>
                     </div>
                 </div>
@@ -96,8 +95,8 @@
                     <div class="welcome-card">
                         <div class="welcome-emoji">🌱</div>
                         <div class="welcome-text">
-                            <h2>Selamat datang di (BSI Mandiri) <span id="welcomeName">Admin</span>!</h2>
-                            <p></p>
+                            <h2>Selamat datang di BSI Mandiri, <span id="welcomeName">Admin</span>!</h2>
+                            <p>Kelola sampah dengan mudah dan bijak</p>
                         </div>
                     </div>
                     <!-- RT/RW Filter -->
@@ -128,8 +127,6 @@
                             </div>
                         </div>
                     </div>
-
-                 
 
                     <div class="stat-grid">
                         <div class="stat-card stat-organik">
@@ -460,6 +457,6 @@
         <span id="toastMessage"></span>
     </div>
 
-    <script src="script-admin.js"></script>
+    <script src="admin-script.js"></script>
 </body>
 </html>
