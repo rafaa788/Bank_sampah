@@ -2,9 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#2e7d32">
-    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Admin Dashboard - Bank Sampah Digital</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -41,11 +39,14 @@
             <div class="sidebar-header">
                 <div class="logo">
                     <div class="logo-badge">
-                        <i class="fas fa-trash-alt"></i>
+                        <img src="BSI MANDIRI.jpeg" alt="Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 14px;">
                     </div>
                     <div class="logo-text">
-                        <h2>Bank Sampah Induk Mandiri</h2>
-                        <p>Desa Gunung Putri, Kabupaten Bogor</p>
+                        <h2>Bank sampah<span></span></h2>
+                        <h2>Induk mandiri<span></span></h2>
+                        <p>Desa gunung putri</p>
+                        <p>Kabupaten Bogor</p>
+
                     </div>
                 </div>
             </div>
@@ -83,7 +84,7 @@
                 </div>
                 <div class="header-profile">
                     <div class="profile-avatar">
-                        <i class="fas fa-user-circle"></i>
+                        <i class="fas fa-trash-alt"></i>
                         <div class="online-dot"></div>
                     </div>
                 </div>
@@ -95,11 +96,10 @@
                     <div class="welcome-card">
                         <div class="welcome-emoji">🌱</div>
                         <div class="welcome-text">
-                            <h2>Selamat datang, <span id="welcomeName">Admin</span>!</h2>
-                            <p>Kelola sampah dengan mudah dan bijak</p>
+                            <h2>Selamat datang di (BSI Mandiri) <span id="welcomeName">Admin</span>!</h2>
+                            <p></p>
                         </div>
                     </div>
-                    
                     <!-- RT/RW Filter -->
                     <div class="filter-card">
                         <div class="filter-header">
@@ -129,42 +129,40 @@
                         </div>
                     </div>
 
-                    <!-- Statistik Cards -->
+                 
+
                     <div class="stat-grid">
                         <div class="stat-card stat-organik">
+                            <div class="stat-bg"></div>
                             <div class="stat-icon"><i class="fas fa-seedling"></i></div>
-                            <div class="stat-info">
-                                <div class="stat-label">Sampah Organik</div>
-                                <div class="stat-value-wrapper">
-                                    <span class="stat-value" id="totalOrganik">0</span>
-                                    <span class="stat-unit">kg</span>
-                                </div>
-                                <div class="stat-progress">
-                                    <div class="progress-bar" style="width: 0%"></div>
-                                </div>
+                            <div class="stat-detail">
+                                <span class="stat-label">Sampah Organik</span>
+                                <span class="stat-value" id="totalOrganik">0</span>
+                                <span class="stat-unit">kg</span>
+                            </div>
+                            <div class="stat-progress">
+                                <div class="progress-bar" style="width: 0%"></div>
                             </div>
                         </div>
                         <div class="stat-card stat-nonorganik">
+                            <div class="stat-bg"></div>
                             <div class="stat-icon"><i class="fas fa-box"></i></div>
-                            <div class="stat-info">
-                                <div class="stat-label">Sampah Nonorganik</div>
-                                <div class="stat-value-wrapper">
-                                    <span class="stat-value" id="totalNonorganik">0</span>
-                                    <span class="stat-unit">kg</span>
-                                </div>
-                                <div class="stat-progress">
-                                    <div class="progress-bar" style="width: 0%"></div>
-                                </div>
+                            <div class="stat-detail">
+                                <span class="stat-label">Sampah Nonorganik</span>
+                                <span class="stat-value" id="totalNonorganik">0</span>
+                                <span class="stat-unit">kg</span>
+                            </div>
+                            <div class="stat-progress">
+                                <div class="progress-bar" style="width: 0%"></div>
                             </div>
                         </div>
                         <div class="stat-card stat-total">
-                            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
-                            <div class="stat-info">
-                                <div class="stat-label">Total Keseluruhan</div>
-                                <div class="stat-value-wrapper">
-                                    <span class="stat-value" id="totalSemua">0</span>
-                                    <span class="stat-unit">kg</span>
-                                </div>
+                            <div class="stat-bg"></div>
+                            <div class="stat-icon"><i class="fas fa-chart-simple"></i></div>
+                            <div class="stat-detail">
+                                <span class="stat-label">Total Semua</span>
+                                <span class="stat-value" id="totalSemua">0</span>
+                                <span class="stat-unit">kg</span>
                             </div>
                         </div>
                     </div>
@@ -196,7 +194,7 @@
                                         <th>Nama Sampah</th>
                                         <th>Jenis</th>
                                         <th>Berat (kg)</th>
-                                        <th>Total Nilai</th>
+                                        <th>Total Nilai (Rp)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="rtRwTableBody">
@@ -309,6 +307,7 @@
                         </div>
                     </div>
 
+                    <!-- Statistik per RT/RW -->
                     <div class="filter-card">
                         <div class="filter-header">
                             <i class="fas fa-chart-bar"></i>
@@ -337,6 +336,7 @@
                         </div>
                     </div>
 
+                    <!-- Statistik per Jenis Sampah -->
                     <div class="filter-card">
                         <div class="filter-header">
                             <i class="fas fa-trash-alt"></i>
@@ -381,6 +381,7 @@
                         </div>
                     </div>
 
+                    <!-- Statistik per Jenis Sampah Detail -->
                     <div class="chart-card">
                         <h3><i class="fas fa-chart-pie"></i> Komposisi Sampah per Jenis</h3>
                         <div class="pie-chart-container">
@@ -399,6 +400,7 @@
                         </div>
                     </div>
 
+                    <!-- Detail Statistik per Jenis Sampah -->
                     <div class="data-table-card">
                         <div class="card-header">
                             <div class="header-left">
@@ -458,6 +460,6 @@
         <span id="toastMessage"></span>
     </div>
 
-    <script src="admin-script.js"></script>
+    <script src="script-admin.js"></script>
 </body>
 </html>
