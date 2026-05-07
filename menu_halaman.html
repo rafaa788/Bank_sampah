@@ -10,6 +10,9 @@
 </head>
 <body>
     <div class="app">
+        <!-- Overlay untuk menutup sidebar saat klik di luar -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
         <!-- Bottom Navigation untuk Mobile -->
         <nav class="bottom-nav" id="bottomNav">
             <a href="#" class="nav-bot-item active" data-page="dashboard">
@@ -36,11 +39,14 @@
             <div class="sidebar-header">
                 <div class="logo">
                     <div class="logo-badge">
-                        <i class="fas fa-trash-alt"></i>
+                        <img src="BSI MANDIRI.jpeg" alt="Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 14px;">
                     </div>
                     <div class="logo-text">
-                        <h2>Bank<span>Sampah</span></h2>
-                        <p>Digital Management</p>
+                        <h2>Bank sampah<span></span></h2>
+                        <h2>Induk mandiri<span></span></h2>
+                        <p>Desa gunung putri</p>
+                        <p>Kabupaten Bogor</p>
+
                     </div>
                 </div>
             </div>
@@ -61,7 +67,7 @@
             <div class="sidebar-footer">
                 <button id="logoutBtn" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+                    <span>Keluar</span>
                 </button>
             </div>
         </aside>
@@ -78,7 +84,7 @@
                 </div>
                 <div class="header-profile">
                     <div class="profile-avatar">
-                        <i class="fas fa-user-astronaut"></i>
+                        <i class="fas fa-trash-alt"></i>
                         <div class="online-dot"></div>
                     </div>
                 </div>
@@ -87,16 +93,44 @@
             <div class="page-container">
                 <!-- DASHBOARD PAGE -->
                 <div id="dashboardPage" class="page active">
-                    <!-- Welcome Card -->
                     <div class="welcome-card">
                         <div class="welcome-emoji">🌱</div>
                         <div class="welcome-text">
-                            <h2>Halo, <span id="welcomeName">Admin</span>!</h2>
-                            <p>Kelola bank sampah dengan mudah. Pantau statistik dan data sampah organik & nonorganik.</p>
+                            <h2>Selamat datang di (BSI Mandiri) <span id="welcomeName">Admin</span>!</h2>
+                            <p></p>
+                        </div>
+                    </div>
+                    <!-- RT/RW Filter -->
+                    <div class="filter-card">
+                        <div class="filter-header">
+                            <i class="fas fa-filter"></i>
+                            <h3>Filter Data per Wilayah</h3>
+                        </div>
+                        <div class="filter-body">
+                            <div class="form-group">
+                                <label>Pilih RW</label>
+                                <select id="filterRW">
+                                    <option value="all">Semua RW</option>
+                                    <option value="RW01">RW 01</option>
+                                    <option value="RW02">RW 02</option>
+                                    <option value="RW03">RW 03</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Pilih RT</label>
+                                <select id="filterRT">
+                                    <option value="all">Semua RT</option>
+                                    <option value="RT01">RT 01</option>
+                                    <option value="RT02">RT 02</option>
+                                    <option value="RT03">RT 03</option>
+                                    <option value="RT04">RT 04</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Stat Cards -->
+                 
+
                     <div class="stat-grid">
                         <div class="stat-card stat-organik">
                             <div class="stat-bg"></div>
@@ -131,35 +165,49 @@
                                 <span class="stat-unit">kg</span>
                             </div>
                         </div>
-                        <div class="stat-card stat-items">
-                            <div class="stat-bg"></div>
-                            <div class="stat-icon"><i class="fas fa-boxes"></i></div>
-                            <div class="stat-detail">
-                                <span class="stat-label">Jenis Sampah</span>
-                                <span class="stat-value" id="totalItems">0</span>
-                                <span class="stat-unit">item</span>
-                            </div>
-                        </div>
                     </div>
 
-                    <!-- Preview Data -->
-                    <div class="preview-card">
+                    <!-- Tombol Laporan -->
+                    <div class="laporan-buttons">
+                        <button id="btnLaporanMingguan" class="btn-laporan mingguan">
+                            <i class="fas fa-calendar-week"></i> Laporan Mingguan
+                        </button>
+                        <button id="btnLaporanBulanan" class="btn-laporan bulanan">
+                            <i class="fas fa-calendar-alt"></i> Laporan Bulanan
+                        </button>
+                    </div>
+
+                    <!-- Data per RT/RW Table -->
+                    <div class="data-table-card">
                         <div class="card-header">
                             <div class="header-left">
-                                <i class="fas fa-database"></i>
-                                <h3>Data Sampah Terbaru</h3>
+                                <i class="fas fa-table"></i>
+                                <h3>Data Sampah per RT/RW</h3>
                             </div>
-                            <button class="btn-ghost" id="goToKelolaBtn">
-                                Lihat Semua <i class="fas fa-arrow-right"></i>
-                            </button>
                         </div>
-                        <div class="preview-list" id="previewList">
-                            <!-- Dynamic preview items -->
+                        <div class="table-responsive">
+                            <table class="data-table" id="rtRwTable">
+                                <thead>
+                                    <tr>
+                                        <th>RW</th>
+                                        <th>RT</th>
+                                        <th>Nama Sampah</th>
+                                        <th>Jenis</th>
+                                        <th>Berat (kg)</th>
+                                        <th>Total Nilai (Rp)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rtRwTableBody">
+                                    <tr>
+                                        <td colspan="6" style="text-align: center;">Memuat data...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- KELOLA SAMPAH PAGE (CRUD) -->
+                <!-- KELOLA SAMPAH PAGE -->
                 <div id="kelolaPage" class="page">
                     <div class="page-title">
                         <i class="fas fa-recycle"></i>
@@ -169,13 +217,31 @@
                         </div>
                     </div>
 
-                    <!-- Form Tambah Sampah -->
                     <div class="form-card">
                         <div class="form-header">
                             <i class="fas fa-plus-circle"></i>
                             <h3>Tambah Data Baru</h3>
                         </div>
                         <div class="form-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label><i class="fas fa-map-marker-alt"></i> RW</label>
+                                    <select id="inputRW">
+                                        <option value="RW01">RW 01</option>
+                                        <option value="RW02">RW 02</option>
+                                        <option value="RW03">RW 03</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-home"></i> RT</label>
+                                    <select id="inputRT">
+                                        <option value="RT01">RT 01</option>
+                                        <option value="RT02">RT 02</option>
+                                        <option value="RT03">RT 03</option>
+                                        <option value="RT04">RT 04</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label><i class="fas fa-tag"></i> Nama Sampah</label>
@@ -205,14 +271,13 @@
                                 </div>
                                 <div class="form-group">
                                     <button id="tambahSampahBtn" class="btn-primary">
-                                        <i class="fas fa-save"></i> Simpan
+                                        <i class="fas fa-save"></i> Simpan Data
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Daftar Sampah -->
                     <div class="data-card">
                         <div class="data-header">
                             <div class="header-left">
@@ -222,15 +287,13 @@
                             <div class="filter-chip">
                                 <i class="fas fa-filter"></i>
                                 <select id="filterJenis">
-                                    <option value="all">Semua</option>
+                                    <option value="all">Semua Jenis</option>
                                     <option value="organik">🌿 Organik</option>
                                     <option value="nonorganik">📦 Nonorganik</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="data-list" id="sampahList">
-                            <!-- Dynamic list items -->
-                        </div>
+                        <div class="data-list" id="sampahList"></div>
                     </div>
                 </div>
 
@@ -240,7 +303,54 @@
                         <i class="fas fa-chart-line"></i>
                         <div>
                             <h2>Statistik</h2>
-                            <p>Analisis data sampah bank sampah</p>
+                            <p>Analisis data sampah per wilayah dan per jenis</p>
+                        </div>
+                    </div>
+
+                    <!-- Statistik per RT/RW -->
+                    <div class="filter-card">
+                        <div class="filter-header">
+                            <i class="fas fa-chart-bar"></i>
+                            <h3>Filter Statistik per Wilayah</h3>
+                        </div>
+                        <div class="filter-body">
+                            <div class="form-group">
+                                <label>Pilih RW</label>
+                                <select id="statFilterRW">
+                                    <option value="all">Semua RW</option>
+                                    <option value="RW01">RW 01</option>
+                                    <option value="RW02">RW 02</option>
+                                    <option value="RW03">RW 03</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Pilih RT</label>
+                                <select id="statFilterRT">
+                                    <option value="all">Semua RT</option>
+                                    <option value="RT01">RT 01</option>
+                                    <option value="RT02">RT 02</option>
+                                    <option value="RT03">RT 03</option>
+                                    <option value="RT04">RT 04</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistik per Jenis Sampah -->
+                    <div class="filter-card">
+                        <div class="filter-header">
+                            <i class="fas fa-trash-alt"></i>
+                            <h3>Filter Statistik per Jenis Sampah</h3>
+                        </div>
+                        <div class="filter-body">
+                            <div class="form-group">
+                                <label>Pilih Jenis Sampah</label>
+                                <select id="statFilterJenisSampah">
+                                    <option value="all">Semua Jenis</option>
+                                    <option value="organik">🌿 Organik</option>
+                                    <option value="nonorganik">📦 Nonorganik</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -250,7 +360,7 @@
                             <div class="stat-big-info">
                                 <span class="stat-big-label">Total Sampah Organik</span>
                                 <span class="stat-big-value" id="statOrganikBerat">0 kg</span>
-                                <span class="stat-big-sub">dari <span id="statOrganikItem">0</span> jenis</span>
+                                <span class="stat-big-sub">dari <span id="statOrganikItem">0</span> transaksi</span>
                             </div>
                         </div>
                         <div class="stat-big-card nonorganik-bg">
@@ -258,7 +368,7 @@
                             <div class="stat-big-info">
                                 <span class="stat-big-label">Total Sampah Nonorganik</span>
                                 <span class="stat-big-value" id="statNonorganikBerat">0 kg</span>
-                                <span class="stat-big-sub">dari <span id="statNonorganikItem">0</span> jenis</span>
+                                <span class="stat-big-sub">dari <span id="statNonorganikItem">0</span> transaksi</span>
                             </div>
                         </div>
                         <div class="stat-big-card total-bg">
@@ -266,14 +376,14 @@
                             <div class="stat-big-info">
                                 <span class="stat-big-label">Keseluruhan</span>
                                 <span class="stat-big-value" id="statTotalBerat">0 kg</span>
-                                <span class="stat-big-sub">Total <span id="statTotalItem">0</span> jenis sampah</span>
+                                <span class="stat-big-sub">Total <span id="statTotalItem">0</span> transaksi</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Grafik Sederhana -->
+                    <!-- Statistik per Jenis Sampah Detail -->
                     <div class="chart-card">
-                        <h3><i class="fas fa-chart-pie"></i> Komposisi Sampah</h3>
+                        <h3><i class="fas fa-chart-pie"></i> Komposisi Sampah per Jenis</h3>
                         <div class="pie-chart-container">
                             <div class="pie-chart" id="pieChart">
                                 <div class="pie-segment organik-segment"></div>
@@ -289,9 +399,59 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Detail Statistik per Jenis Sampah -->
+                    <div class="data-table-card">
+                        <div class="card-header">
+                            <div class="header-left">
+                                <i class="fas fa-chart-line"></i>
+                                <h3>Rekap per Jenis Sampah</h3>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table" id="jenisSampahTable">
+                                <thead>
+                                    <tr>
+                                        <th>Jenis Sampah</th>
+                                        <th>Total Berat (kg)</th>
+                                        <th>Jumlah Transaksi</th>
+                                        <th>Total Nilai (Rp)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="jenisSampahTableBody">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center;">Memuat data...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Modal Laporan -->
+    <div id="laporanModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-alt"></i> Ekspor Laporan</h2>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-info">
+                    <p id="modalPeriode">Periode: -</p>
+                </div>
+                <div class="modal-actions">
+                    <button id="exportPDFBtn" class="btn-export pdf">
+                        <i class="fas fa-file-pdf"></i> Ekspor PDF
+                    </button>
+                    <button id="exportWordBtn" class="btn-export word">
+                        <i class="fas fa-file-word"></i> Ekspor Word
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Toast Notification -->
