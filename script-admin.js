@@ -1,4 +1,4 @@
-// ADMIN SCRIPT - VERSI DENGAN RT/RW, JENIS SAMPAH, DAN LAPORAN PDF/WORD
+// ADMIN SCRIPT - VERSI OPTIMAL UNTUK ANDROID
 
 document.addEventListener('DOMContentLoaded', function() {
     // ==================== SIDEBAR & SWIPE GESTURE ====================
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
             overlay.addEventListener('click', closeSidebar);
         }
         
-        // SWIPE GESTURE
+        // SWIPE GESTURE untuk Android
         var touchStartX = 0;
         var touchEndX = 0;
         var touchStartTime = 0;
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var touchDuration = new Date().getTime() - touchStartTime;
             var swipeDistance = touchEndX - touchStartX;
             
-            if (touchStartX < 50 && swipeDistance > 70 && touchDuration < 300) {
+            if (touchStartX < 50 && swipeDistance > 60 && touchDuration < 300) {
                 if (sidebar && !sidebar.classList.contains('open')) {
                     openSidebar();
                 }
@@ -376,11 +376,11 @@ document.addEventListener('DOMContentLoaded', function() {
         for (var i = 0; i < filteredData.length; i++) {
             var item = filteredData[i];
             html += '<div class="data-item">' +
-                '<div class="data-info" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">' +
+                '<div class="data-info" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">' +
                 '<div class="data-number">' + (i + 1) + '</div>' +
                 '<div><strong>' + item.rw + ' - ' + item.rt + '</strong></div>' +
                 '<div class="data-name">' + escapeHtml(item.nama) + '</div>' +
-                '<span class="preview-badge badge-' + item.jenis + '">' + (item.jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik') + '</span>' +
+                '<span class="preview-badge badge-' + item.jenis + '" style="font-size:0.7rem;">' + (item.jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik') + '</span>' +
                 '<div class="data-weight">' + item.berat.toFixed(2) + ' kg</div>' +
                 '<div class="data-price">Rp ' + item.hargaPerKg.toLocaleString() + '/kg</div>' +
                 '<div class="data-total">Rp ' + (item.berat * item.hargaPerKg).toLocaleString() + '</div>' +
@@ -592,7 +592,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '</div>' +
             '<div class="info-box"><strong>Total Nilai: ' + formatRupiah(laporan.totalNilai) + '</strong> | Jumlah Item: ' + laporan.jumlahItem + ' jenis</div>' +
             '<h3>Detail Data Sampah</h3>' +
-            '<table><thead><tr><th>No</th><th>RW/RT</th><th>Nama Sampah</th><th>Jenis</th><th>Berat</th><th>Harga</th><th>Total</th></tr></thead><tbody>' +
+            '<td><thead><tr><th>No</th><th>RW/RT</th><th>Nama Sampah</th><th>Jenis</th><th>Berat</th><th>Harga</th><th>Total</th></tr></thead><tbody>' +
             tabelDetail + '</tbody></table>' +
             '<div class="footer"><p>Dicetak: ' + tglCetak + '</p><p>Dicetak oleh: ' + admin + '</p><p>Bank Sampah Digital - Kelola Sampah, Selamatkan Bumi</p></div>' +
             '</body></html>';
