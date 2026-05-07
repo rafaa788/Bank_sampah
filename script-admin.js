@@ -29,6 +29,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function getHargaOtomatis(namaSampah, jenis) {
         var namaLower = namaSampah.toLowerCase();
         var hargaData = hargaOtomatis[jenis];
+        if (!hargaData) return hargaOtomatis.organik.default;
+        
         for (var keyword in hargaData.list) {
             if (namaLower.includes(keyword)) return hargaData.list[keyword];
         }
@@ -61,6 +63,8 @@ document.addEventListener('DOMContentLoaded', function() {
         var sidebar = document.getElementById('sidebar');
         var overlay = document.getElementById('sidebarOverlay');
         var menuToggle = document.getElementById('menuToggle');
+        
+        if (!sidebar || !overlay || !menuToggle) return;
         
         function openSidebar() {
             sidebar.classList.add('open');
@@ -98,12 +102,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==================== NAVIGASI ====================
     function navigateTo(page) {
         // Sembunyikan semua page
-        document.getElementById('dashboardPage').classList.remove('active');
-        document.getElementById('kelolaPage').classList.remove('active');
-        document.getElementById('statistikPage').classList.remove('active');
+        var dashboardPage = document.getElementById('dashboardPage');
+        var kelolaPage = document.getElementById('kelolaPage');
+        var statistikPage = document.getElementById('statistikPage');
+        
+        if (dashboardPage) dashboardPage.classList.remove('active');
+        if (kelolaPage) kelolaPage.classList.remove('active');
+        if (statistikPage) statistikPage.classList.remove('active');
         
         // Tampilkan page yang dipilih
-        document.getElementById(page + 'Page').classList.add('active');
+        var selectedPage = document.getElementById(page + 'Page');
+        if (selectedPage) selectedPage.classList.add('active');
         
         // Update active menu di sidebar
         var menuItems = document.querySelectorAll('.menu-item');
@@ -124,13 +133,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Update title
-        var titles = { dashboard: 'Dashboard', kelola: 'Kelola Sampah', statistik: 'Statistik' };
-        document.getElementById('pageTitle').innerText = titles[page];
+        var pageTitle = document.getElementById('pageTitle');
+        if (pageTitle) {
+            var titles = { dashboard: 'Dashboard', kelola: 'Kelola Sampah', statistik: 'Statistik' };
+            pageTitle.innerText = titles[page];
+        }
         
         // Tutup sidebar di mobile
-        if (window.innerWidth <= 768) {
-            document.getElementById('sidebar').classList.remove('open');
-            document.getElementById('sidebarOverlay').classList.remove('active');
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        if (window.innerWidth <= 768 && sidebar && overlay) {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
             document.body.style.overflow = '';
         }
     }
@@ -174,9 +188,13 @@ document.addEventListener('DOMContentLoaded', function() {
         var totalSemua = totalOrganik + totalNonorganik;
         var organikPercent = totalSemua > 0 ? (totalOrganik / totalSemua) * 100 : 0;
         
-        document.getElementById('totalOrganik').innerText = totalOrganik.toFixed(2);
-        document.getElementById('totalNonorganik').innerText = totalNonorganik.toFixed(2);
-        document.getElementById('totalSemua').innerText = totalSemua.toFixed(2);
+        var totalOrganikEl = document.getElementById('totalOrganik');
+        var totalNonorganikEl = document.getElementById('totalNonorganik');
+        var totalSemuaEl = document.getElementById('totalSemua');
+        
+        if (totalOrganikEl) totalOrganikEl.innerText = totalOrganik.toFixed(2);
+        if (totalNonorganikEl) totalNonorganikEl.innerText = totalNonorganik.toFixed(2);
+        if (totalSemuaEl) totalSemuaEl.innerText = totalSemua.toFixed(2);
         
         var progressBars = document.querySelectorAll('.progress-bar');
         if (progressBars[0]) progressBars[0].style.width = organikPercent + '%';
@@ -187,10 +205,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function renderRTandRWTable() {
         var container = document.getElementById('rtRwTableBody');
+        if (!container) return;
+        
         var filteredData = filterDataByRTandRW(daftarSampah, currentFilterRW, currentFilterRT);
         
         if (filteredData.length === 0) {
-            container.innerHTML = '<tr><td colspan="6" style="text-align: center;">Tidak ada数据</td></tr>';
+            container.innerHTML = '<tr><td colspan="6" style="text-align: center;">Tidak ada data</td></tr>';
             return;
         }
         
@@ -198,8 +218,8 @@ document.addEventListener('DOMContentLoaded', function() {
         for (var i = 0; i < filteredData.length; i++) {
             var item = filteredData[i];
             html += '<tr>' +
-                '<td>' + item.rw + '</td>' +
-                '<td>' + item.rt + '</td>' +
+                '<td>' + escapeHtml(item.rw) + '</td>' +
+                '<td>' + escapeHtml(item.rt) + '</td>' +
                 '<td>' + escapeHtml(item.nama) + '</td>' +
                 '<td>' + (item.jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik') + '</td>' +
                 '<td>' + item.berat.toFixed(2) + '</td>' +
@@ -211,6 +231,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function renderDataList() {
         var container = document.getElementById('sampahList');
+        if (!container) return;
+        
         var filteredData = daftarSampah.slice();
         if (currentFilter !== 'all') {
             filteredData = filteredData.filter(function(item) { return item.jenis === currentFilter; });
@@ -227,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
             html += '<div class="data-item" data-id="' + item.id + '">' +
                 '<div class="data-info">' +
                 '<div class="data-number">' + (i + 1) + '</div>' +
-                '<div><strong>' + item.rw + ' - ' + item.rt + '</strong></div>' +
+                '<div><strong>' + escapeHtml(item.rw) + ' - ' + escapeHtml(item.rt) + '</strong></div>' +
                 '<div class="data-name">' + escapeHtml(item.nama) + '</div>' +
                 '<span style="font-size:0.65rem;">' + (item.jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik') + '</span>' +
                 '<div class="data-weight">' + item.berat.toFixed(2) + ' kg</div>' +
@@ -288,30 +310,45 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         var totalSemua = totalOrganik + totalNonorganik;
-        document.getElementById('statOrganikBerat').innerText = totalOrganik.toFixed(2) + ' kg';
-        document.getElementById('statOrganikItem').innerText = itemOrganik;
-        document.getElementById('statNonorganikBerat').innerText = totalNonorganik.toFixed(2) + ' kg';
-        document.getElementById('statNonorganikItem').innerText = itemNonorganik;
-        document.getElementById('statTotalBerat').innerText = totalSemua.toFixed(2) + ' kg';
-        document.getElementById('statTotalItem').innerText = filteredData.length;
+        
+        var statOrganikBerat = document.getElementById('statOrganikBerat');
+        var statOrganikItem = document.getElementById('statOrganikItem');
+        var statNonorganikBerat = document.getElementById('statNonorganikBerat');
+        var statNonorganikItem = document.getElementById('statNonorganikItem');
+        var statTotalBerat = document.getElementById('statTotalBerat');
+        var statTotalItem = document.getElementById('statTotalItem');
+        
+        if (statOrganikBerat) statOrganikBerat.innerText = totalOrganik.toFixed(2) + ' kg';
+        if (statOrganikItem) statOrganikItem.innerText = itemOrganik;
+        if (statNonorganikBerat) statNonorganikBerat.innerText = totalNonorganik.toFixed(2) + ' kg';
+        if (statNonorganikItem) statNonorganikItem.innerText = itemNonorganik;
+        if (statTotalBerat) statTotalBerat.innerText = totalSemua.toFixed(2) + ' kg';
+        if (statTotalItem) statTotalItem.innerText = filteredData.length;
         
         var organikDeg = totalSemua > 0 ? (totalOrganik / totalSemua) * 360 : 0;
         var organikSegment = document.querySelector('.organik-segment');
         var nonorganikSegment = document.querySelector('.nonorganik-segment');
         if (organikSegment) organikSegment.style.background = 'conic-gradient(#2e7d32 ' + organikDeg + 'deg, #2e7d32 ' + organikDeg + 'deg, transparent ' + organikDeg + 'deg)';
         if (nonorganikSegment) nonorganikSegment.style.background = 'conic-gradient(#f9a825 ' + (360 - organikDeg) + 'deg, #f9a825 ' + (360 - organikDeg) + 'deg, transparent ' + (360 - organikDeg) + 'deg)';
-        document.getElementById('pieTotal').innerText = totalSemua.toFixed(1);
-        document.getElementById('legendOrganik').innerText = totalOrganik.toFixed(2);
-        document.getElementById('legendNonorganik').innerText = totalNonorganik.toFixed(2);
+        
+        var pieTotal = document.getElementById('pieTotal');
+        var legendOrganik = document.getElementById('legendOrganik');
+        var legendNonorganik = document.getElementById('legendNonorganik');
+        
+        if (pieTotal) pieTotal.innerText = totalSemua.toFixed(1);
+        if (legendOrganik) legendOrganik.innerText = totalOrganik.toFixed(2);
+        if (legendNonorganik) legendNonorganik.innerText = totalNonorganik.toFixed(2);
         
         // Render tabel per jenis
         var container = document.getElementById('jenisSampahTableBody');
-        var html = '';
-        for (var jenis in jenisSampahMap) {
-            var data = jenisSampahMap[jenis];
-            html += '<tr><td>' + (jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik') + '</td><td>' + data.berat.toFixed(2) + ' kg</td><td>' + data.count + ' item</td><td>Rp ' + data.nilai.toLocaleString() + '</td></tr>';
+        if (container) {
+            var html = '';
+            for (var jenis in jenisSampahMap) {
+                var data = jenisSampahMap[jenis];
+                html += '<tr><td>' + (jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik') + '</td><td>' + data.berat.toFixed(2) + ' kg</td><td>' + data.count + ' item</td><td>Rp ' + data.nilai.toLocaleString() + '</td></tr>';
+            }
+            container.innerHTML = html || '<tr><td colspan="4" style="text-align: center;">Tidak ada data</td></tr>';
         }
-        container.innerHTML = html || '<tr><td colspan="4" style="text-align: center;">Tidak ada data</td></tr>';
     }
     
     function refreshAll() {
@@ -322,12 +359,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ==================== CRUD ====================
     function tambahSampah() {
-        var rw = document.getElementById('inputRW').value;
-        var rt = document.getElementById('inputRT').value;
-        var nama = document.getElementById('namaSampah').value;
-        var jenis = document.getElementById('jenisSampah').value;
-        var berat = parseFloat(document.getElementById('beratSampah').value);
-        var harga = parseInt(document.getElementById('hargaSampah').value);
+        var rw = document.getElementById('inputRW') ? document.getElementById('inputRW').value : 'RW01';
+        var rt = document.getElementById('inputRT') ? document.getElementById('inputRT').value : 'RT01';
+        var nama = document.getElementById('namaSampah') ? document.getElementById('namaSampah').value : '';
+        var jenis = document.getElementById('jenisSampah') ? document.getElementById('jenisSampah').value : 'organik';
+        var berat = parseFloat(document.getElementById('beratSampah') ? document.getElementById('beratSampah').value : 0);
+        var harga = parseInt(document.getElementById('hargaSampah') ? document.getElementById('hargaSampah').value : 0);
         
         if (!nama.trim()) { showToast('Nama sampah wajib diisi!', true); return; }
         if (isNaN(berat) || berat <= 0) { showToast('Berat harus lebih dari 0 kg!', true); return; }
@@ -339,9 +376,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         saveData();
         refreshAll();
-        document.getElementById('namaSampah').value = '';
-        document.getElementById('beratSampah').value = '1';
-        document.getElementById('hargaSampah').value = '2000';
+        
+        var namaSampahInput = document.getElementById('namaSampah');
+        var beratSampahInput = document.getElementById('beratSampah');
+        var hargaSampahInput = document.getElementById('hargaSampah');
+        
+        if (namaSampahInput) namaSampahInput.value = '';
+        if (beratSampahInput) beratSampahInput.value = '1';
+        if (hargaSampahInput) hargaSampahInput.value = '2000';
+        
         showToast('Data berhasil ditambahkan!', false);
     }
     
@@ -397,7 +440,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return {
             title: 'Laporan Mingguan Bank Sampah Digital',
             periode: weekStart.toLocaleDateString('id-ID') + ' s/d ' + today.toLocaleDateString('id-ID'),
-            data: daftarSampah,
+            data: daftarSampah.slice(),
             totalOrganik: totalOrganik, totalNonorganik: totalNonorganik,
             totalBerat: totalOrganik + totalNonorganik, totalNilai: totalNilai, jumlahItem: daftarSampah.length
         };
@@ -415,7 +458,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return {
             title: 'Laporan Bulanan Bank Sampah Digital',
             periode: namaBulan[today.getMonth()] + ' ' + today.getFullYear(),
-            data: daftarSampah,
+            data: daftarSampah.slice(),
             totalOrganik: totalOrganik, totalNonorganik: totalNonorganik,
             totalBerat: totalOrganik + totalNonorganik, totalNilai: totalNilai, jumlahItem: daftarSampah.length
         };
@@ -427,7 +470,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var tabelDetail = '';
         for (var i = 0; i < laporan.data.length; i++) {
             var item = laporan.data[i];
-            tabelDetail += '<tr><td>' + (i+1) + '</td><td>' + item.rw + ' - ' + item.rt + '</td><td>' + escapeHtml(item.nama) + '</td><td>' + (item.jenis === 'organik' ? 'Organik' : 'Nonorganik') + '</td><td style="text-align:right;">' + item.berat.toFixed(2) + ' kg</td><td style="text-align:right;">' + formatRupiah(item.hargaPerKg) + '</td><td style="text-align:right;">' + formatRupiah(item.berat * item.hargaPerKg) + '</td></tr>';
+            tabelDetail += '<tr><td>' + (i+1) + '</td><td>' + escapeHtml(item.rw) + ' - ' + escapeHtml(item.rt) + '</td><td>' + escapeHtml(item.nama) + '</td><td>' + (item.jenis === 'organik' ? 'Organik' : 'Nonorganik') + '</td><td style="text-align:right;">' + item.berat.toFixed(2) + ' kg</td><td style="text-align:right;">' + formatRupiah(item.hargaPerKg) + '</td><td style="text-align:right;">' + formatRupiah(item.berat * item.hargaPerKg) + '</td></tr>';
         }
         var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + laporan.title + '</title><style>' +
             'body{font-family:Arial;padding:20px}h1,h2{text-align:center;color:#2e7d32}.periode{background:#e8f5e9;padding:10px;margin:20px 0;text-align:center}table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#2e7d32;color:#fff;padding:8px}td{padding:6px;border-bottom:1px solid #ddd}' +
@@ -438,13 +481,15 @@ document.addEventListener('DOMContentLoaded', function() {
             '<p><strong>Total Organik:</strong> ' + laporan.totalOrganik.toFixed(2) + ' kg | <strong>Total Nonorganik:</strong> ' + laporan.totalNonorganik.toFixed(2) + ' kg | <strong>Total Semua:</strong> ' + laporan.totalBerat.toFixed(2) + ' kg</p>' +
             '<p><strong>Total Nilai:</strong> ' + formatRupiah(laporan.totalNilai) + ' | <strong>Jumlah Transaksi:</strong> ' + laporan.jumlahItem + '</p>' +
             '<h3>Detail Data Sampah</h3>' +
-            '<table><thead><tr><th>No</th><th>RW/RT</th><th>Nama</th><th>Jenis</th><th>Berat</th><th>Harga/Kg</th><th>Total</th></tr></thead><tbody>' + tabelDetail + '</tbody></tr>' +
+            '<table><thead><tr><th>No</th><th>RW/RT</th><th>Nama</th><th>Jenis</th><th>Berat</th><th>Harga/Kg</th><th>Total</th></tr></thead><tbody>' + tabelDetail + '</tbody></table>' +
             '<p style="margin-top:30px;">Dicetak oleh: ' + admin + '</p>' +
             '</body></html>';
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-        printWindow.print();
-        showToast('Laporan siap dicetak', false);
+        if (printWindow) {
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+            printWindow.print();
+            showToast('Laporan siap dicetak', false);
+        }
     }
     
     function exportToWord(laporan, jenisLaporan) {
@@ -452,7 +497,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var tabelDetail = '';
         for (var i = 0; i < laporan.data.length; i++) {
             var item = laporan.data[i];
-            tabelDetail += '<tr><td>' + (i+1) + '</td><td>' + item.rw + ' - ' + item.rt + '</td><td>' + escapeHtml(item.nama) + '</td><td>' + (item.jenis === 'organik' ? 'Organik' : 'Nonorganik') + '</td><td>' + item.berat.toFixed(2) + ' kg</td><td>' + formatRupiah(item.hargaPerKg) + '</td><td>' + formatRupiah(item.berat * item.hargaPerKg) + '</td>' + '</tr>';
+            tabelDetail += '<tr><td>' + (i+1) + '</td><td>' + escapeHtml(item.rw) + ' - ' + escapeHtml(item.rt) + '</td><td>' + escapeHtml(item.nama) + '</td><td>' + (item.jenis === 'organik' ? 'Organik' : 'Nonorganik') + '</td><td>' + item.berat.toFixed(2) + ' kg</td><td>' + formatRupiah(item.hargaPerKg) + '</td><td>' + formatRupiah(item.berat * item.hargaPerKg) + '</td></tr>';
         }
         var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + laporan.title + '</title><style>' +
             'body{font-family:Calibri;padding:20px}h1,h2{text-align:center;color:#2e7d32}table{width:100%;border-collapse:collapse}th{background:#2e7d32;color:#fff;padding:8px}td{padding:6px;border-bottom:1px solid #ddd}' +
@@ -486,40 +531,99 @@ document.addEventListener('DOMContentLoaded', function() {
         var currentLaporan = null;
         var currentJenis = null;
         
-        btnMingguan.onclick = function() { currentLaporan = generateLaporanMingguan(); currentJenis = 'mingguan'; modalPeriode.innerHTML = '<strong>Periode:</strong> ' + currentLaporan.periode; modal.style.display = 'block'; };
-        btnBulanan.onclick = function() { currentLaporan = generateLaporanBulanan(); currentJenis = 'bulanan'; modalPeriode.innerHTML = '<strong>Periode:</strong> ' + currentLaporan.periode; modal.style.display = 'block'; };
-        exportPDFBtn.onclick = function() { if (currentLaporan) { exportToPDF(currentLaporan); modal.style.display = 'none'; } };
-        exportWordBtn.onclick = function() { if (currentLaporan) { exportToWord(currentLaporan, currentJenis); modal.style.display = 'none'; } };
-        closeBtn.onclick = function() { modal.style.display = 'none'; };
-        window.onclick = function(e) { if (e.target === modal) modal.style.display = 'none'; };
+        if (!modal || !btnMingguan || !btnBulanan) return;
+        
+        btnMingguan.onclick = function() { 
+            currentLaporan = generateLaporanMingguan(); 
+            currentJenis = 'mingguan'; 
+            if (modalPeriode) modalPeriode.innerHTML = '<strong>Periode:</strong> ' + currentLaporan.periode; 
+            modal.style.display = 'block'; 
+        };
+        
+        btnBulanan.onclick = function() { 
+            currentLaporan = generateLaporanBulanan(); 
+            currentJenis = 'bulanan'; 
+            if (modalPeriode) modalPeriode.innerHTML = '<strong>Periode:</strong> ' + currentLaporan.periode; 
+            modal.style.display = 'block'; 
+        };
+        
+        if (exportPDFBtn) {
+            exportPDFBtn.onclick = function() { 
+                if (currentLaporan) { 
+                    exportToPDF(currentLaporan); 
+                    modal.style.display = 'none'; 
+                } 
+            };
+        }
+        
+        if (exportWordBtn) {
+            exportWordBtn.onclick = function() { 
+                if (currentLaporan) { 
+                    exportToWord(currentLaporan, currentJenis); 
+                    modal.style.display = 'none'; 
+                } 
+            };
+        }
+        
+        if (closeBtn) {
+            closeBtn.onclick = function() { modal.style.display = 'none'; };
+        }
+        
+        window.onclick = function(e) { 
+            if (e.target === modal) modal.style.display = 'none'; 
+        };
     }
     
     // ==================== SETUP FILTERS ====================
     function setupFilters() {
-        document.getElementById('filterRW').addEventListener('change', function(e) {
-            currentFilterRW = e.target.value;
-            refreshAll();
-        });
-        document.getElementById('filterRT').addEventListener('change', function(e) {
-            currentFilterRT = e.target.value;
-            refreshAll();
-        });
-        document.getElementById('statFilterRW').addEventListener('change', function(e) {
-            currentStatFilterRW = e.target.value;
-            updateStatistikPage();
-        });
-        document.getElementById('statFilterRT').addEventListener('change', function(e) {
-            currentStatFilterRT = e.target.value;
-            updateStatistikPage();
-        });
-        document.getElementById('statFilterJenisSampah').addEventListener('change', function(e) {
-            currentStatFilterJenis = e.target.value;
-            updateStatistikPage();
-        });
-        document.getElementById('filterJenis').addEventListener('change', function(e) {
-            currentFilter = e.target.value;
-            renderDataList();
-        });
+        var filterRW = document.getElementById('filterRW');
+        var filterRT = document.getElementById('filterRT');
+        var statFilterRW = document.getElementById('statFilterRW');
+        var statFilterRT = document.getElementById('statFilterRT');
+        var statFilterJenis = document.getElementById('statFilterJenisSampah');
+        var filterJenis = document.getElementById('filterJenis');
+        
+        if (filterRW) {
+            filterRW.addEventListener('change', function(e) {
+                currentFilterRW = e.target.value;
+                refreshAll();
+            });
+        }
+        
+        if (filterRT) {
+            filterRT.addEventListener('change', function(e) {
+                currentFilterRT = e.target.value;
+                refreshAll();
+            });
+        }
+        
+        if (statFilterRW) {
+            statFilterRW.addEventListener('change', function(e) {
+                currentStatFilterRW = e.target.value;
+                updateStatistikPage();
+            });
+        }
+        
+        if (statFilterRT) {
+            statFilterRT.addEventListener('change', function(e) {
+                currentStatFilterRT = e.target.value;
+                updateStatistikPage();
+            });
+        }
+        
+        if (statFilterJenis) {
+            statFilterJenis.addEventListener('change', function(e) {
+                currentStatFilterJenis = e.target.value;
+                updateStatistikPage();
+            });
+        }
+        
+        if (filterJenis) {
+            filterJenis.addEventListener('change', function(e) {
+                currentFilter = e.target.value;
+                renderDataList();
+            });
+        }
     }
     
     // ==================== SETUP AUTO HARGA ====================
@@ -527,21 +631,28 @@ document.addEventListener('DOMContentLoaded', function() {
         var namaInput = document.getElementById('namaSampah');
         var jenisBtns = document.querySelectorAll('.type-option');
         var hargaInput = document.getElementById('hargaSampah');
+        var jenisSelect = document.getElementById('jenisSampah');
         
-        namaInput.addEventListener('input', function() {
-            var jenis = document.getElementById('jenisSampah').value;
-            hargaInput.value = getHargaOtomatis(this.value, jenis);
-        });
-        
-        jenisBtns.forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                jenisBtns.forEach(function(b) { b.classList.remove('active'); });
-                this.classList.add('active');
-                var jenis = this.getAttribute('data-type');
-                document.getElementById('jenisSampah').value = jenis;
-                hargaInput.value = getHargaOtomatis(namaInput.value, jenis);
+        if (namaInput && hargaInput && jenisSelect) {
+            namaInput.addEventListener('input', function() {
+                var jenis = jenisSelect.value;
+                hargaInput.value = getHargaOtomatis(this.value, jenis);
             });
-        });
+        }
+        
+        if (jenisBtns.length > 0) {
+            jenisBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    jenisBtns.forEach(function(b) { b.classList.remove('active'); });
+                    this.classList.add('active');
+                    var jenis = this.getAttribute('data-type');
+                    if (jenisSelect) jenisSelect.value = jenis;
+                    if (namaInput && hargaInput) {
+                        hargaInput.value = getHargaOtomatis(namaInput.value, jenis);
+                    }
+                });
+            });
+        }
     }
     
     // ==================== SETUP NAVIGATION ====================
@@ -552,6 +663,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (page) navigateTo(page);
             });
         });
+        
         document.querySelectorAll('.nav-bot-item').forEach(function(btn) {
             if (btn.id !== 'logoutMobileBtn') {
                 btn.addEventListener('click', function() {
@@ -564,16 +676,24 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ==================== SETUP LOGOUT ====================
     function setupLogout() {
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            sessionStorage.removeItem('isLoggedIn');
-            sessionStorage.removeItem('adminName');
-            window.location.href = 'menu_login.html';
-        });
-        document.getElementById('logoutMobileBtn').addEventListener('click', function() {
-            sessionStorage.removeItem('isLoggedIn');
-            sessionStorage.removeItem('adminName');
-            window.location.href = 'menu_login.html';
-        });
+        var logoutBtn = document.getElementById('logoutBtn');
+        var logoutMobileBtn = document.getElementById('logoutMobileBtn');
+        
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
+                sessionStorage.removeItem('isLoggedIn');
+                sessionStorage.removeItem('adminName');
+                window.location.href = 'menu_login.html';
+            });
+        }
+        
+        if (logoutMobileBtn) {
+            logoutMobileBtn.addEventListener('click', function() {
+                sessionStorage.removeItem('isLoggedIn');
+                sessionStorage.removeItem('adminName');
+                window.location.href = 'menu_login.html';
+            });
+        }
     }
     
     // ==================== CEK LOGIN ====================
@@ -584,8 +704,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set admin name
     var adminName = sessionStorage.getItem('adminName') || 'Admin';
-    document.getElementById('adminName').innerText = adminName;
-    document.getElementById('welcomeName').innerText = adminName;
+    var adminNameEl = document.getElementById('adminName');
+    var welcomeNameEl = document.getElementById('welcomeName');
+    
+    if (adminNameEl) adminNameEl.innerText = adminName;
+    if (welcomeNameEl) welcomeNameEl.innerText = adminName;
     
     // ==================== INIT ====================
     initSidebar();
@@ -594,6 +717,11 @@ document.addEventListener('DOMContentLoaded', function() {
     setupAutoHarga();
     setupLaporanModal();
     setupLogout();
-    document.getElementById('tambahSampahBtn').addEventListener('click', tambahSampah);
+    
+    var tambahBtn = document.getElementById('tambahSampahBtn');
+    if (tambahBtn) {
+        tambahBtn.addEventListener('click', tambahSampah);
+    }
+    
     loadData();
 });
