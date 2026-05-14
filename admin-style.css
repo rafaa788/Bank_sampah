@@ -484,7 +484,7 @@ body {
 
 .modal-content {
     background-color: white;
-    margin: 15% auto;
+    margin: 10% auto;
     width: 90%;
     max-width: 500px;
     border-radius: 24px;
@@ -756,6 +756,7 @@ body {
     gap: 8px;
     transition: all 0.3s;
     width: 100%;
+    margin-top: 24px;
 }
 
 .btn-primary:hover {
@@ -1138,6 +1139,214 @@ body {
 .sidebar-overlay.active {
     display: block;
     opacity: 1;
+}
+
+/* ==================== BSU SELECTOR STYLES ==================== */
+.bsu-selector-card {
+    background: white;
+    border-radius: 24px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.bsu-selector-header {
+    padding: 20px 24px;
+    background: rgba(46, 125, 50, 0.05);
+    border-bottom: 1px solid rgba(46, 125, 50, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bsu-selector-header i {
+    font-size: 1.3rem;
+    color: #2e7d32;
+}
+
+.bsu-selector-header h3 {
+    color: #1b5e20;
+    font-size: 1.1rem;
+}
+
+.bsu-selector-body {
+    padding: 24px;
+}
+
+.bsu-search {
+    margin-bottom: 20px;
+}
+
+.bsu-search input {
+    width: 100%;
+    padding: 14px;
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.bsu-search input:focus {
+    outline: none;
+    border-color: #2e7d32;
+    background: white;
+}
+
+.bsu-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 16px;
+    background: #fafafa;
+}
+
+.bsu-item {
+    padding: 14px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bsu-item:last-child {
+    border-bottom: none;
+}
+
+.bsu-item:hover {
+    background: rgba(46, 125, 50, 0.1);
+}
+
+.bsu-item.selected {
+    background: rgba(46, 125, 50, 0.15);
+    border-left: 3px solid #2e7d32;
+}
+
+.bsu-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.bsu-location {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.bsu-badge {
+    background: #2e7d32;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+}
+
+.sampah-preset {
+    margin-bottom: 16px;
+}
+
+.sampah-preset label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.preset-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 120px;
+    overflow-y: auto;
+    padding: 8px;
+    background: #fafafa;
+    border-radius: 12px;
+}
+
+.preset-btn {
+    padding: 8px 14px;
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #555;
+}
+
+.preset-btn:hover {
+    background: rgba(46, 125, 50, 0.1);
+    border-color: #2e7d32;
+    color: #2e7d32;
+}
+
+.preset-organik {
+    border-left: 3px solid #2e7d32;
+}
+
+.preset-nonorganik {
+    border-left: 3px solid #f9a825;
+}
+
+.current-bsu-info {
+    background: #e8f5e9;
+    padding: 12px 16px;
+    border-radius: 14px;
+    margin-top: 16px;
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.current-bsu-info span:first-child {
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.current-bsu-info span:last-child {
+    color: #333;
+}
+
+.selected-bsu-display {
+    background: linear-gradient(135deg, #2e7d32, #43a047);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.selected-bsu-display .bsu-text {
+    font-weight: 600;
+}
+
+.selected-bsu-display .location-text {
+    font-size: 0.75rem;
+    opacity: 0.9;
+}
+
+.clear-bsu-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.7rem;
+}
+
+.clear-bsu-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* DATALIST STYLES */
+datalist {
+    background: white;
+    border-radius: 14px;
 }
 
 /* RESPONSIVE */
