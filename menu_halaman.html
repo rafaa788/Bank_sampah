@@ -46,7 +46,6 @@
                         <h2>Induk mandiri<span></span></h2>
                         <p>Desa gunung putri</p>
                         <p>Kabupaten Bogor</p>
-
                     </div>
                 </div>
             </div>
@@ -108,28 +107,44 @@
                         </div>
                         <div class="filter-body">
                             <div class="form-group">
-                                <label>Pilih RW</label>
+                                <label><i class="fas fa-building"></i> Pilih BSU</label>
+                                <select id="filterBSU">
+                                    <option value="all">Semua BSU</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-map-marker-alt"></i> Pilih RW</label>
                                 <select id="filterRW">
                                     <option value="all">Semua RW</option>
                                     <option value="RW01">RW 01</option>
                                     <option value="RW02">RW 02</option>
                                     <option value="RW03">RW 03</option>
+                                    <option value="RW04">RW 04</option>
+                                    <option value="RW05">RW 05</option>
+                                    <option value="RW06">RW 06</option>
+                                    <option value="RW07">RW 07</option>
+                                    <option value="RW08">RW 08</option>
+                                    <option value="RW09">RW 09</option>
+                                    <option value="RW10">RW 10</option>
+                                    <option value="RW11">RW 11</option>
+                                    <option value="RW12">RW 12</option>
+                                    <option value="RW13">RW 13</option>
+                                    <option value="RW14">RW 14</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Pilih RT</label>
+                                <label><i class="fas fa-home"></i> Pilih RT</label>
                                 <select id="filterRT">
                                     <option value="all">Semua RT</option>
                                     <option value="RT01">RT 01</option>
                                     <option value="RT02">RT 02</option>
                                     <option value="RT03">RT 03</option>
                                     <option value="RT04">RT 04</option>
+                                    <option value="RT05">RT 05</option>
                                 </select>
                             </div>
                         </div>
                     </div>
-
-                 
 
                     <div class="stat-grid">
                         <div class="stat-card stat-organik">
@@ -189,6 +204,7 @@
                             <table class="data-table" id="rtRwTable">
                                 <thead>
                                     <tr>
+                                        <th>BSU</th>
                                         <th>RW</th>
                                         <th>RT</th>
                                         <th>Nama Sampah</th>
@@ -199,7 +215,7 @@
                                 </thead>
                                 <tbody id="rtRwTableBody">
                                     <tr>
-                                        <td colspan="6" style="text-align: center;">Memuat data...</td>
+                                        <td colspan="7" style="text-align: center;">Memuat data...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -217,6 +233,31 @@
                         </div>
                     </div>
 
+                    <!-- Pilih BSU -->
+                    <div class="bsu-selector-card">
+                        <div class="bsu-selector-header">
+                            <i class="fas fa-building"></i>
+                            <h3>Pilih Bank Sampah Unit (BSU)</h3>
+                        </div>
+                        <div class="bsu-selector-body">
+                            <div class="selected-bsu-display" id="selectedBsuDisplay" style="display: none;">
+                                <div>
+                                    <div class="bsu-text" id="selectedBsuName">-</div>
+                                    <div class="location-text" id="selectedBsuLocation">-</div>
+                                </div>
+                                <button class="clear-bsu-btn" id="clearBsuBtn"><i class="fas fa-times"></i> Hapus</button>
+                            </div>
+                            <div class="bsu-search">
+                                <input type="text" id="bsuSearchInput" placeholder="Cari nama BSU...">
+                            </div>
+                            <div class="bsu-list" id="bsuList"></div>
+                            <div class="current-bsu-info" id="currentBsuInfo" style="display: none;">
+                                <span><i class="fas fa-check-circle"></i> BSU Terpilih:</span>
+                                <span id="currentBsuText">-</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-card">
                         <div class="form-header">
                             <i class="fas fa-plus-circle"></i>
@@ -230,6 +271,17 @@
                                         <option value="RW01">RW 01</option>
                                         <option value="RW02">RW 02</option>
                                         <option value="RW03">RW 03</option>
+                                        <option value="RW04">RW 04</option>
+                                        <option value="RW05">RW 05</option>
+                                        <option value="RW06">RW 06</option>
+                                        <option value="RW07">RW 07</option>
+                                        <option value="RW08">RW 08</option>
+                                        <option value="RW09">RW 09</option>
+                                        <option value="RW10">RW 10</option>
+                                        <option value="RW11">RW 11</option>
+                                        <option value="RW12">RW 12</option>
+                                        <option value="RW13">RW 13</option>
+                                        <option value="RW14">RW 14</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -239,14 +291,24 @@
                                         <option value="RT02">RT 02</option>
                                         <option value="RT03">RT 03</option>
                                         <option value="RT04">RT 04</option>
+                                        <option value="RT05">RT 05</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label><i class="fas fa-tag"></i> Nama Sampah</label>
-                                    <input type="text" id="namaSampah" placeholder="Contoh: Daun Kering">
+                                    <input type="text" id="namaSampah" placeholder="Contoh: Daun Kering" list="sampahDatalist">
+                                    <datalist id="sampahDatalist">
+                                        <!-- Options will be populated by JS -->
+                                    </datalist>
                                 </div>
+                                <div class="form-group sampah-preset">
+                                    <label><i class="fas fa-list"></i> Pilih dari daftar (scroll)</label>
+                                    <div class="preset-buttons" id="presetSampahContainer"></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
                                 <div class="form-group">
                                     <label><i class="fas fa-category"></i> Jenis</label>
                                     <div class="type-selector">
@@ -259,8 +321,6 @@
                                     </div>
                                     <input type="hidden" id="jenisSampah" value="organik">
                                 </div>
-                            </div>
-                            <div class="form-row">
                                 <div class="form-group">
                                     <label><i class="fas fa-weight-hanging"></i> Berat (kg)</label>
                                     <input type="number" id="beratSampah" step="0.1" value="1">
@@ -315,12 +375,29 @@
                         </div>
                         <div class="filter-body">
                             <div class="form-group">
+                                <label>Pilih BSU</label>
+                                <select id="statFilterBSU">
+                                    <option value="all">Semua BSU</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label>Pilih RW</label>
                                 <select id="statFilterRW">
                                     <option value="all">Semua RW</option>
                                     <option value="RW01">RW 01</option>
                                     <option value="RW02">RW 02</option>
                                     <option value="RW03">RW 03</option>
+                                    <option value="RW04">RW 04</option>
+                                    <option value="RW05">RW 05</option>
+                                    <option value="RW06">RW 06</option>
+                                    <option value="RW07">RW 07</option>
+                                    <option value="RW08">RW 08</option>
+                                    <option value="RW09">RW 09</option>
+                                    <option value="RW10">RW 10</option>
+                                    <option value="RW11">RW 11</option>
+                                    <option value="RW12">RW 12</option>
+                                    <option value="RW13">RW 13</option>
+                                    <option value="RW14">RW 14</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -331,6 +408,7 @@
                                     <option value="RT02">RT 02</option>
                                     <option value="RT03">RT 03</option>
                                     <option value="RT04">RT 04</option>
+                                    <option value="RT05">RT 05</option>
                                 </select>
                             </div>
                         </div>
@@ -441,6 +519,7 @@
             <div class="modal-body">
                 <div class="modal-info">
                     <p id="modalPeriode">Periode: -</p>
+                    <p id="modalFilterInfo" style="margin-top: 8px; font-size: 0.85rem;"></p>
                 </div>
                 <div class="modal-actions">
                     <button id="exportPDFBtn" class="btn-export pdf">
