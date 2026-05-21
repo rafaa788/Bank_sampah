@@ -1,59 +1,85 @@
-// LOGIN SCRIPT
+// login-script.js - PERBAIKAN
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('loginForm');
     const errorToast = document.getElementById('errorMessage');
     
-    // Cek session
+    // Cek apakah sudah login - gunakan sessionStorage
     if (sessionStorage.getItem('isLoggedIn') === 'true') {
         window.location.href = 'menu_halaman.html';
         return;
     }
     
-    // Particle effect sederhana
-    const particles = document.getElementById('particles');
-    if (particles) {
-        for (let i = 0; i < 30; i++) {
-            const particle = document.createElement('div');
-            particle.style.position = 'absolute';
-            particle.style.width = '2px';
-            particle.style.height = '2px';
-            particle.style.background = 'rgba(16, 185, 129, 0.5)';
-            particle.style.borderRadius = '50%';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.top = Math.random() * 100 + '%';
-            particle.style.animation = `float ${3 + Math.random() * 5}s infinite ease-in-out`;
-            particles.appendChild(particle);
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                showError(errorToast, 'Username dan password wajib diisi!');
+                return;
+            }
+            
+            const submitBtn = form.querySelector('.btn-login');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Memproses...';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch('api_login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Gunakan sessionStorage (bukan localStorage)
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    sessionStorage.setItem('user', JSON.stringify(result.user));
+                    sessionStorage.setItem('adminName', result.user.nama || result.user.username);
+                    
+                    showSuccess(errorToast, 'Login berhasil! Mengarahkan...');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'menu_halaman.html';
+                    }, 1000);
+                } else {
+                    showError(errorToast, result.message);
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError(errorToast, 'Terjadi kesalahan: ' + error.message);
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+    
+    function showError(toast, message) {
+        if (toast) {
+            toast.style.background = '#ef5350';
+            toast.style.color = 'white';
+            toast.querySelector('span').innerText = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        } else {
+            alert(message);
         }
     }
     
-    // Style untuk particle animation
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) translateX(0px); opacity: 0; }
-            50% { transform: translateY(-20px) translateX(10px); opacity: 1; }
+    function showSuccess(toast, message) {
+        if (toast) {
+            toast.style.background = '#4caf50';
+            toast.style.color = 'white';
+            toast.querySelector('span').innerText = message;
+            toast.style.display = 'block';
         }
-    `;
-    document.head.appendChild(style);
-    
-    // Login submit
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            if (username === 'banksampah' && password === 'admin123') {
-                sessionStorage.setItem('isLoggedIn', 'true');
-                sessionStorage.setItem('adminName', username);
-                window.location.href = 'menu_halaman.html';
-            } else {
-                errorToast.classList.add('show');
-                setTimeout(() => {
-                    errorToast.classList.remove('show');
-                }, 3000);
-            }
-        });
     }
 });
