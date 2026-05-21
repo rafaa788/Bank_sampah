@@ -1,5 +1,300 @@
-// ADMIN SCRIPT - VERSI LENGKAP DENGAN BSU, PRESET SAMPAH, DAN FILTER LAPORAN
+// ADMIN SCRIPT - VERSI LENGKAP DENGAN BSU, PRESET SAMPAH (PLASTIK, LOGAM, KERTAS), DAN FILTER LAPORAN
 
+// ==================== FUNGSI AJAX REALTIME KE DATABASE ====================
+
+// Ambil semua data dari database
+async function loadDataFromDB() {
+    try {
+        const response = await fetch('api_get_data.php?action=get_all_transaksi');
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            daftarSampah = result.data;
+            saveDataToLocal(); // Simpan ke localStorage sebagai cache
+            refreshAll();
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Gagal load data:', error);
+        return false;
+    }
+}
+
+// Ambil statistik dari database
+async function loadStatsFromDB() {
+    try {
+        const response = await fetch('api_get_data.php?action=get_statistik');
+        const result = await response.json();
+        
+        if (result.success) {
+            updateStatsUI(result);
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Gagal load statistik:', error);
+        return false;
+    }
+}
+
+// Update UI statistik
+function updateStatsUI(stats) {
+    const totalOrganikEl = document.getElementById('totalOrganik');
+    const totalNonorganikEl = document.getElementById('totalNonorganik');
+    const totalSemuaEl = document.getElementById('totalSemua');
+    
+    if (totalOrganikEl) totalOrganikEl.innerText = stats.total_organik.toFixed(2);
+    if (totalNonorganikEl) totalNonorganikEl.innerText = stats.total_nonorganik.toFixed(2);
+    if (totalSemuaEl) totalSemuaEl.innerText = stats.total_berat.toFixed(2);
+    
+    const organikPercent = stats.total_berat > 0 ? (stats.total_organik / stats.total_berat) * 100 : 0;
+    const progressBars = document.querySelectorAll('.progress-bar');
+    if (progressBars[0]) progressBars[0].style.width = organikPercent + '%';
+    if (progressBars[1]) progressBars[1].style.width = (100 - organikPercent) + '%';
+}
+
+// Simpan data ke database (tambah)
+async function saveToDatabase(data) {
+    try {
+        const formData = new URLSearchParams();
+        formData.append('action', 'tambah');
+        formData.append('bsu', data.bsu || '');
+        formData.append('rw', data.rw);
+        formData.append('rt', data.rt);
+        formData.append('nama', data.nama);
+        formData.append('jenis', data.jenis);
+        formData.append('berat', data.berat);
+        formData.append('harga', data.harga);
+        
+        const response = await fetch('api_simpan_data.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            await loadDataFromDB(); // Reload data setelah simpan
+            showToast(result.message, false);
+            return true;
+        } else {
+            showToast(result.message, true);
+            return false;
+        }
+    } catch (error) {
+        console.error('Error saving:', error);
+        showToast('Gagal menyimpan data', true);
+        return false;
+    }
+}
+
+// Update data ke database (edit)
+async function updateToDatabase(id, data) {
+    try {
+        const formData = new URLSearchParams();
+        formData.append('action', 'edit');
+        formData.append('id', id);
+        formData.append('bsu', data.bsu || '');
+        formData.append('rw', data.rw);
+        formData.append('rt', data.rt);
+        formData.append('nama', data.nama);
+        formData.append('jenis', data.jenis);
+        formData.append('berat', data.berat);
+        formData.append('harga', data.harga);
+        
+        const response = await fetch('api_simpan_data.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            await loadDataFromDB();
+            showToast(result.message, false);
+            return true;
+        } else {
+            showToast(result.message, true);
+            return false;
+        }
+    } catch (error) {
+        console.error('Error updating:', error);
+        showToast('Gagal update data', true);
+        return false;
+    }
+}
+
+// Hapus data dari database
+async function deleteFromDatabase(id) {
+    try {
+        const formData = new URLSearchParams();
+        formData.append('action', 'hapus');
+        formData.append('id', id);
+        
+        const response = await fetch('api_simpan_data.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            await loadDataFromDB();
+            showToast(result.message, false);
+            return true;
+        } else {
+            showToast(result.message, true);
+            return false;
+        }
+    } catch (error) {
+        console.error('Error deleting:', error);
+        showToast('Gagal hapus data', true);
+        return false;
+    }
+}
+
+// Override fungsi tambahSampah yang lama dengan yang baru
+const originalTambahSampah = window.tambahSampah;
+window.tambahSampah = async function() {
+    var rw = document.getElementById('inputRW').value;
+    var rt = document.getElementById('inputRT').value;
+    var nama = document.getElementById('namaSampah').value;
+    var jenis = document.getElementById('jenisSampah').value;
+    var berat = parseFloat(document.getElementById('beratSampah').value);
+    var harga = parseInt(document.getElementById('hargaSampah').value);
+    
+    if (selectedBSU) {
+        rw = selectedBSU.rw;
+        if (selectedBSU.rt !== 'all') rt = selectedBSU.rt;
+    }
+    
+    if (!nama.trim()) {
+        showToast('Nama sampah wajib diisi!', true);
+        return;
+    }
+    if (berat <= 0) {
+        showToast('Berat harus lebih dari 0 kg!', true);
+        return;
+    }
+    
+    if (!harga || harga <= 0) {
+        harga = getHargaByNamaSampah(nama);
+    }
+    
+    const success = await saveToDatabase({
+        bsu: selectedBSU ? selectedBSU.nama : '',
+        rw: rw,
+        rt: rt,
+        nama: nama.trim(),
+        jenis: jenis,
+        berat: berat,
+        harga: harga
+    });
+    
+    if (success) {
+        document.getElementById('namaSampah').value = '';
+        document.getElementById('beratSampah').value = '1';
+        document.getElementById('hargaSampah').value = '2000';
+    }
+};
+
+// Override fungsi editSampah
+const originalEditSampah = window.editSampah;
+window.editSampah = async function(id) {
+    var item = daftarSampah.find(i => i.id === id);
+    if (!item) return;
+    
+    var newBSU = prompt('Edit BSU (atau kosongkan):', item.bsu || '');
+    var newRW = prompt('Edit RW:', item.rw);
+    if (!newRW) return;
+    var newRT = prompt('Edit RT:', item.rt);
+    if (!newRT) return;
+    var newNama = prompt('Edit Nama Sampah:', item.nama);
+    if (!newNama) return;
+    var newJenis = prompt('Jenis (organik/nonorganik):', item.jenis);
+    if (newJenis !== 'organik' && newJenis !== 'nonorganik') {
+        showToast('Jenis harus organik atau nonorganik', true);
+        return;
+    }
+    var newBerat = parseFloat(prompt('Berat (kg):', item.berat));
+    if (isNaN(newBerat) || newBerat <= 0) {
+        showToast('Berat tidak valid', true);
+        return;
+    }
+    var newHarga = parseInt(prompt('Harga per Kg (Rp):', item.hargaPerKg));
+    if (isNaN(newHarga) || newHarga < 0) {
+        newHarga = getHargaByNamaSampah(newNama);
+    }
+    
+    await updateToDatabase(id, {
+        bsu: newBSU || '',
+        rw: newRW,
+        rt: newRT,
+        nama: newNama.trim(),
+        jenis: newJenis,
+        berat: newBerat,
+        harga: newHarga
+    });
+};
+
+// Override fungsi deleteSampah
+const originalDeleteSampah = window.deleteSampah;
+window.deleteSampah = async function(id) {
+    if (confirm('Yakin ingin menghapus data ini?')) {
+        await deleteFromDatabase(id);
+    }
+};
+
+// Fungsi untuk refresh data realtime (auto reload setiap 30 detik)
+let autoRefreshInterval = null;
+
+function startAutoRefresh() {
+    if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+    autoRefreshInterval = setInterval(async () => {
+        await loadDataFromDB();
+        await loadStatsFromDB();
+    }, 30000); // Refresh setiap 30 detik
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+}
+
+// Save ke localStorage sebagai cache
+function saveDataToLocal() {
+    localStorage.setItem('bankSampahData', JSON.stringify(daftarSampah));
+}
+
+// Load awal dari database
+async function initRealtime() {
+    // Coba load dari database
+    const success = await loadDataFromDB();
+    await loadStatsFromDB();
+    
+    if (!success) {
+        // Fallback ke localStorage jika database error
+        console.log('Menggunakan data dari localStorage');
+        loadDataFromLocal();
+    }
+    
+    startAutoRefresh();
+}
+
+// Load dari localStorage (fallback)
+function loadDataFromLocal() {
+    var stored = localStorage.getItem('bankSampahData');
+    if (stored) {
+        daftarSampah = JSON.parse(stored);
+        refreshAll();
+    }
+}
+
+// Ganti panggilan loadData() dengan initRealtime() di bagian bawah file
+// Cari baris "loadData();" dan ganti dengan "initRealtime();"
 document.addEventListener('DOMContentLoaded', function() {
     // ==================== SIDEBAR & SWIPE GESTURE ====================
     initSidebar();
@@ -94,7 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Data Model
     let daftarSampah = [];
     let currentFilter = 'all';
-    let currentType = 'organik';
+    let currentType = 'nonorganik';
     let currentFilterRW = 'all';
     let currentFilterRT = 'all';
     let currentFilterBSU = 'all';
@@ -104,110 +399,278 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentStatFilterJenis = 'all';
     const STORAGE_KEY = 'bankSampahData';
     
+    // Chart instances
+    let jenisSampahChart = null;
+    let namaSampahChart = null;
+    
     // Nama hari dan bulan
     const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     const namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     
     // ==================== DATA BSU (BANK SAMPAH UNIT) ====================
     const dataBSU = [
+        // RW 01
         { nama: "BSU MEDE 1", rw: "RW01", rt: "RT01" },
         { nama: "BSU MEDE 2", rw: "RW01", rt: "RT02" },
         { nama: "BSU MEDE 3", rw: "RW01", rt: "RT03" },
         { nama: "BSU MEDE 4", rw: "RW01", rt: "RT04" },
+        // RW 02
         { nama: "BSU PELANGI CERIA", rw: "RW02", rt: "RT01" },
         { nama: "BSU PELANGI 2", rw: "RW02", rt: "RT02" },
         { nama: "BSU PELANGI KENANGA", rw: "RW02", rt: "RT03" },
         { nama: "BSU PELANGI BUNDA", rw: "RW02", rt: "RT04" },
+        // RW 03
+        { nama: "BSU RW03 RT01", rw: "RW03", rt: "RT01" },
+        { nama: "BSU RW03 RT02", rw: "RW03", rt: "RT02" },
+        { nama: "BSU RW03 RT03", rw: "RW03", rt: "RT03" },
+        // RW 04
+        { nama: "BSU FORSILA", rw: "RW04", rt: "RT01" },
+        { nama: "BSU BERSERI 04", rw: "RW04", rt: "RT02" },
+        // RW 05
+        { nama: "BSU BINTANG KEJORA 1", rw: "RW05", rt: "RT01" },
+        { nama: "BSU BINTANG KEJORA 2", rw: "RW05", rt: "RT02" },
+        // RW 06
+        { nama: "BSU TERANG", rw: "RW06", rt: "RT01" },
+        { nama: "BSU RW06 RT02", rw: "RW06", rt: "RT02" },
+        { nama: "BSU RW06 RT03", rw: "RW06", rt: "RT03" },
+        { nama: "BSU RW06 RT04", rw: "RW06", rt: "RT04" },
+        { nama: "BSU RW06 RT05", rw: "RW06", rt: "RT05" },
+        // RW 07
+        { nama: "BSU BERSEMI 0107", rw: "RW07", rt: "RT01" },
+        { nama: "BSU BERSEMI 07", rw: "RW07", rt: "RT02" },
+        { nama: "BSU RW07 RT03", rw: "RW07", rt: "RT03" },
+        { nama: "BSU RW07 RT04", rw: "RW07", rt: "RT04" },
+        { nama: "BSU RW07 RT05", rw: "RW07", rt: "RT05" },
+        // RW 08
+        { nama: "BSU MENTARI 01", rw: "RW08", rt: "RT01" },
+        { nama: "BSU MENTARI", rw: "RW08", rt: "RT02" },
+        // RW 09
         { nama: "BSU KP KIDOEL", rw: "RW09", rt: "all" },
+        // RW 10
         { nama: "BSU MAWARGA", rw: "RW10", rt: "RT01" },
         { nama: "BSU SRIKANDI", rw: "RW10", rt: "RT02" },
+        { nama: "BSU RW10 RT03", rw: "RW10", rt: "RT03" },
+        // RW 11
+        { nama: "BSU RW11 RT01", rw: "RW11", rt: "RT01" },
         { nama: "BSU ZALAK 2", rw: "RW11", rt: "RT02" },
+        { nama: "BSU RW11 RT03", rw: "RW11", rt: "RT03" },
+        // RW 12
+        { nama: "BSU RW12 RT01", rw: "RW12", rt: "RT01" },
+        { nama: "BSU RW12 RT02", rw: "RW12", rt: "RT02" },
+        { nama: "BSU RW12 RT03", rw: "RW12", rt: "RT03" },
+        // RW 13
         { nama: "BSU CEMERLANG 1", rw: "RW13", rt: "RT01" },
         { nama: "BSU CEMERLANG 2", rw: "RW13", rt: "RT02" },
         { nama: "BSU CEMERLANG 3", rw: "RW13", rt: "RT03" },
-        { nama: "BSU FORSILA", rw: "RW04", rt: "RT01" },
-        { nama: "BSU BERSERI 04", rw: "RW04", rt: "RT02" },
-        { nama: "BSU BINTANG KEJORA 1", rw: "RW05", rt: "RT01" },
-        { nama: "BSU BINTANG KEJORA 2", rw: "RW05", rt: "RT02" },
-        { nama: "BSU TERANG", rw: "RW06", rt: "RT01" },
-        { nama: "BSU BERSEMI 0107", rw: "RW07", rt: "RT01" },
-        { nama: "BSU BERSEMI 07", rw: "RW07", rt: "RT02" },
-        { nama: "BSU MENTARI 01", rw: "RW08", rt: "RT01" },
-        { nama: "BSU MENTARI", rw: "RW08", rt: "RT02" }
+        // RW 14
+        { nama: "BSU RW14 RT01", rw: "RW14", rt: "RT01" },
+        { nama: "BSU RW14 RT02", rw: "RW14", rt: "RT02" },
+        { nama: "BSU RW14 RT03", rw: "RW14", rt: "RT03" }
     ];
     
-    // Data preset nama sampah
+    // ==================== DATA PRESET SAMPAH DAN HARGA (BARU) ====================
+    
+    // Data preset nama sampah berdasarkan kategori
     const presetSampah = {
-        organik: [
-            "Daun Kering", "Sisa Makanan", "Sayuran Busuk", "Buah Busuk", 
-            "Ampas Kopi", "Kulit Telur", "Ranting Pohon", "Kompos", 
-            "Limbah Dapur", "Kertas Basah", "Ampas Tahu", "Ampas Kelapa",
-            "Eceng Gondok", "Rumput", "Jerami", "Kotoran Ternak"
+        plastik: [
+            "Pet A - Botol TANPA tutup dan label + Galon Le Mineral",
+            "Pet B - Masih berlabel dan tutup",
+            "Botol Warna BENING (MIZONE, SPRITE, MINYAK KAYU PUTIH)",
+            "Botol Plastik Campuran Semua Warna dan Bentuk",
+            "Botol Warna MILKU dan NUTRIBOOST",
+            "Gelas A - Gelas plastik kemasan bening TANPA SABLON DAN LABEL",
+            "Gelas B - Warna jernih DENGAN SABLON DAN LABEL",
+            "Gelas Warna (Mountea, Tea Gelas, Ale2)",
+            "Emberan - Semua plastik lunak YANG BUKAN HITAM",
+            "Kresek / Assoy",
+            "Plastik Bening Polos PP/PE",
+            "Sedotan Plastik Aqua",
+            "Sedotan Plastik Putih Susu",
+            "Sedotan Plastik Warna Campur",
+            "Sedotan Plastik Hitam",
+            "Tutup Botol Plastik / HDPE",
+            "Tutup Galon Aqua Plastik / LDPE",
+            "Tutup Galon Isi Ulang",
+            "Galon AQUA / OASIS UTUH",
+            "Galon AQUA / OASIS PECAH BELAH",
+            "Paralon / PVC",
+            "PP Crystal Bening Transparan / Toples Nastar",
+            "Slopan (kantong minyak goreng, kemasan sunlight)",
+            "Kaset CD / VCD",
+            "Kemasan / Tetrapak / Mika",
+            "Boncos (karung bekas, tali rapiah plastik)",
+            "Naso (Jerigen/Cuka, Botol Minuman Susu)",
+            "Impact - Plastik keras tidak lunak (Yakult, Helm, Body Motor)",
+            "HDPE (Botol shampo, pewangi pakaian, pembersih lantai)",
+            "Emberan Hitam - Semua plastik lunak hitam",
+            "PP Inject - Plastik keras fleksible, kuat, tidak jernih",
+            "Nilek / Selang air, kabel utuh / kulit kabel"
         ],
-        nonorganik: [
-            "Botol Plastik", "Kardus Bekas", "Kaleng Minuman", "Kertas HVS", 
-            "Koran Bekas", "Besi Tua", "Kaca Beling", "Alumunium", 
-            "Tembaga", "Kuningan", "Plastik Kresek", "Baterai Bekas", 
-            "Ban Bekas", "Kain Perca", "Sterofoam", "Gelas Plastik", 
-            "Sendok Plastik", "Sedotan", "Kabel", "Mainan Rusak"
+        logam: [
+            "Alumunium",
+            "Besi A (besi cor-coran, padat, tebal)",
+            "Besi Campur / Baja Ringan, sepeda rusak, paku",
+            "Rongsok Campur (alumunium panci, softdrink, siku)",
+            "Kaleng",
+            "Kawat / Seng",
+            "Tembaga Merah / kupas berisi padat tebal",
+            "Tembaga Bakar",
+            "Babet - Bekas onderdil, sperpart, besi berlapis chrome",
+            "Kuningan / logam campuran berwarna kuningan kemerahan",
+            "Kabin / Enamel / Besi lapis cat / Crom Warna / CPU komputer"
+        ],
+        kertas: [
+            "Kertas Koran B / Lecek tidak utuh",
+            "Kertas Putih / HVS bertinta hitam",
+            "Kertas Semen",
+            "Kertas Warna / HVS warna, tinta warna, Crayon",
+            "Kertas Campur / Semua kertas KECUALI KERTAS NASI",
+            "Kardus",
+            "Duplex",
+            "Kornes (Gulungan Kain)"
         ]
     };
     
-    let selectedBSU = null;
-    let currentLaporanFilter = { bsu: 'all', rw: 'all', rt: 'all' };
-    
-    // Data harga otomatis
-    const hargaOtomatis = {
-        organik: {
-            default: 2000,
-            list: {
-                "daun": 1500,
-                "sayur": 1200,
-                "buah": 1800,
-                "makanan": 1200,
-                "kompos": 1500,
-                "sisa": 1200,
-                "organik": 2000,
-                "ampas": 1000,
-                "kulit": 1500,
-                "ranting": 1000,
-                "rumput": 800,
-                "jerami": 900
-            }
-        },
-        nonorganik: {
-            default: 3500,
-            list: {
-                "plastik": 4000,
-                "botol": 4500,
-                "kardus": 2800,
-                "kertas": 2500,
-                "kaleng": 5000,
-                "besi": 6000,
-                "kaca": 3000,
-                "alumunium": 10000,
-                "tembaga": 65000,
-                "kuningan": 30000,
-                "nonorganik": 3500,
-                "kabel": 25000,
-                "ban": 2000,
-                "kain": 1500
-            }
-        }
+    // Data harga per kg untuk setiap jenis sampah
+    const hargaSampahDetail = {
+        // PLASTIK
+        "Pet A - Botol TANPA tutup dan label + Galon Le Mineral": 3500,
+        "Pet B - Masih berlabel dan tutup": 2000,
+        "Botol Warna BENING (MIZONE, SPRITE, MINYAK KAYU PUTIH)": 1000,
+        "Botol Plastik Campuran Semua Warna dan Bentuk": 1500,
+        "Botol Warna MILKU dan NUTRIBOOST": 500,
+        "Gelas A - Gelas plastik kemasan bening TANPA SABLON DAN LABEL": 3000,
+        "Gelas B - Warna jernih DENGAN SABLON DAN LABEL": 1500,
+        "Gelas Warna (Mountea, Tea Gelas, Ale2)": 2000,
+        "Emberan - Semua plastik lunak YANG BUKAN HITAM": 1500,
+        "Kresek / Assoy": 500,
+        "Plastik Bening Polos PP/PE": 1000,
+        "Sedotan Plastik Aqua": 1200,
+        "Sedotan Plastik Putih Susu": 1200,
+        "Sedotan Plastik Warna Campur": 800,
+        "Sedotan Plastik Hitam": 1000,
+        "Tutup Botol Plastik / HDPE": 2500,
+        "Tutup Galon Aqua Plastik / LDPE": 3000,
+        "Tutup Galon Isi Ulang": 2500,
+        "Galon AQUA / OASIS UTUH": 2500,
+        "Galon AQUA / OASIS PECAH BELAH": 1000,
+        "Paralon / PVC": 1200,
+        "PP Crystal Bening Transparan / Toples Nastar": 2000,
+        "Slopan (kantong minyak goreng, kemasan sunlight)": 300,
+        "Kaset CD / VCD": 2000,
+        "Kemasan / Tetrapak / Mika": 100,
+        "Boncos (karung bekas, tali rapiah plastik)": 500,
+        "Naso (Jerigen/Cuka, Botol Minuman Susu)": 2500,
+        "Impact - Plastik keras tidak lunak (Yakult, Helm, Body Motor)": 800,
+        "HDPE (Botol shampo, pewangi pakaian, pembersih lantai)": 1900,
+        "Emberan Hitam - Semua plastik lunak hitam": 1000,
+        "PP Inject - Plastik keras fleksible, kuat, tidak jernih": 2500,
+        "Nilek / Selang air, kabel utuh / kulit kabel": 2000,
+        // LOGAM
+        "Alumunium": 10000,
+        "Besi A (besi cor-coran, padat, tebal)": 4000,
+        "Besi Campur / Baja Ringan, sepeda rusak, paku": 2500,
+        "Rongsok Campur (alumunium panci, softdrink, siku)": 6000,
+        "Kaleng": 2000,
+        "Kawat / Seng": 1500,
+        "Tembaga Merah / kupas berisi padat tebal": 65000,
+        "Tembaga Bakar": 55000,
+        "Babet - Bekas onderdil, sperpart, besi berlapis chrome": 5000,
+        "Kuningan / logam campuran berwarna kuningan kemerahan": 30000,
+        "Kabin / Enamel / Besi lapis cat / Crom Warna / CPU komputer": 2000,
+        // KERTAS
+        "Kertas Koran B / Lecek tidak utuh": 100,
+        "Kertas Putih / HVS bertinta hitam": 1500,
+        "Kertas Semen": 1400,
+        "Kertas Warna / HVS warna, tinta warna, Crayon": 800,
+        "Kertas Campur / Semua kertas KECUALI KERTAS NASI": 800,
+        "Kardus": 1600,
+        "Duplex": 800,
+        "Kornes (Gulungan Kain)": 800
     };
     
-    function getHargaOtomatis(namaSampah, jenis) {
-        var namaLower = namaSampah.toLowerCase();
-        var hargaData = hargaOtomatis[jenis];
+    // Default harga per kategori jika nama tidak ditemukan
+    const defaultHargaPerKategori = {
+        plastik: 2000,
+        logam: 5000,
+        kertas: 1000
+    };
+    
+    // Fungsi untuk mendapatkan harga berdasarkan nama sampah
+    function getHargaByNamaSampah(namaSampah) {
+        // Cari di hargaSampahDetail
+        if (hargaSampahDetail[namaSampah]) {
+            return hargaSampahDetail[namaSampah];
+        }
         
-        for (var keyword in hargaData.list) {
-            if (hargaData.list.hasOwnProperty(keyword)) {
-                if (namaLower.includes(keyword)) {
-                    return hargaData.list[keyword];
-                }
+        // Cari dengan partial match
+        var namaLower = namaSampah.toLowerCase();
+        for (var key in hargaSampahDetail) {
+            if (namaLower.includes(key.toLowerCase()) || key.toLowerCase().includes(namaLower)) {
+                return hargaSampahDetail[key];
             }
         }
-        return hargaData.default;
+        
+        // Tentukan kategori berdasarkan kata kunci
+        var plastikKeywords = ["botol", "plastik", "gelas", "kresek", "sedotan", "tutup", "galon", "paralon", "pp", "hdpe", "ldpe", "slopan", "kaset", "tetrapak", "boncos", "naso", "impact", "nilek", "emberan"];
+        var logamKeywords = ["alumunium", "besi", "tembaga", "kuningan", "babet", "kabin", "enamel", "kawat", "seng", "kaleng", "logam"];
+        var kertasKeywords = ["kertas", "koran", "hvs", "semen", "kardus", "duplex", "kornes", "kain"];
+        
+        for (var i = 0; i < plastikKeywords.length; i++) {
+            if (namaLower.includes(plastikKeywords[i])) {
+                return defaultHargaPerKategori.plastik;
+            }
+        }
+        for (var i = 0; i < logamKeywords.length; i++) {
+            if (namaLower.includes(logamKeywords[i])) {
+                return defaultHargaPerKategori.logam;
+            }
+        }
+        for (var i = 0; i < kertasKeywords.length; i++) {
+            if (namaLower.includes(kertasKeywords[i])) {
+                return defaultHargaPerKategori.kertas;
+            }
+        }
+        
+        return 2000; // default
+    }
+    
+    // Fungsi untuk menentukan kategori berdasarkan nama sampah
+    function getKategoriByNamaSampah(namaSampah) {
+        var namaLower = namaSampah.toLowerCase();
+        
+        // Cek apakah termasuk plastik
+        var plastikList = presetSampah.plastik.map(function(item) { return item.toLowerCase(); });
+        for (var i = 0; i < plastikList.length; i++) {
+            if (namaLower === plastikList[i] || namaLower.includes(plastikList[i].substring(0, 20))) {
+                return "nonorganik";
+            }
+        }
+        
+        // Cek apakah termasuk logam
+        var logamList = presetSampah.logam.map(function(item) { return item.toLowerCase(); });
+        for (var i = 0; i < logamList.length; i++) {
+            if (namaLower === logamList[i] || namaLower.includes(logamList[i].substring(0, 15))) {
+                return "nonorganik";
+            }
+        }
+        
+        // Cek apakah termasuk kertas
+        var kertasList = presetSampah.kertas.map(function(item) { return item.toLowerCase(); });
+        for (var i = 0; i < kertasList.length; i++) {
+            if (namaLower === kertasList[i] || namaLower.includes(kertasList[i].substring(0, 15))) {
+                return "nonorganik";
+            }
+        }
+        
+        return "nonorganik";
+    }
+    
+    let selectedBSU = null;
+    
+    // Fungsi untuk mendapatkan harga otomatis (kompatibilitas)
+    function getHargaOtomatis(namaSampah, jenis) {
+        return getHargaByNamaSampah(namaSampah);
     }
     
     function formatRupiah(angka) {
@@ -230,7 +693,6 @@ document.addEventListener('DOMContentLoaded', function() {
         var stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
             daftarSampah = JSON.parse(stored);
-            // Migrasi data lama untuk menambahkan field bsu jika belum ada
             for (var i = 0; i < daftarSampah.length; i++) {
                 if (!daftarSampah[i].bsu) {
                     daftarSampah[i].bsu = null;
@@ -238,17 +700,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             saveData();
         } else {
+            // Data awal dengan sampah baru
             daftarSampah = [
-                { id: Date.now() + 1, rw: "RW01", rt: "RT01", nama: "Daun Kering", jenis: "organik", berat: 12.5, hargaPerKg: 1500, tanggal: new Date().toISOString(), bsu: "BSU MEDE 1" },
-                { id: Date.now() + 2, rw: "RW01", rt: "RT02", nama: "Sisa Makanan", jenis: "organik", berat: 8.2, hargaPerKg: 1200, tanggal: new Date().toISOString(), bsu: "BSU MEDE 2" },
-                { id: Date.now() + 3, rw: "RW02", rt: "RT01", nama: "Botol Plastik", jenis: "nonorganik", berat: 5.0, hargaPerKg: 3500, tanggal: new Date().toISOString(), bsu: "BSU PELANGI CERIA" },
-                { id: Date.now() + 4, rw: "RW02", rt: "RT03", nama: "Kardus Bekas", jenis: "nonorganik", berat: 7.3, hargaPerKg: 2800, tanggal: new Date().toISOString(), bsu: "BSU PELANGI KENANGA" },
-                { id: Date.now() + 5, rw: "RW03", rt: "RT02", nama: "Kaleng Minuman", jenis: "nonorganik", berat: 3.2, hargaPerKg: 4200, tanggal: new Date().toISOString(), bsu: null }
+                { id: Date.now() + 1, rw: "RW01", rt: "RT01", nama: "Pet A - Botol TANPA tutup dan label + Galon Le Mineral", jenis: "nonorganik", berat: 12.5, hargaPerKg: 3500, tanggal: new Date().toISOString(), bsu: "BSU MEDE 1" },
+                { id: Date.now() + 2, rw: "RW01", rt: "RT02", nama: "Kardus", jenis: "nonorganik", berat: 8.2, hargaPerKg: 1600, tanggal: new Date().toISOString(), bsu: "BSU MEDE 2" },
+                { id: Date.now() + 3, rw: "RW02", rt: "RT01", nama: "Alumunium", jenis: "nonorganik", berat: 5.0, hargaPerKg: 10000, tanggal: new Date().toISOString(), bsu: "BSU PELANGI CERIA" },
+                { id: Date.now() + 4, rw: "RW02", rt: "RT03", nama: "Botol Plastik Campuran Semua Warna dan Bentuk", jenis: "nonorganik", berat: 7.3, hargaPerKg: 1500, tanggal: new Date().toISOString(), bsu: "BSU PELANGI KENANGA" },
+                { id: Date.now() + 5, rw: "RW03", rt: "RT02", nama: "Kertas Koran B / Lecek tidak utuh", jenis: "nonorganik", berat: 3.2, hargaPerKg: 100, tanggal: new Date().toISOString(), bsu: null }
             ];
             saveData();
         }
         refreshAll();
         populateBSUFilters();
+        updateCharts();
     }
     
     function saveData() {
@@ -264,22 +728,18 @@ document.addEventListener('DOMContentLoaded', function() {
         
         var filterBSU = document.getElementById('filterBSU');
         var statFilterBSU = document.getElementById('statFilterBSU');
+        var jenisChartBSU = document.getElementById('jenisChartBSUFilter');
+        var namaChartBSU = document.getElementById('namaChartBSUFilter');
         
-        if (filterBSU) {
-            var currentHTML = '<option value="all">Semua BSU</option>';
-            for (var j = 0; j < bsuNames.length; j++) {
-                currentHTML += '<option value="' + bsuNames[j] + '">' + bsuNames[j] + '</option>';
-            }
-            filterBSU.innerHTML = currentHTML;
+        var optionHTML = '<option value="all">Semua BSU</option>';
+        for (var j = 0; j < bsuNames.length; j++) {
+            optionHTML += '<option value="' + bsuNames[j] + '">' + bsuNames[j] + '</option>';
         }
         
-        if (statFilterBSU) {
-            var statHTML = '<option value="all">Semua BSU</option>';
-            for (var k = 0; k < bsuNames.length; k++) {
-                statHTML += '<option value="' + bsuNames[k] + '">' + bsuNames[k] + '</option>';
-            }
-            statFilterBSU.innerHTML = statHTML;
-        }
+        if (filterBSU) filterBSU.innerHTML = optionHTML;
+        if (statFilterBSU) statFilterBSU.innerHTML = optionHTML;
+        if (jenisChartBSU) jenisChartBSU.innerHTML = optionHTML;
+        if (namaChartBSU) namaChartBSU.innerHTML = optionHTML;
     }
     
     // Filter data berdasarkan BSU, RW, dan RT
@@ -295,6 +755,142 @@ document.addEventListener('DOMContentLoaded', function() {
             filtered = filtered.filter(function(item) { return item.rt === rt; });
         }
         return filtered;
+    }
+    
+    // ==================== GRAFIK FUNGSI ====================
+    
+    function updateCharts() {
+        updateJenisSampahChart();
+        updateNamaSampahChart();
+    }
+    
+    function updateJenisSampahChart() {
+        var selectedBSU = document.getElementById('jenisChartBSUFilter') ? document.getElementById('jenisChartBSUFilter').value : 'all';
+        var filteredData = filterDataByFilters(daftarSampah, selectedBSU, currentStatFilterRW, currentStatFilterRT);
+        
+        var totalOrganik = 0;
+        var totalNonorganik = 0;
+        
+        for (var i = 0; i < filteredData.length; i++) {
+            if (filteredData[i].jenis === 'organik') {
+                totalOrganik += filteredData[i].berat;
+            } else {
+                totalNonorganik += filteredData[i].berat;
+            }
+        }
+        
+        var ctx = document.getElementById('jenisSampahChart').getContext('2d');
+        
+        if (jenisSampahChart) {
+            jenisSampahChart.destroy();
+        }
+        
+        jenisSampahChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Organik', 'Nonorganik'],
+                datasets: [{
+                    data: [totalOrganik, totalNonorganik],
+                    backgroundColor: ['#2e7d32', '#f9a825'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: { size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.label || '';
+                                var value = context.raw || 0;
+                                var total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                                var percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return label + ': ' + value.toFixed(2) + ' kg (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function updateNamaSampahChart() {
+        var selectedBSU = document.getElementById('namaChartBSUFilter') ? document.getElementById('namaChartBSUFilter').value : 'all';
+        var filteredData = filterDataByFilters(daftarSampah, selectedBSU, currentStatFilterRW, currentStatFilterRT);
+        
+        var sampahMap = {};
+        for (var i = 0; i < filteredData.length; i++) {
+            var nama = filteredData[i].nama;
+            if (!sampahMap[nama]) {
+                sampahMap[nama] = 0;
+            }
+            sampahMap[nama] += filteredData[i].berat;
+        }
+        
+        var sortedItems = [];
+        for (var nama in sampahMap) {
+            sortedItems.push({ nama: nama, berat: sampahMap[nama] });
+        }
+        sortedItems.sort(function(a, b) { return b.berat - a.berat; });
+        var topItems = sortedItems.slice(0, 10);
+        
+        var labels = topItems.map(function(item) { return item.nama.length > 25 ? item.nama.substring(0, 22) + '...' : item.nama; });
+        var data = topItems.map(function(item) { return item.berat; });
+        
+        var ctx = document.getElementById('namaSampahChart').getContext('2d');
+        
+        if (namaSampahChart) {
+            namaSampahChart.destroy();
+        }
+        
+        namaSampahChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Berat (kg)',
+                    data: data,
+                    backgroundColor: '#2e7d32',
+                    borderRadius: 8,
+                    barPercentage: 0.7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw.toFixed(2) + ' kg';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Berat (kg)', font: { size: 12 } }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            autoSkip: true,
+                            font: { size: 10 }
+                        }
+                    }
+                }
+            }
+        });
     }
     
     // Update stats dengan filter
@@ -337,7 +933,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var filteredData = filterDataByFilters(daftarSampah, currentFilterBSU, currentFilterRW, currentFilterRT);
         
         if (filteredData.length === 0) {
-            container.innerHTML = '<tr><td colspan="7" style="text-align: center;">Tidak ada数据</td></tr>';
+            container.innerHTML = '<tr><td colspan="7" style="text-align: center;">Tidak ada data</td></tr>';
             return;
         }
         
@@ -357,7 +953,7 @@ document.addEventListener('DOMContentLoaded', function() {
         container.innerHTML = html;
     }
     
-    // Update statistik page dengan filter BSU, RW, RT, dan jenis
+    // Update statistik page
     function updateStatistikPage() {
         var filteredData = filterDataByFilters(daftarSampah, currentStatFilterBSU, currentStatFilterRW, currentStatFilterRT);
         
@@ -380,11 +976,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (!jenisSampahMap[item.jenis]) {
-                jenisSampahMap[item.jenis] = {
-                    berat: 0,
-                    count: 0,
-                    nilai: 0
-                };
+                jenisSampahMap[item.jenis] = { berat: 0, count: 0, nilai: 0 };
             }
             jenisSampahMap[item.jenis].berat += item.berat;
             jenisSampahMap[item.jenis].count++;
@@ -408,24 +1000,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (statTotalBerat) statTotalBerat.innerText = totalSemua.toFixed(2) + ' kg';
         if (statTotalItem) statTotalItem.innerText = totalItems;
         
-        var organikDeg = totalSemua > 0 ? (totalOrganik / totalSemua) * 360 : 0;
-        var organikSegment = document.querySelector('.organik-segment');
-        var nonorganikSegment = document.querySelector('.nonorganik-segment');
-        var pieTotal = document.getElementById('pieTotal');
-        var legendOrganik = document.getElementById('legendOrganik');
-        var legendNonorganik = document.getElementById('legendNonorganik');
-        
-        if (organikSegment) {
-            organikSegment.style.background = 'conic-gradient(#2e7d32 ' + organikDeg + 'deg, #2e7d32 ' + organikDeg + 'deg, transparent ' + organikDeg + 'deg)';
-        }
-        if (nonorganikSegment) {
-            nonorganikSegment.style.background = 'conic-gradient(#f9a825 ' + (360 - organikDeg) + 'deg, #f9a825 ' + (360 - organikDeg) + 'deg, transparent ' + (360 - organikDeg) + 'deg)';
-        }
-        if (pieTotal) pieTotal.innerText = totalSemua.toFixed(1);
-        if (legendOrganik) legendOrganik.innerText = totalOrganik.toFixed(2);
-        if (legendNonorganik) legendNonorganik.innerText = totalNonorganik.toFixed(2);
-        
         renderJenisSampahTable(jenisSampahMap);
+        updateCharts();
     }
     
     function renderJenisSampahTable(jenisSampahMap) {
@@ -437,7 +1013,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (jenisSampahMap.hasOwnProperty(jenis)) {
                 var data = jenisSampahMap[jenis];
                 html += '<tr>' +
-                    '<td>' + (jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik') + '</td>' +
+                    '<td>' + (jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik (Plastik/Logam/Kertas)') + '</td>' +
                     '<td>' + data.berat.toFixed(2) + ' kg</td>' +
                     '<td>' + data.count + ' item</td>' +
                     '<td>Rp ' + data.nilai.toLocaleString() + '</td>' +
@@ -471,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', function() {
             html += '<div class="data-item">' +
                 '<div class="data-info" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">' +
                 '<div class="data-number">' + (i + 1) + '</div>' +
-                '<div><strong>' + (item.bsu ? item.bsu : '-') + '</strong></div>' +
+                '<div><strong>' + (item.bsu ? escapeHtml(item.bsu) : '-') + '</strong></div>' +
                 '<div><small>' + item.rw + ' - ' + item.rt + '</small></div>' +
                 '<div class="data-name">' + escapeHtml(item.nama) + '</div>' +
                 '<span class="preview-badge">' + (item.jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik') + '</span>' +
@@ -621,10 +1197,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const datalist = document.getElementById('sampahDatalist');
         if (!datalist) return;
         
-        let allSampah = [...presetSampah.organik, ...presetSampah.nonorganik];
+        let allSampah = [...presetSampah.plastik, ...presetSampah.logam, ...presetSampah.kertas];
         let html = '';
         for (let i = 0; i < allSampah.length; i++) {
-            html += `<option value="${allSampah[i]}">`;
+            html += `<option value="${escapeHtml(allSampah[i])}">`;
         }
         datalist.innerHTML = html;
     }
@@ -634,16 +1210,24 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!container) return;
         
         let html = '<div style="margin-bottom: 8px;"><small style="color:#666;">📋 Klik untuk memilih nama sampah:</small></div>';
-        html += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+        html += '<div style="display: flex; flex-wrap: wrap; gap: 8px; max-height: 200px; overflow-y: auto; padding: 8px;">';
         
-        html += '<div style="width: 100%; margin-top: 4px;"><small style="color:#2e7d32;">🌿 Organik:</small></div>';
-        for (let i = 0; i < presetSampah.organik.length; i++) {
-            html += `<button type="button" class="preset-btn preset-organik" data-nama="${presetSampah.organik[i]}" data-jenis="organik">${presetSampah.organik[i]}</button>`;
+        // Plastik
+        html += '<div style="width: 100%; margin-top: 4px;"><small style="color:#1565c0;">🥤 PLASTIK:</small></div>';
+        for (let i = 0; i < presetSampah.plastik.length; i++) {
+            html += `<button type="button" class="preset-btn preset-plastik" data-nama="${escapeHtml(presetSampah.plastik[i])}" data-jenis="nonorganik" data-harga="${hargaSampahDetail[presetSampah.plastik[i]] || 2000}">${presetSampah.plastik[i].length > 30 ? presetSampah.plastik[i].substring(0, 27) + '...' : presetSampah.plastik[i]}</button>`;
         }
         
-        html += '<div style="width: 100%; margin-top: 8px;"><small style="color:#f9a825;">📦 Nonorganik:</small></div>';
-        for (let i = 0; i < presetSampah.nonorganik.length; i++) {
-            html += `<button type="button" class="preset-btn preset-nonorganik" data-nama="${presetSampah.nonorganik[i]}" data-jenis="nonorganik">${presetSampah.nonorganik[i]}</button>`;
+        // Logam
+        html += '<div style="width: 100%; margin-top: 8px;"><small style="color:#f9a825;">🔩 LOGAM:</small></div>';
+        for (let i = 0; i < presetSampah.logam.length; i++) {
+            html += `<button type="button" class="preset-btn preset-logam" data-nama="${escapeHtml(presetSampah.logam[i])}" data-jenis="nonorganik" data-harga="${hargaSampahDetail[presetSampah.logam[i]] || 5000}">${presetSampah.logam[i]}</button>`;
+        }
+        
+        // Kertas
+        html += '<div style="width: 100%; margin-top: 8px;"><small style="color:#7b1fa2;">📄 KERTAS:</small></div>';
+        for (let i = 0; i < presetSampah.kertas.length; i++) {
+            html += `<button type="button" class="preset-btn preset-kertas" data-nama="${escapeHtml(presetSampah.kertas[i])}" data-jenis="nonorganik" data-harga="${hargaSampahDetail[presetSampah.kertas[i]] || 1000}">${presetSampah.kertas[i]}</button>`;
         }
         
         html += '</div>';
@@ -654,6 +1238,7 @@ document.addEventListener('DOMContentLoaded', function() {
             presetBtns[i].addEventListener('click', function() {
                 const nama = this.getAttribute('data-nama');
                 const jenis = this.getAttribute('data-jenis');
+                const harga = parseInt(this.getAttribute('data-harga'));
                 
                 const namaInput = document.getElementById('namaSampah');
                 const jenisInput = document.getElementById('jenisSampah');
@@ -670,17 +1255,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                if (hargaInput) {
-                    const hargaOtomatisValue = getHargaOtomatis(nama, jenis);
-                    hargaInput.value = hargaOtomatisValue;
+                if (hargaInput && harga) {
+                    hargaInput.value = harga;
                 }
                 
-                showToast(`Nama sampah "${nama}" dipilih`, false);
+                showToast(`Nama sampah "${nama.length > 40 ? nama.substring(0, 37) + '...' : nama}" dipilih`, false);
             });
         }
     }
     
-    // ==================== FITUR LAPORAN DENGAN FILTER ====================
+    // ==================== FITUR LAPORAN ====================
     
     function getFilteredLaporanData() {
         var filteredData = filterDataByFilters(daftarSampah, currentFilterBSU, currentFilterRW, currentFilterRT);
@@ -736,6 +1320,34 @@ document.addEventListener('DOMContentLoaded', function() {
         return {
             title: 'Laporan Bulanan Bank Sampah Digital',
             periode: namaBulan[today.getMonth()] + ' ' + today.getFullYear(),
+            data: filteredData,
+            totalOrganik: totalOrganik,
+            totalNonorganik: totalNonorganik,
+            totalBerat: totalBerat,
+            totalNilai: totalNilai,
+            jumlahItem: filteredData.length,
+            filterInfo: filterText
+        };
+    }
+    
+    function generateLaporanTahunan() {
+        var today = new Date();
+        var filteredData = getFilteredLaporanData();
+        var totalOrganik = 0, totalNonorganik = 0, totalNilai = 0;
+        
+        for (var i = 0; i < filteredData.length; i++) {
+            var item = filteredData[i];
+            if (item.jenis === 'organik') totalOrganik += item.berat;
+            else totalNonorganik += item.berat;
+            totalNilai += (item.berat * item.hargaPerKg);
+        }
+        var totalBerat = totalOrganik + totalNonorganik;
+        
+        var filterText = getFilterText();
+        
+        return {
+            title: 'Laporan Tahunan Bank Sampah Digital',
+            periode: 'Tahun ' + today.getFullYear(),
             data: filteredData,
             totalOrganik: totalOrganik,
             totalNonorganik: totalNonorganik,
@@ -815,9 +1427,7 @@ document.addEventListener('DOMContentLoaded', function() {
             '<strong>Jumlah Transaksi:</strong> ' + laporan.jumlahItem + ' item' +
             '</div>' +
             '<h3>Detail Data Sampah</h3>' +
-            '<table><thead><tr>' +
-            '<th>No</th><th>BSU</th><th>RW/RT</th><th>Nama Sampah</th><th>Jenis</th><th>Berat</th><th>Harga per Kg</th><th>Total Nilai</th>' +
-            '</tr></thead><tbody>' + tabelDetail + '</tbody></tr>' +
+            '<table><thead><tr><th>No</th><th>BSU</th><th>RW/RT</th><th>Nama Sampah</th><th>Jenis</th><th>Berat</th><th>Harga per Kg</th><th>Total Nilai</th></tr></thead><tbody>' + tabelDetail + '</tbody></table>' +
             '<div class="footer">' +
             '<p>Dicetak pada: ' + tglCetak + '</p>' +
             '<p>Dicetak oleh: ' + admin + '</p>' +
@@ -888,7 +1498,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var link = document.createElement('a');
         var url = URL.createObjectURL(blob);
         link.href = url;
-        var fileName = 'Laporan_Bank_Sampah_' + (jenisLaporan === 'mingguan' ? 'Mingguan' : 'Bulanan') + '_' + new Date().toISOString().slice(0,10) + '.doc';
+        var fileName = 'Laporan_Bank_Sampah_' + (jenisLaporan === 'mingguan' ? 'Mingguan' : (jenisLaporan === 'bulanan' ? 'Bulanan' : 'Tahunan')) + '_' + new Date().toISOString().slice(0,10) + '.doc';
         link.download = fileName;
         link.click();
         URL.revokeObjectURL(url);
@@ -904,6 +1514,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var closeBtn = document.querySelector('.modal-close');
         var btnMingguan = document.getElementById('btnLaporanMingguan');
         var btnBulanan = document.getElementById('btnLaporanBulanan');
+        var btnTahunan = document.getElementById('btnLaporanTahunan');
         
         var currentLaporan = null;
         var currentJenis = null;
@@ -927,6 +1538,13 @@ document.addEventListener('DOMContentLoaded', function() {
             btnBulanan.addEventListener('click', function() {
                 var laporan = generateLaporanBulanan();
                 showModal(laporan, 'bulanan');
+            });
+        }
+        
+        if (btnTahunan) {
+            btnTahunan.addEventListener('click', function() {
+                var laporan = generateLaporanTahunan();
+                showModal(laporan, 'tahunan');
             });
         }
         
@@ -988,7 +1606,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (!harga || harga <= 0) {
-            harga = getHargaOtomatis(nama, jenis);
+            harga = getHargaByNamaSampah(nama);
         }
         
         daftarSampah.push({
@@ -1042,7 +1660,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         var newHarga = parseInt(prompt('Harga per Kg (Rp):', item.hargaPerKg));
         if (isNaN(newHarga) || newHarga < 0) {
-            newHarga = getHargaOtomatis(newNama, newJenis);
+            newHarga = getHargaByNamaSampah(newNama);
         }
         
         item.bsu = newBSU || null;
@@ -1080,8 +1698,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (namaInput) {
             namaInput.addEventListener('input', function() {
-                var jenis = document.getElementById('jenisSampah').value;
-                var hargaOtomatisValue = getHargaOtomatis(this.value, jenis);
+                var hargaOtomatisValue = getHargaByNamaSampah(this.value);
                 if (hargaInput && hargaOtomatisValue) {
                     hargaInput.value = hargaOtomatisValue;
                 }
@@ -1092,7 +1709,7 @@ document.addEventListener('DOMContentLoaded', function() {
             jenisSelect[i].addEventListener('click', function() {
                 var jenis = this.getAttribute('data-type');
                 var nama = namaInput ? namaInput.value : '';
-                var hargaOtomatisValue = getHargaOtomatis(nama, jenis);
+                var hargaOtomatisValue = getHargaByNamaSampah(nama);
                 if (hargaInput && hargaOtomatisValue) {
                     hargaInput.value = hargaOtomatisValue;
                 }
@@ -1138,6 +1755,8 @@ document.addEventListener('DOMContentLoaded', function() {
         var statFilterRW = document.getElementById('statFilterRW');
         var statFilterRT = document.getElementById('statFilterRT');
         var statFilterJenis = document.getElementById('statFilterJenisSampah');
+        var jenisChartBSU = document.getElementById('jenisChartBSUFilter');
+        var namaChartBSU = document.getElementById('namaChartBSUFilter');
         
         if (filterBSU) {
             filterBSU.addEventListener('change', function(e) {
@@ -1185,6 +1804,18 @@ document.addEventListener('DOMContentLoaded', function() {
             statFilterJenis.addEventListener('change', function(e) {
                 currentStatFilterJenis = e.target.value;
                 updateStatistikPage();
+            });
+        }
+        
+        if (jenisChartBSU) {
+            jenisChartBSU.addEventListener('change', function() {
+                updateJenisSampahChart();
+            });
+        }
+        
+        if (namaChartBSU) {
+            namaChartBSU.addEventListener('change', function() {
+                updateNamaSampahChart();
             });
         }
     }
