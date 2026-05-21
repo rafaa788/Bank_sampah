@@ -2,63 +2,44 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Bank Sampah Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="login-style.css">
 </head>
 <body>
-    <div class="login-wrapper">
-        <div class="login-hero">
-            <div class="hero-bg-gradient"></div>
-            <div class="hero-particles" id="particles"></div>
-            <div class="login-content">
-                <div class="brand-card">
-                    <div class="brand-icon">
-                        <div class="icon-ring">
-                            <i class="fas fa-leaf"></i>
-                            <i class="fas fa-recycle"></i>
-                        </div>
-                    </div>
-                    <h1>Bank Sampah <span>Digital</span></h1>
-                    <p class="brand-tagline">Kelola Sampah, Selamatkan Bumi</p>
-                    
-                    <form id="loginForm" class="login-form">
-                        <div class="input-field">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="username" placeholder="Username" autocomplete="off">
-                            <div class="input-line"></div>
-                        </div>
-                        <div class="input-field">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="password" placeholder="Password">
-                            <div class="input-line"></div>
-                        </div>
-                        <button type="submit" class="login-btn">
-                            <span>Masuk Dashboard</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </button>
-                    </form>
-                    
-                    <div class="demo-access">
-                        <div class="demo-badge">
-                            <i class="fas fa-flask"></i> Demo Mode
-                        </div>
-                        <div class="demo-creds">
-                            <span><i class="fas fa-user-circle"></i> banksampah</span>
-                            <span><i class="fas fa-key"></i> admin123</span>
-                        </div>
-                    </div>
-                    
-                    <div id="errorMessage" class="error-toast">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <span>Login gagal! Periksa username & password</span>
-                    </div>
-                </div>
-            </div>
+    <div class="login-container">
+        <div class="logo">
+            <i class="fas fa-leaf"></i>
+            <i class="fas fa-recycle"></i>
+            <h1>Bank Sampah <span>Digital</span></h1>
+            <p>BSI Mandiri - Desa Gunung Putri</p>
         </div>
-    </div>
+        
+        <!-- FORM HARUS ADA ID="loginForm" -->
+        <form id="loginForm" class="login-form" onsubmit="return false;">
+            <div class="input-group">
+                <label><i class="fas fa-user"></i> Username</label>
+                <input type="text" id="username" placeholder="Masukkan username" required>
+            </div>
+            
+            <div class="input-group">
+                <label><i class="fas fa-lock"></i> Password</label>
+                <input type="password" id="password" placeholder="Masukkan password" required>
+            </div>
+            
+            <button type="submit" class="btn-login">
+                <i class="fas fa-sign-in-alt"></i> Masuk Dashboard
+            </button>
+        </form>
+        
+        <div id="errorMessage" class="error-toast" style="display: none;">
+            <i class="fas fa-exclamation-circle"></i> <span></span>
+        </div>
+        
+        
+
     <script src="login-script.js"></script>
 </body>
 </html>
