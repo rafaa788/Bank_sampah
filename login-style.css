@@ -14,13 +14,14 @@ body {
 }
 
 .login-container {
-    background: white;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
     border-radius: 32px;
     padding: 48px 40px;
     width: 100%;
     max-width: 450px;
     margin: 20px;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
 }
 
 .logo {
@@ -29,11 +30,12 @@ body {
 }
 
 .logo i {
-    font-size: 3rem;
+    font-size: 2.5rem;
     background: linear-gradient(135deg, #2e7d32, #f9a825);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    margin: 0 8px;
 }
 
 .logo h1 {
@@ -74,11 +76,14 @@ body {
     border-radius: 16px;
     font-size: 1rem;
     transition: all 0.3s;
+    background: #f9f9f9;
 }
 
 .input-group input:focus {
     outline: none;
     border-color: #2e7d32;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
 }
 
 .btn-login {
@@ -99,13 +104,17 @@ body {
     box-shadow: 0 5px 20px rgba(46, 125, 50, 0.4);
 }
 
-.error-msg {
-    background: #ffebee;
-    color: #c62828;
-    padding: 12px;
-    border-radius: 12px;
+.error-toast {
+    background: #ef5350;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     margin-top: 20px;
-    text-align: center;
+    font-size: 0.85rem;
     display: none;
 }
 
@@ -134,18 +143,4 @@ body {
 
 .badge i {
     margin-right: 4px;
-}
-
-.error-toast {
-    background: #ef5350;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
-    font-size: 0.85rem;
-    display: none;
 }
