@@ -380,11 +380,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ==================== CEK LOGIN ====================
-    if (sessionStorage.getItem('isLoggedIn') !== 'true') {
-        window.location.href = 'menu_login.html';
-        return;
-    }
+// ==================== CEK LOGIN ====================
+// Gunakan sessionStorage (sama dengan login)
+if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+    window.location.href = 'menu_login.html';
+    return;
+}
     
     // Data Model
     let daftarSampah = [];
