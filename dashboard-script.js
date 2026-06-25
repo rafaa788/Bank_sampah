@@ -2,13 +2,13 @@
 // DASHBOARD SCRIPT - REALTIME DATABASE
 // =====================================================
 
-// CEK LOGIN
-if (localStorage.getItem('isLoggedIn') !== 'true') {
+// CEK LOGIN - Gunakan sessionStorage
+if (sessionStorage.getItem('isLoggedIn') !== 'true') {
     window.location.href = 'menu_login.html';
 }
 
 // Ambil data user
-const userData = JSON.parse(localStorage.getItem('user') || '{}');
+const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
 const adminName = userData.nama || userData.username || 'Admin';
 
 // Set nama admin di UI
@@ -244,8 +244,8 @@ document.getElementById('filterRW')?.addEventListener('change', e => { currentFi
 document.getElementById('filterRT')?.addEventListener('change', e => { currentFilterRT = e.target.value; refreshAll(); });
 document.getElementById('bsuSearchInput')?.addEventListener('input', e => renderBSUList(e.target.value));
 document.getElementById('clearBsuBtn')?.addEventListener('click', clearSelectedBSU);
-document.getElementById('logoutBtn')?.addEventListener('click', () => { localStorage.clear(); window.location.href = 'menu_login.html'; });
-document.getElementById('logoutMobileBtn')?.addEventListener('click', () => { localStorage.clear(); window.location.href = 'menu_login.html'; });
+document.getElementById('logoutBtn')?.addEventListener('click', () => { sessionStorage.clear(); window.location.href = 'menu_login.html'; });
+document.getElementById('logoutMobileBtn')?.addEventListener('click', () => { sessionStorage.clear(); window.location.href = 'menu_login.html'; });
 
 // Inisialisasi datalist
 let datalist = document.getElementById('sampahDatalist');
