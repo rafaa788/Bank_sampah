@@ -1,34 +1,34 @@
-// login-script.js - TANPA DATABASE
+// login-script.js - Dengan Multi User & Role + Animasi
 document.addEventListener('DOMContentLoaded', function() {
     var form = document.getElementById('loginForm');
     var errorToast = document.getElementById('errorMessage');
     
-    console.log('Login script loaded');
+    // DEFAULT USERS
+    var DEFAULT_USERS = [
+        { username: 'admin', password: 'admin123', nama: 'Administrator', role: 'admin' },
+        { username: 'tamu', password: 'tamu123', nama: 'Pengunjung', role: 'tamu' }
+    ];
     
-    // AKUN DEFAULT (hardcoded)
-    var DEFAULT_USER = {
-        username: 'admin',
-        password: 'admin123',
-        nama: 'Administrator'
-    };
-    
-    // Cek apakah sudah login - gunakan sessionStorage
+    // Load users dari localStorage
+    var users = JSON.parse(localStorage.getItem('bankSampahUsers') || '[]');
+    if (users.length === 0) {
+        users = DEFAULT_USERS;
+        localStorage.setItem('bankSampahUsers', JSON.stringify(users));
+    }
+  
+    // Cek login
     if (sessionStorage.getItem('isLoggedIn') === 'true') {
-        console.log('Sudah login, redirect ke menu_halaman.html');
         window.location.href = 'menu_halaman.html';
         return;
     }
     
     if (form) {
-        console.log('Form ditemukan');
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log('Form submitted');
             
-            var username = document.getElementById('username').value.trim();
+            var username = document.getElementById('username').value.trim().toLowerCase();
             var password = document.getElementById('password').value;
-            
-            console.log('Username:', username);
+            var selectedRole = document.getElementById('loginRole').value;
             
             if (!username || !password) {
                 showError(errorToast, 'Username dan password wajib diisi!');
@@ -37,59 +37,84 @@ document.addEventListener('DOMContentLoaded', function() {
             
             var submitBtn = form.querySelector('.btn-login');
             var originalText = submitBtn.innerHTML;
+            
+            // Tampilkan loading
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Memproses...';
             submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
             
-            // Simulasi proses login
+            // Animasi loading
+            var icon = submitBtn.querySelector('i');
+            if (icon) {
+                icon.style.animation = 'spin 0.8s linear infinite';
+            }
+            
             setTimeout(function() {
-                // Cek login (tanpa database)
-                if (username === DEFAULT_USER.username && password === DEFAULT_USER.password) {
-                    console.log('Login berhasil!');
+                var user = null;
+                for (var i = 0; i < users.length; i++) {
+                    if (users[i].username === username && users[i].role === selectedRole) {
+                        user = users[i];
+                        break;
+                    }
+                }
+                
+                if (user && user.password === password) {
                     sessionStorage.setItem('isLoggedIn', 'true');
-                    sessionStorage.setItem('adminName', DEFAULT_USER.nama);
+                    sessionStorage.setItem('userRole', user.role);
+                    sessionStorage.setItem('adminName', user.nama);
+                    sessionStorage.setItem('username', user.username);
+                    sessionStorage.setItem('loginTime', Date.now().toString());
                     
-                    showSuccess(errorToast, 'Login berhasil! Mengarahkan...');
+                    showSuccess(errorToast, ' Login berhasil! Mengarahkan...');
                     
                     setTimeout(function() {
-                        console.log('Redirect ke menu_halaman.html');
                         window.location.href = 'menu_halaman.html';
-                    }, 1000);
+                    }, 800);
                 } else {
-                    console.log('Login gagal');
-                    showError(errorToast, 'Username atau password salah!');
+                    showError(errorToast, ' Username atau password salah!');
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
+                    submitBtn.classList.remove('loading');
+                    
+                    // Shake animation on error
+                    form.style.animation = 'shakeError 0.5s ease';
+                    setTimeout(function() {
+                        form.style.animation = '';
+                    }, 500);
                 }
-            }, 500);
+            }, 600);
         });
-    } else {
-        console.error('Form dengan id "loginForm" tidak ditemukan!');
     }
     
     function showError(toast, message) {
-        console.log('Error:', message);
         if (toast) {
-            toast.style.background = '#ef5350';
-            toast.style.color = 'white';
+            toast.className = 'error-toast show';
             var span = toast.querySelector('span');
             if (span) span.innerText = message;
-            toast.style.display = 'block';
+            toast.style.display = 'flex';
             setTimeout(function() {
                 toast.style.display = 'none';
-            }, 3000);
-        } else {
-            alert(message);
+                toast.className = 'error-toast';
+            }, 3500);
         }
     }
     
     function showSuccess(toast, message) {
-        console.log('Success:', message);
         if (toast) {
-            toast.style.background = '#4caf50';
-            toast.style.color = 'white';
+            toast.className = 'error-toast show success';
             var span = toast.querySelector('span');
             if (span) span.innerText = message;
-            toast.style.display = 'block';
+            toast.style.display = 'flex';
         }
     }
+    
+    // Keyboard shortcut: Enter untuk submit
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && document.activeElement.tagName !== 'BUTTON') {
+            var submitBtn = form.querySelector('.btn-login');
+            if (submitBtn && !submitBtn.disabled) {
+                submitBtn.click();
+            }
+        }
+    });
 });
