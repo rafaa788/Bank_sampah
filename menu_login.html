@@ -4,29 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Bank Sampah Digital</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="login-style.css">
 </head>
 <body>
+    <!-- Floating Decorations -->
+    <div class="floating-decoration d1">
+        <i class="fas fa-leaf"></i>
+    </div>
+    <div class="floating-decoration d2">
+        <i class="fas fa-recycle"></i>
+    </div>
+    
+    <!-- Glow Orbs -->
+    <div class="glow-orb-2"></div>
+
     <div class="login-container">
         <div class="logo">
-            <i class="fas fa-leaf"></i>
-            <i class="fas fa-recycle"></i>
+            <div class="icon-wrapper">
+                <i class="fas fa-leaf"></i>
+                <i class="fas fa-recycle"></i>
+            </div>
             <h1>Bank Sampah <span>Digital</span></h1>
-            <p>BSI Mandiri - Desa Gunung Putri</p>
+            <p class="subtitle">BSI <span>Mandiri</span> · Desa Gunung Putri</p>
         </div>
         
-        <!-- FORM HARUS ADA ID="loginForm" -->
         <form id="loginForm" class="login-form" onsubmit="return false;">
             <div class="input-group">
                 <label><i class="fas fa-user"></i> Username</label>
-                <input type="text" id="username" placeholder="Masukkan username" required>
+                <input type="text" id="username" placeholder="Masukkan username" required autocomplete="username">
             </div>
             
             <div class="input-group">
                 <label><i class="fas fa-lock"></i> Password</label>
-                <input type="password" id="password" placeholder="Masukkan password" required>
+                <input type="password" id="password" placeholder="Masukkan password" required autocomplete="current-password">
+            </div>
+            
+            <div class="input-group">
+                <label><i class="fas fa-user-tag"></i> Login Sebagai</label>
+                <select id="loginRole">
+                    <option value="admin"> Administrator</option>
+                    <option value="tamu"> Tamu (Lihat Data)</option>
+                </select>
             </div>
             
             <button type="submit" class="btn-login">
@@ -34,11 +54,17 @@
             </button>
         </form>
         
-        <div id="errorMessage" class="error-toast" style="display: none;">
+        <div id="errorMessage" class="error-toast">
             <i class="fas fa-exclamation-circle"></i> <span></span>
         </div>
         
-        
+        <div class="info-akun">
+            <small>🔐 Akun Demo</small>
+            <span class="badge"><i class="fas fa-user-cog"></i> admin</span>
+            <span class="badge"><i class="fas fa-user"></i> tamu</span>
+            <span class="badge"><i class="fas fa-key"></i> admin123 / tamu123</span>
+        </div>
+    </div>
 
     <script src="login-script.js"></script>
 </body>
