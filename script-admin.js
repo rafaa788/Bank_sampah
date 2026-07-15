@@ -14,6 +14,7 @@ var currentStatFilterRT = 'all';
 var currentStatFilterBSU = 'all';
 var currentStatFilterJenis = 'all';
 var STORAGE_KEY = 'bankSampahData';
+var DATA_TAMU_KEY = 'bankSampahTamuData';
 var searchQuery = '';
 var dateStart = '';
 var dateEnd = '';
@@ -37,10 +38,11 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
 
 userRole = sessionStorage.getItem('userRole') || 'tamu';
 isAdmin = (userRole === 'admin');
-var username = sessionStorage.getItem('username') || '';
 
-console.log('User Role:', userRole);
-console.log('Is Admin:', isAdmin);
+// Jika bukan admin (tamu), redirect ke halaman tamu
+if (!isAdmin) {
+    window.location.href = 'tamu.html';
+}
 
 // ==================== FUNGSI GLOBAL ====================
 function escapeHtml(str) {
@@ -102,10 +104,12 @@ function showConfirm(title, message, onConfirm) {
 }
 
 // ==================== NAVIGASI ====================
+// ==================== NAVIGASI ====================
 function navigateTo(page) {
     console.log('Navigasi ke:', page);
     
-    var pages = ['dashboardPage', 'kelolaPage', 'statistikPage', 'pengaturanPage', 'aktivitasPage'];
+    // DAFTAR SEMUA HALAMAN - TAMBAHKAN bsuPage, nasabahPage, userPage
+    var pages = ['dashboardPage', 'kelolaPage', 'statistikPage', 'pengaturanPage', 'aktivitasPage', 'verifikasiPage', 'laporanPage', 'bsuPage', 'nasabahPage', 'userPage'];
     for (var i = 0; i < pages.length; i++) {
         var el = document.getElementById(pages[i]);
         if (el) el.classList.remove('active');
@@ -116,10 +120,13 @@ function navigateTo(page) {
         targetPage.classList.add('active');
     } else {
         console.error('Halaman tidak ditemukan:', page + 'Page');
+        // Fallback: jika halaman tidak ditemukan, tetap tampilkan dashboard
+        var dashboard = document.getElementById('dashboardPage');
+        if (dashboard) dashboard.classList.add('active');
         return;
     }
     
-    // Update menu aktif
+    // Update active menu
     var menuItems = document.querySelectorAll('.menu-item, .nav-bot-item');
     for (var i = 0; i < menuItems.length; i++) {
         menuItems[i].classList.remove('active');
@@ -128,20 +135,27 @@ function navigateTo(page) {
         }
     }
     
+    // Update title
     var titles = { 
         dashboard: 'Dashboard', 
         kelola: 'Kelola Sampah', 
         statistik: 'Statistik',
         pengaturan: 'Pengaturan',
-        aktivitas: 'Aktivitas'
+        aktivitas: 'Aktivitas',
+        verifikasi: 'Verifikasi Data',
+        laporan: 'Laporan & Tabungan',
+        bsu: 'Manajemen BSU',
+        nasabah: 'Manajemen Nasabah',
+        user: 'Manajemen User'
     };
     var pageTitle = document.getElementById('pageTitle');
     if (pageTitle) pageTitle.innerText = titles[page] || page;
     
+    // Update breadcrumb
     var breadcrumbText = document.getElementById('breadcrumbText');
     if (breadcrumbText) breadcrumbText.textContent = titles[page] || page;
     
-    // Toggle FAB
+    // FAB visibility
     setTimeout(function() {
         var fab = document.getElementById('fabBtn');
         if (fab) {
@@ -150,11 +164,36 @@ function navigateTo(page) {
         }
     }, 100);
     
-    // Update statistik jika ke halaman statistik
+    // Refresh data saat halaman tertentu
     if (page === 'statistik') {
         setTimeout(function() {
             updateStatistikPage();
             updateCharts();
+        }, 200);
+    }
+    
+    if (page === 'verifikasi') {
+        setTimeout(function() {
+            renderVerifikasiTableWithMassal();
+            renderVerifikasiHistory();
+        }, 200);
+    }
+    
+    if (page === 'bsu') {
+        setTimeout(function() {
+            renderBSUTable();
+        }, 200);
+    }
+    
+    if (page === 'nasabah') {
+        setTimeout(function() {
+            renderAdminNasabah('', 'all');
+        }, 200);
+    }
+    
+    if (page === 'user') {
+        setTimeout(function() {
+            renderUserTable();
         }, 200);
     }
 }
@@ -204,6 +243,52 @@ var dataBSU = [
     { nama: "BSU RW14 RT01", rw: "RW14", rt: "RT01" },
     { nama: "BSU RW14 RT02", rw: "RW14", rt: "RT02" },
     { nama: "BSU RW14 RT03", rw: "RW14", rt: "RT03" }
+];
+
+var dataBSUWithKetua = [
+    { nama: "BSU MEDE 1", rw: "RW01", rt: "RT01", ketua: "Bapak Slamet" },
+    { nama: "BSU MEDE 2", rw: "RW01", rt: "RT02", ketua: "Ibu Siti" },
+    { nama: "BSU MEDE 3", rw: "RW01", rt: "RT03", ketua: "Bapak Agus" },
+    { nama: "BSU MEDE 4", rw: "RW01", rt: "RT04", ketua: "Ibu Dewi" },
+    { nama: "BSU PELANGI CERIA", rw: "RW02", rt: "RT01", ketua: "Bapak Herman" },
+    { nama: "BSU PELANGI 2", rw: "RW02", rt: "RT02", ketua: "Ibu Rina" },
+    { nama: "BSU PELANGI KENANGA", rw: "RW02", rt: "RT03", ketua: "Bapak Joko" },
+    { nama: "BSU PELANGI BUNDA", rw: "RW02", rt: "RT04", ketua: "Ibu Tuti" },
+    { nama: "BSU RW03 RT01", rw: "RW03", rt: "RT01", ketua: "Bapak Eko" },
+    { nama: "BSU RW03 RT02", rw: "RW03", rt: "RT02", ketua: "Ibu Ani" },
+    { nama: "BSU RW03 RT03", rw: "RW03", rt: "RT03", ketua: "Bapak Budi" },
+    { nama: "BSU FORSILA", rw: "RW04", rt: "RT01", ketua: "Ibu Wati" },
+    { nama: "BSU BERSERI 04", rw: "RW04", rt: "RT02", ketua: "Bapak Dodi" },
+    { nama: "BSU BINTANG KEJORA 1", rw: "RW05", rt: "RT01", ketua: "Ibu Lina" },
+    { nama: "BSU BINTANG KEJORA 2", rw: "RW05", rt: "RT02", ketua: "Bapak Deni" },
+    { nama: "BSU TERANG", rw: "RW06", rt: "RT01", ketua: "Ibu Maya" },
+    { nama: "BSU RW06 RT02", rw: "RW06", rt: "RT02", ketua: "Bapak Rudi" },
+    { nama: "BSU RW06 RT03", rw: "RW06", rt: "RT03", ketua: "Ibu Erna" },
+    { nama: "BSU RW06 RT04", rw: "RW06", rt: "RT04", ketua: "Bapak Tono" },
+    { nama: "BSU RW06 RT05", rw: "RW06", rt: "RT05", ketua: "Ibu Yuni" },
+    { nama: "BSU BERSEMI 0107", rw: "RW07", rt: "RT01", ketua: "Bapak Hendra" },
+    { nama: "BSU BERSEMI 07", rw: "RW07", rt: "RT02", ketua: "Ibu Ratna" },
+    { nama: "BSU RW07 RT03", rw: "RW07", rt: "RT03", ketua: "Bapak Feri" },
+    { nama: "BSU RW07 RT04", rw: "RW07", rt: "RT04", ketua: "Ibu Linda" },
+    { nama: "BSU RW07 RT05", rw: "RW07", rt: "RT05", ketua: "Bapak Andi" },
+    { nama: "BSU MENTARI 01", rw: "RW08", rt: "RT01", ketua: "Ibu Nina" },
+    { nama: "BSU MENTARI", rw: "RW08", rt: "RT02", ketua: "Bapak Taufik" },
+    { nama: "BSU KP KIDOEL", rw: "RW09", rt: "all", ketua: "Bapak Kidoel" },
+    { nama: "BSU MAWARGA", rw: "RW10", rt: "RT01", ketua: "Ibu Rose" },
+    { nama: "BSU SRIKANDI", rw: "RW10", rt: "RT02", ketua: "Bapak Srikandi" },
+    { nama: "BSU RW10 RT03", rw: "RW10", rt: "RT03", ketua: "Ibu Mega" },
+    { nama: "BSU RW11 RT01", rw: "RW11", rt: "RT01", ketua: "Bapak Gilang" },
+    { nama: "BSU ZALAK 2", rw: "RW11", rt: "RT02", ketua: "Ibu Zalak" },
+    { nama: "BSU RW11 RT03", rw: "RW11", rt: "RT03", ketua: "Bapak Rizki" },
+    { nama: "BSU RW12 RT01", rw: "RW12", rt: "RT01", ketua: "Ibu Sari" },
+    { nama: "BSU RW12 RT02", rw: "RW12", rt: "RT02", ketua: "Bapak Darma" },
+    { nama: "BSU RW12 RT03", rw: "RW12", rt: "RT03", ketua: "Ibu Ayu" },
+    { nama: "BSU CEMERLANG 1", rw: "RW13", rt: "RT01", ketua: "Bapak Chandra" },
+    { nama: "BSU CEMERLANG 2", rw: "RW13", rt: "RT02", ketua: "Ibu Berlian" },
+    { nama: "BSU CEMERLANG 3", rw: "RW13", rt: "RT03", ketua: "Bapak Gio" },
+    { nama: "BSU RW14 RT01", rw: "RW14", rt: "RT01", ketua: "Ibu Fira" },
+    { nama: "BSU RW14 RT02", rw: "RW14", rt: "RT02", ketua: "Bapak Irfan" },
+    { nama: "BSU RW14 RT03", rw: "RW14", rt: "RT03", ketua: "Ibu Nadia" }
 ];
 
 // ==================== DATA PRESET SAMPAH DAN HARGA ====================
@@ -447,6 +532,10 @@ function populateBSUFilters() {
     var statFilterBSU = document.getElementById('statFilterBSU');
     var jenisChartBSU = document.getElementById('jenisChartBSUFilter');
     var namaChartBSU = document.getElementById('namaChartBSUFilter');
+    var laporanBSUFilter = document.getElementById('laporanBSUFilter');
+    var laporanBSUFilter2 = document.getElementById('laporanBSUFilter2');
+    var tabunganBSUFilter = document.getElementById('tabunganBSUFilter');
+    var tabunganBSUFilter2 = document.getElementById('tabunganBSUFilter2');
     
     var optionHTML = '<option value="all">Semua BSU</option>';
     for (var j = 0; j < bsuNames.length; j++) {
@@ -457,6 +546,10 @@ function populateBSUFilters() {
     if (statFilterBSU) statFilterBSU.innerHTML = optionHTML;
     if (jenisChartBSU) jenisChartBSU.innerHTML = optionHTML;
     if (namaChartBSU) namaChartBSU.innerHTML = optionHTML;
+    if (laporanBSUFilter) laporanBSUFilter.innerHTML = optionHTML;
+    if (laporanBSUFilter2) laporanBSUFilter2.innerHTML = optionHTML;
+    if (tabunganBSUFilter) tabunganBSUFilter.innerHTML = optionHTML;
+    if (tabunganBSUFilter2) tabunganBSUFilter2.innerHTML = optionHTML;
 }
 
 // ==================== UPDATE FUNCTIONS ====================
@@ -953,6 +1046,938 @@ function clearSelectedBSU() {
     showToast('BSU dibatalkan', false);
 }
 
+// ==================== FUNGSI UNTUK TAMU ====================
+
+function loadTamuDataFromLocal() {
+    var stored = localStorage.getItem(DATA_TAMU_KEY);
+    if (stored) {
+        dataTamuMenunggu = JSON.parse(stored);
+    } else {
+        dataTamuMenunggu = [];
+        saveTamuDataToLocal();
+    }
+    renderTamuDataList();
+    updateVerifikasiCard();
+    renderVerifikasiTable();
+    renderVerifikasiHistory();
+}
+
+function saveTamuDataToLocal() {
+    localStorage.setItem(DATA_TAMU_KEY, JSON.stringify(dataTamuMenunggu));
+}
+
+function setUserBSUForTamu() {
+    var userRT = sessionStorage.getItem('userRT') || '';
+    var userRW = sessionStorage.getItem('userRW') || '';
+    var userBSU = sessionStorage.getItem('userBSU') || '';
+    var userName = sessionStorage.getItem('username') || 'Tamu';
+    
+    if (userBSU) {
+        currentUserBSU = userBSU;
+        currentUserRW = userRW || 'RW01';
+        currentUserRT = userRT || 'RT01';
+        currentUserName = userName;
+        return;
+    }
+    
+    if (userRT || userRW) {
+        for (var i = 0; i < dataBSUWithKetua.length; i++) {
+            var bsu = dataBSUWithKetua[i];
+            if (bsu.rw === userRW && (bsu.rt === userRT || bsu.rt === 'all')) {
+                currentUserBSU = bsu.nama;
+                currentUserRW = bsu.rw;
+                currentUserRT = bsu.rt;
+                currentUserName = userName;
+                sessionStorage.setItem('userBSU', bsu.nama);
+                sessionStorage.setItem('userRW', bsu.rw);
+                sessionStorage.setItem('userRT', bsu.rt);
+                return;
+            }
+        }
+        for (var i = 0; i < dataBSUWithKetua.length; i++) {
+            if (dataBSUWithKetua[i].rw === userRW) {
+                currentUserBSU = dataBSUWithKetua[i].nama;
+                currentUserRW = dataBSUWithKetua[i].rw;
+                currentUserRT = dataBSUWithKetua[i].rt;
+                currentUserName = userName;
+                sessionStorage.setItem('userBSU', dataBSUWithKetua[i].nama);
+                sessionStorage.setItem('userRW', dataBSUWithKetua[i].rw);
+                sessionStorage.setItem('userRT', dataBSUWithKetua[i].rt);
+                return;
+            }
+        }
+    }
+    
+    if (dataBSUWithKetua.length > 0) {
+        currentUserBSU = dataBSUWithKetua[0].nama;
+        currentUserRW = dataBSUWithKetua[0].rw;
+        currentUserRT = dataBSUWithKetua[0].rt;
+        currentUserName = userName;
+    }
+}
+
+var dataTamuMenunggu = [];
+var currentUserBSU = '';
+var currentUserRW = '';
+var currentUserRT = '';
+var currentUserName = '';
+
+window.tambahDataTamu = function() {
+    var namaNasabah = document.getElementById('tamuNamaNasabah').value;
+    var namaSampah = document.getElementById('tamuNamaSampah').value;
+    var berat = parseFloat(document.getElementById('tamuBeratSampah').value);
+    var bsu = document.getElementById('tamuBSU').value;
+    var ketua = document.getElementById('tamuKetuaBSU').value;
+    var tanggal = document.getElementById('tamuTanggal').value;
+    var rwrt = document.getElementById('tamuRWRT').value;
+    
+    var fotoTimbang = document.getElementById('previewFotoTimbang').querySelector('img');
+    var fotoHasil = document.getElementById('previewFotoHasil').querySelector('img');
+    
+    if (!namaNasabah.trim()) {
+        showToast('Nama nasabah wajib diisi!', true);
+        return;
+    }
+    if (!namaSampah.trim()) {
+        showToast('Nama sampah wajib diisi!', true);
+        return;
+    }
+    if (berat <= 0 || isNaN(berat)) {
+        showToast('Berat harus lebih dari 0 kg!', true);
+        return;
+    }
+    if (!ketua.trim()) {
+        showToast('Nama Ketua BSU wajib diisi!', true);
+        return;
+    }
+    if (!fotoTimbang) {
+        showToast('Foto penimbangan wajib diupload!', true);
+        return;
+    }
+    if (!fotoHasil) {
+        showToast('Foto hasil timbangan wajib diupload!', true);
+        return;
+    }
+    
+    var fotoTimbangData = fotoTimbang.src;
+    var fotoHasilData = fotoHasil.src;
+    
+    var rw = 'RW01';
+    var rt = 'RT01';
+    if (rwrt) {
+        var parts = rwrt.split(' - ');
+        if (parts.length === 2) {
+            rw = parts[0].trim();
+            rt = parts[1].trim();
+        }
+    }
+    
+    dataTamuMenunggu.push({
+        id: Date.now(),
+        namaNasabah: namaNasabah.trim(),
+        nama: namaSampah.trim(),
+        berat: berat,
+        bsu: bsu,
+        ketua: ketua.trim(),
+        rw: rw,
+        rt: rt,
+        tanggal: tanggal || new Date().toISOString().slice(0,10),
+        fotoTimbang: fotoTimbangData,
+        fotoHasil: fotoHasilData,
+        status: 'pending',
+        hargaPerKg: 0,
+        verifiedBy: null,
+        verifiedAt: null,
+        createdAt: new Date().toISOString()
+    });
+    
+    saveTamuDataToLocal();
+    renderTamuDataList();
+    updateVerifikasiCard();
+    renderVerifikasiTable();
+    renderVerifikasiHistory();
+    
+    document.getElementById('tamuNamaNasabah').value = '';
+    document.getElementById('tamuNamaSampah').value = '';
+    document.getElementById('tamuBeratSampah').value = '1';
+    document.getElementById('tamuKetuaBSU').value = '';
+    document.getElementById('previewFotoTimbang').innerHTML = '';
+    document.getElementById('previewFotoHasil').innerHTML = '';
+    
+    showToast('Data berhasil dikirim untuk verifikasi!', false);
+    logActivity('Tambah Data Tamu', 'Tamu ' + namaNasabah.trim() + ' mengirim data: ' + namaSampah.trim() + ' (' + berat + ' kg) ke BSU ' + bsu);
+};
+
+function renderTamuDataList() {
+    var container = document.getElementById('tamuDataBody');
+    var count = document.getElementById('tamuDataCount');
+    if (!container) return;
+    
+    var pendingData = dataTamuMenunggu.filter(function(item) {
+        return item.status === 'pending';
+    });
+    
+    if (count) count.textContent = 'Total: ' + pendingData.length + ' data';
+    
+    if (pendingData.length === 0) {
+        container.innerHTML = '<tr><td colspan="9" style="text-align:center;">Tidak ada data menunggu verifikasi</td></tr>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < pendingData.length; i++) {
+        var item = pendingData[i];
+        html += '<tr>' +
+            '<td>' + (i + 1) + '</td>' +
+            '<td>' + escapeHtml(item.namaNasabah || '-') + '</td>' +
+            '<td>' + escapeHtml(item.nama) + '</td>' +
+            '<td>' + item.berat.toFixed(2) + ' kg</td>' +
+            '<td>' + escapeHtml(item.bsu) + '</td>' +
+            '<td>' + escapeHtml(item.ketua) + '</td>' +
+            '<td>' + item.tanggal + '</td>' +
+            '<td><span class="status-badge pending">⏳ Menunggu</span></td>' +
+            '<td>' +
+                '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
+                '<button class="btn-verify" onclick="verifikasiDataTamu(' + item.id + ', \'verified\', null)" style="padding:4px 12px;font-size:0.7rem;background:#2e7d32;color:white;border:none;border-radius:6px;cursor:pointer;">✓</button>' +
+                '<button class="btn-reject" onclick="verifikasiDataTamu(' + item.id + ', \'rejected\', null)" style="padding:4px 12px;font-size:0.7rem;background:#ef5350;color:white;border:none;border-radius:6px;cursor:pointer;">✕</button>' +
+                '<button class="btn-detail" onclick="lihatDetailTamu(' + item.id + ')" style="padding:4px 12px;font-size:0.7rem;background:#0d6efd;color:white;border:none;border-radius:6px;cursor:pointer;">👁</button>' +
+                '</div>' +
+            '</td>' +
+            '</tr>';
+    }
+    container.innerHTML = html;
+}
+
+function renderVerifikasiTable() {
+    var container = document.getElementById('verifikasiTableBody');
+    var count = document.getElementById('verifikasiPageCount');
+    if (!container) return;
+    
+    var pendingData = dataTamuMenunggu.filter(function(item) {
+        return item.status === 'pending';
+    });
+    
+    if (count) count.textContent = 'Total: ' + pendingData.length + ' data';
+    
+    if (pendingData.length === 0) {
+        container.innerHTML = '<tr><td colspan="9" style="text-align:center;">Tidak ada data menunggu verifikasi</td></tr>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < pendingData.length; i++) {
+        var item = pendingData[i];
+        html += '<tr>' +
+            '<td>' + (i + 1) + '</td>' +
+            '<td>' + escapeHtml(item.namaNasabah || '-') + '</td>' +
+            '<td>' + escapeHtml(item.nama) + '</td>' +
+            '<td>' + item.berat.toFixed(2) + ' kg</td>' +
+            '<td>' + escapeHtml(item.bsu) + '</td>' +
+            '<td>' + escapeHtml(item.ketua) + '</td>' +
+            '<td>' + item.tanggal + '</td>' +
+            '<td>' +
+                '<div style="display:flex;gap:4px;">' +
+                '<button onclick="lihatDetailTamu(' + item.id + ')" style="padding:2px 8px;font-size:0.6rem;background:#0d6efd;color:white;border:none;border-radius:4px;cursor:pointer;">📷</button>' +
+                '</div>' +
+            '</td>' +
+            '<td>' +
+                '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
+                '<button class="btn-verify" onclick="verifikasiDataTamu(' + item.id + ', \'verified\', null)" style="padding:4px 12px;font-size:0.7rem;background:#2e7d32;color:white;border:none;border-radius:6px;cursor:pointer;">✓</button>' +
+                '<button class="btn-reject" onclick="verifikasiDataTamu(' + item.id + ', \'rejected\', null)" style="padding:4px 12px;font-size:0.7rem;background:#ef5350;color:white;border:none;border-radius:6px;cursor:pointer;">✕</button>' +
+                '<button class="btn-detail" onclick="verifikasiDenganHarga(' + item.id + ')" style="padding:4px 12px;font-size:0.7rem;background:#f9a825;color:white;border:none;border-radius:6px;cursor:pointer;">💰</button>' +
+                '</div>' +
+            '</td>' +
+            '</tr>';
+    }
+    container.innerHTML = html;
+}
+
+function renderVerifikasiHistory() {
+    var container = document.getElementById('verifikasiHistoryBody');
+    var count = document.getElementById('verifikasiHistoryCount');
+    if (!container) return;
+    
+    var historyData = dataTamuMenunggu.filter(function(item) {
+        return item.status === 'verified' || item.status === 'rejected';
+    });
+    
+    if (count) count.textContent = 'Total: ' + historyData.length + ' data';
+    
+    if (historyData.length === 0) {
+        container.innerHTML = '<tr><td colspan="7" style="text-align:center;">Belum ada riwayat verifikasi</td></tr>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < historyData.length; i++) {
+        var item = historyData[i];
+        var statusText = item.status === 'verified' ? '✅ Diverifikasi' : '❌ Ditolak';
+        var statusClass = item.status === 'verified' ? 'verified' : 'rejected';
+        html += '<tr>' +
+            '<td>' + (i + 1) + '</td>' +
+            '<td>' + escapeHtml(item.namaNasabah || '-') + '</td>' +
+            '<td>' + escapeHtml(item.nama) + '</td>' +
+            '<td>' + item.berat.toFixed(2) + ' kg</td>' +
+            '<td>' + escapeHtml(item.bsu) + '</td>' +
+            '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+            '<td>' + (item.verifiedAt ? new Date(item.verifiedAt).toLocaleDateString('id-ID') : '-') + '</td>' +
+            '</tr>';
+    }
+    container.innerHTML = html;
+}
+
+window.verifikasiDataTamu = function(id, status, hargaPerKg) {
+    var item = null;
+    var index = -1;
+    for (var i = 0; i < dataTamuMenunggu.length; i++) {
+        if (dataTamuMenunggu[i].id === id) {
+            item = dataTamuMenunggu[i];
+            index = i;
+            break;
+        }
+    }
+    if (!item) {
+        showToast('Data tidak ditemukan!', true);
+        return;
+    }
+    
+    if (status === 'verified') {
+        if (!hargaPerKg || hargaPerKg <= 0) {
+            hargaPerKg = getHargaByNamaSampah(item.nama);
+        }
+        
+        daftarSampah.push({
+            id: Date.now(),
+            rw: item.rw || 'RW01',
+            rt: item.rt || 'RT01',
+            nama: item.nama,
+            jenis: 'nonorganik',
+            berat: item.berat,
+            hargaPerKg: hargaPerKg,
+            tanggal: item.tanggal,
+            bsu: item.bsu,
+            verifiedFromTamu: true,
+            verifiedTamuId: item.id,        // <-- SIMPAN ID TAMU
+            namaNasabah: item.namaNasabah || '', // <-- SIMPAN NAMA NASABAH
+            verifiedBy: sessionStorage.getItem('username') || 'Admin'
+        });
+        
+        saveDataToLocal();
+        refreshAll();
+        
+        item.status = 'verified';
+        item.hargaPerKg = hargaPerKg;
+        item.verifiedBy = sessionStorage.getItem('username') || 'Admin';
+        item.verifiedAt = new Date().toISOString();
+        
+        showToast('Data berhasil diverifikasi dan ditambahkan ke database!', false);
+        logActivity('Verifikasi Data Tamu', 'Admin memverifikasi data: ' + item.nama + ' dengan harga Rp ' + hargaPerKg + ' | Nasabah: ' + (item.namaNasabah || '-'));
+    } else if (status === 'rejected') {
+        item.status = 'rejected';
+        item.verifiedBy = sessionStorage.getItem('username') || 'Admin';
+        item.verifiedAt = new Date().toISOString();
+        showToast('Data ditolak!', false);
+        logActivity('Tolak Data Tamu', 'Admin menolak data: ' + item.nama);
+    }
+    
+    saveTamuDataToLocal();
+    renderTamuDataList();
+    updateVerifikasiCard();
+    renderVerifikasiTable();
+    renderVerifikasiHistory();
+};
+window.verifikasiDenganHarga = function(id) {
+    var item = null;
+    for (var i = 0; i < dataTamuMenunggu.length; i++) {
+        if (dataTamuMenunggu[i].id === id) {
+            item = dataTamuMenunggu[i];
+            break;
+        }
+    }
+    if (!item) {
+        showToast('Data tidak ditemukan!', true);
+        return;
+    }
+    
+    var defaultHarga = getHargaByNamaSampah(item.nama);
+    var harga = prompt('Masukkan harga per kg untuk ' + item.nama + ':', defaultHarga);
+    if (harga === null) return;
+    
+    var hargaNum = parseFloat(harga);
+    if (isNaN(hargaNum) || hargaNum <= 0) {
+        showToast('Harga tidak valid!', true);
+        return;
+    }
+    
+    verifikasiDataTamu(id, 'verified', hargaNum);
+};
+
+window.lihatDetailTamu = function(id) {
+    var item = null;
+    for (var i = 0; i < dataTamuMenunggu.length; i++) {
+        if (dataTamuMenunggu[i].id === id) {
+            item = dataTamuMenunggu[i];
+            break;
+        }
+    }
+    if (!item) {
+        showToast('Data tidak ditemukan!', true);
+        return;
+    }
+    
+    var modalContent = '<div style="padding:20px;">' +
+        '<h3 style="color:var(--primary);margin-bottom:12px;">Detail Data Tamu</h3>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">' +
+        '<div><strong>Nama Nasabah:</strong> ' + escapeHtml(item.namaNasabah || '-') + '</div>' +
+        '<div><strong>Nama Sampah:</strong> ' + escapeHtml(item.nama) + '</div>' +
+        '<div><strong>Berat:</strong> ' + item.berat.toFixed(2) + ' kg</div>' +
+        '<div><strong>BSU:</strong> ' + escapeHtml(item.bsu) + '</div>' +
+        '<div><strong>Ketua BSU:</strong> ' + escapeHtml(item.ketua) + '</div>' +
+        '<div><strong>RW/RT:</strong> ' + (item.rw || '-') + ' - ' + (item.rt || '-') + '</div>' +
+        '<div><strong>Tanggal:</strong> ' + item.tanggal + '</div>' +
+        '<div><strong>Status:</strong> <span class="status-badge pending">' + item.status + '</span></div>' +
+        '</div>' +
+        '<div style="margin-bottom:12px;"><strong>Foto Penimbangan:</strong></div>' +
+        '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">' +
+        '<div><img src="' + item.fotoTimbang + '" style="width:200px;height:200px;object-fit:cover;border-radius:12px;border:2px solid var(--primary-bg);"></div>' +
+        '<div><img src="' + item.fotoHasil + '" style="width:200px;height:200px;object-fit:cover;border-radius:12px;border:2px solid var(--primary-bg);"></div>' +
+        '</div>';
+    
+    if (isAdmin && item.status === 'pending') {
+        modalContent += '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+            '<button onclick="verifikasiDataTamu(' + item.id + ', \'verified\', null)" style="padding:10px 24px;background:#2e7d32;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">✓ Verifikasi</button>' +
+            '<button onclick="verifikasiDenganHarga(' + item.id + ')" style="padding:10px 24px;background:#f9a825;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">💰 Set Harga</button>' +
+            '<button onclick="verifikasiDataTamu(' + item.id + ', \'rejected\', null)" style="padding:10px 24px;background:#ef5350;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">✕ Tolak</button>' +
+            '</div>';
+    }
+    
+    modalContent += '</div>';
+    
+    var modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = '<div class="modal-content" style="max-width:600px;">' +
+        '<div class="modal-header"><h2><i class="fas fa-eye"></i> Detail Data Tamu</h2><span class="modal-close" onclick="this.closest(\'.modal\').remove()">&times;</span></div>' +
+        '<div class="modal-body">' + modalContent + '</div>' +
+        '</div>';
+    document.body.appendChild(modal);
+};
+
+function updateVerifikasiCard() {
+    var card = document.getElementById('verifikasiCard');
+    var count = document.getElementById('verifikasiCount');
+    var list = document.getElementById('verifikasiList');
+    
+    if (!card || !count || !list) return;
+    
+    if (!isAdmin) {
+        card.style.display = 'none';
+        return;
+    }
+    
+    var pendingData = dataTamuMenunggu.filter(function(item) {
+        return item.status === 'pending';
+    });
+    
+    if (pendingData.length === 0) {
+        card.style.display = 'none';
+        return;
+    }
+    
+    card.style.display = 'block';
+    count.textContent = pendingData.length + ' data menunggu';
+    count.className = 'status-badge pending';
+    
+    var html = '';
+    for (var i = 0; i < Math.min(pendingData.length, 5); i++) {
+        var item = pendingData[i];
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--primary-bg);">' +
+            '<div>' +
+            '<div style="font-weight:600;">' + escapeHtml(item.nama) + '</div>' +
+            '<div style="font-size:0.75rem;color:var(--text-muted);">' + item.berat.toFixed(2) + ' kg | ' + escapeHtml(item.bsu) + ' | ' + item.tanggal + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:4px;">' +
+            '<button onclick="verifikasiDataTamu(' + item.id + ', \'verified\', null)" style="padding:4px 12px;font-size:0.65rem;background:#2e7d32;color:white;border:none;border-radius:4px;cursor:pointer;">✓</button>' +
+            '<button onclick="verifikasiDenganHarga(' + item.id + ')" style="padding:4px 12px;font-size:0.65rem;background:#f9a825;color:white;border:none;border-radius:4px;cursor:pointer;">💰</button>' +
+            '<button onclick="verifikasiDataTamu(' + item.id + ', \'rejected\', null)" style="padding:4px 12px;font-size:0.65rem;background:#ef5350;color:white;border:none;border-radius:4px;cursor:pointer;">✕</button>' +
+            '<button onclick="lihatDetailTamu(' + item.id + ')" style="padding:4px 12px;font-size:0.65rem;background:#0d6efd;color:white;border:none;border-radius:4px;cursor:pointer;">👁</button>' +
+            '</div>' +
+            '</div>';
+    }
+    if (pendingData.length > 5) {
+        html += '<div style="text-align:center;padding:8px;color:var(--text-muted);font-size:0.8rem;">+ ' + (pendingData.length - 5) + ' data lainnya</div>';
+    }
+    list.innerHTML = html;
+}
+
+function setupUploadFoto() {
+    var uploadTimbang = document.getElementById('uploadFotoTimbang');
+    var inputTimbang = document.getElementById('fotoTimbang');
+    var previewTimbang = document.getElementById('previewFotoTimbang');
+    
+    if (uploadTimbang && inputTimbang) {
+        uploadTimbang.addEventListener('click', function() {
+            inputTimbang.click();
+        });
+        inputTimbang.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                    previewTimbang.innerHTML = '<img src="' + event.target.result + '" style="max-width:150px;max-height:150px;border-radius:12px;border:2px solid var(--primary-light);">';
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+    
+    var uploadHasil = document.getElementById('uploadFotoHasil');
+    var inputHasil = document.getElementById('fotoHasil');
+    var previewHasil = document.getElementById('previewFotoHasil');
+    
+    if (uploadHasil && inputHasil) {
+        uploadHasil.addEventListener('click', function() {
+            inputHasil.click();
+        });
+        inputHasil.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                    previewHasil.innerHTML = '<img src="' + event.target.result + '" style="max-width:150px;max-height:150px;border-radius:12px;border:2px solid var(--primary-light);">';
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+}
+
+// ==================== FUNGSI LAPORAN TAHUNAN BSU ====================
+
+function generateLaporanTahunanBSU(bsuNama, tahun) {
+    var filteredData = daftarSampah.filter(function(item) {
+        if (bsuNama !== 'all' && item.bsu !== bsuNama) return false;
+        if (item.tanggal) {
+            var itemYear = new Date(item.tanggal).getFullYear();
+            if (itemYear !== tahun) return false;
+        }
+        return true;
+    });
+    
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    var bulanData = {};
+    
+    for (var i = 0; i < months.length; i++) {
+        bulanData[months[i]] = { berat: 0, nilai: 0, count: 0 };
+    }
+    
+    for (var i = 0; i < filteredData.length; i++) {
+        var item = filteredData[i];
+        if (item.tanggal) {
+            var month = new Date(item.tanggal).getMonth();
+            var monthName = months[month];
+            bulanData[monthName].berat += item.berat;
+            bulanData[monthName].nilai += (item.berat * item.hargaPerKg);
+            bulanData[monthName].count++;
+        }
+    }
+    
+    var totalBerat = 0, totalNilai = 0, totalCount = 0;
+    var rows = [];
+    for (var i = 0; i < months.length; i++) {
+        var m = months[i];
+        var data = bulanData[m];
+        rows.push({
+            bulan: m,
+            berat: data.berat,
+            nilai: data.nilai,
+            count: data.count
+        });
+        totalBerat += data.berat;
+        totalNilai += data.nilai;
+        totalCount += data.count;
+    }
+    
+    return {
+        bsu: bsuNama,
+        tahun: tahun,
+        rows: rows,
+        totalBerat: totalBerat,
+        totalNilai: totalNilai,
+        totalCount: totalCount
+    };
+}
+
+function renderLaporanTahunanBSU(containerId, bsuNama, tahun) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    
+    var laporan = generateLaporanTahunanBSU(bsuNama, tahun);
+    var bsuDisplay = bsuNama === 'all' ? 'Semua BSU' : bsuNama;
+    
+    var bsuKetua = '';
+    if (bsuNama !== 'all') {
+        var bsuData = dataBSUWithKetua.find(function(b) { return b.nama === bsuNama; });
+        if (bsuData) bsuKetua = bsuData.ketua;
+    }
+    
+    if (laporan.totalCount === 0) {
+        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">' +
+            '<i class="fas fa-file-alt" style="font-size:2rem;display:block;margin-bottom:12px;"></i>' +
+            'Tidak ada data untuk ' + bsuDisplay + ' tahun ' + tahun +
+            '</div>';
+        return;
+    }
+    
+    var html = '<div class="laporan-bsu-card">' +
+        '<div class="laporan-bsu-header">' +
+        '<h4><i class="fas fa-building"></i> ' + bsuDisplay + (bsuKetua ? ' (Ketua: ' + bsuKetua + ')' : '') + '</h4>' +
+        '<span class="periode-text">Laporan Tahunan ' + tahun + '</span>' +
+        '</div>' +
+        '<div style="overflow-x:auto;">' +
+        '<table class="laporan-table">' +
+        '<thead><tr><th>Bulan</th><th>Berat (kg)</th><th>Nilai (Rp)</th><th>Transaksi</th></tr></thead>' +
+        '<tbody>';
+    
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    for (var i = 0; i < months.length; i++) {
+        var row = laporan.rows[i];
+        var rowClass = (i % 2 === 0) ? '' : 'row-alt';
+        html += '<tr class="' + rowClass + '">' +
+            '<td><strong>' + months[i] + '</strong></td>' +
+            '<td>' + row.berat.toFixed(2) + '</td>' +
+            '<td>Rp ' + row.nilai.toLocaleString() + '</td>' +
+            '<td>' + row.count + '</td>' +
+            '</tr>';
+    }
+    
+    html += '<tr class="total-row">' +
+        '<td><strong>TOTAL</strong></td>' +
+        '<td><strong>' + laporan.totalBerat.toFixed(2) + ' kg</strong></td>' +
+        '<td><strong>Rp ' + laporan.totalNilai.toLocaleString() + '</strong></td>' +
+        '<td><strong>' + laporan.totalCount + '</strong></td>' +
+        '</tr>' +
+        '</tbody></table>' +
+        '</div>' +
+        '<div class="export-bsu-actions">' +
+        '<button class="btn-pdf-bsu" onclick="exportLaporanBSUPDF(\'' + bsuNama + '\', ' + tahun + ')"><i class="fas fa-file-pdf"></i> PDF</button>' +
+        '<button class="btn-word-bsu" onclick="exportLaporanBSUWord(\'' + bsuNama + '\', ' + tahun + ')"><i class="fas fa-file-word"></i> Word</button>' +
+        '<button class="btn-excel-bsu" onclick="exportLaporanBSUExcel(\'' + bsuNama + '\', ' + tahun + ')"><i class="fas fa-file-excel"></i> Excel</button>' +
+        '</div>' +
+        '</div>';
+    
+    container.innerHTML = html;
+}
+
+function exportLaporanBSUPDF(bsuNama, tahun) {
+    var laporan = generateLaporanTahunanBSU(bsuNama, tahun);
+    var bsuDisplay = bsuNama === 'all' ? 'Semua BSU' : bsuNama;
+    
+    var printWindow = window.open('', '_blank');
+    var tglCetak = formatTanggalIndo(new Date());
+    var admin = sessionStorage.getItem('adminName') || 'Admin';
+    
+    var bsuKetua = '';
+    if (bsuNama !== 'all') {
+        var bsuData = dataBSUWithKetua.find(function(b) { return b.nama === bsuNama; });
+        if (bsuData) bsuKetua = bsuData.ketua;
+    }
+    
+    var tabelDetail = '';
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    for (var i = 0; i < months.length; i++) {
+        var row = laporan.rows[i];
+        var bgColor = (i % 2 === 0) ? '#f9f9f9' : '#ffffff';
+        tabelDetail += '<tr style="background:' + bgColor + ';">' +
+            '<td style="border:1px solid #ddd;padding:8px;text-align:center;">' + months[i] + '</td>' +
+            '<td style="border:1px solid #ddd;padding:8px;text-align:right;">' + row.berat.toFixed(2) + '</td>' +
+            '<td style="border:1px solid #ddd;padding:8px;text-align:right;">Rp ' + row.nilai.toLocaleString() + '</td>' +
+            '<td style="border:1px solid #ddd;padding:8px;text-align:center;">' + row.count + '</td>' +
+            '</tr>';
+    }
+    
+    var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Laporan Tahunan BSU</title><style>' +
+        'body { font-family: "Times New Roman", Arial, sans-serif; padding: 40px; }' +
+        '.header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #2e7d32; padding-bottom: 20px; }' +
+        'h1 { color: #2e7d32; margin-bottom: 5px; font-size: 24px; }' +
+        '.subtitle { color: #666; font-size: 14px; }' +
+        '.periode { background: #e8f5e9; padding: 12px; border-radius: 8px; text-align: center; margin: 20px 0; font-weight: bold; }' +
+        '.bsu-info { text-align: center; font-size: 18px; margin: 10px 0; color: #1a5e2a; }' +
+        'table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px; }' +
+        'th { background: #2e7d32; color: white; padding: 10px; text-align: center; }' +
+        'td { padding: 8px; border-bottom: 1px solid #ddd; }' +
+        '.total-row { background: #e8f5e9; font-weight: bold; }' +
+        '.footer { margin-top: 40px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }' +
+        '.signature { margin-top: 40px; display: flex; justify-content: space-between; }' +
+        '.signature-box { text-align: center; }' +
+        '.signature-line { margin-top: 40px; width: 200px; border-top: 1px solid #000; margin: 0 auto; }' +
+        '.signature-box p { margin-top: 8px; font-size: 12px; }' +
+        '.no-print { display: block; } @media print { .no-print { display: none; } }' +
+        '</style></head><body>' +
+        '<div class="header">' +
+        '<h1>BANK SAMPAH DIGITAL</h1>' +
+        '<div class="subtitle">BSI Mandiri - Desa Gunung Putri</div>' +
+        '</div>' +
+        '<div class="bsu-info"><strong>' + bsuDisplay + '</strong>' + (bsuKetua ? ' (Ketua: ' + bsuKetua + ')' : '') + '</div>' +
+        '<div class="periode">Laporan Tahunan ' + tahun + '</div>' +
+        '<table><thead><tr><th>Bulan</th><th>Berat (kg)</th><th>Nilai (Rp)</th><th>Transaksi</th></tr></thead><tbody>' + tabelDetail +
+        '<tr class="total-row"><td><strong>TOTAL</strong></td><td><strong>' + laporan.totalBerat.toFixed(2) + ' kg</strong></td><td><strong>Rp ' + laporan.totalNilai.toLocaleString() + '</strong></td><td><strong>' + laporan.totalCount + '</strong></td></tr>' +
+        '</tbody></table>' +
+        '<div class="footer"><p>Dicetak: ' + tglCetak + ' | Dicetak oleh: ' + admin + '</p></div>' +
+        '<div class="signature">' +
+        '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Kepala Bank Sampah</p></div>' +
+        '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Ketua BSU</p></div>' +
+        '</div>' +
+        '<div class="no-print" style="text-align:center;margin-top:20px;">' +
+        '<button onclick="window.print()" style="padding:10px 30px;background:#2e7d32;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer;">🖨️ Cetak / Simpan PDF</button>' +
+        '</div>' +
+        '</body></html>';
+    
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    setTimeout(function() {
+        printWindow.focus();
+        printWindow.print();
+    }, 500);
+    showToast('Laporan PDF siap dicetak', false);
+}
+
+function exportLaporanBSUWord(bsuNama, tahun) {
+    var laporan = generateLaporanTahunanBSU(bsuNama, tahun);
+    var bsuDisplay = bsuNama === 'all' ? 'Semua BSU' : bsuNama;
+    
+    var bsuKetua = '';
+    if (bsuNama !== 'all') {
+        var bsuData = dataBSUWithKetua.find(function(b) { return b.nama === bsuNama; });
+        if (bsuData) bsuKetua = bsuData.ketua;
+    }
+    
+    var tabelDetail = '';
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    for (var i = 0; i < months.length; i++) {
+        var row = laporan.rows[i];
+        var bgColor = (i % 2 === 0) ? '#f9f9f9' : '#ffffff';
+        tabelDetail += '<tr style="background:' + bgColor + ';"><td>' + months[i] + '</td><td>' + row.berat.toFixed(2) + '</td><td>Rp ' + row.nilai.toLocaleString() + '</td><td>' + row.count + '</td></tr>';
+    }
+    
+    var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Laporan Tahunan BSU</title><style>' +
+        'body { font-family: Calibri, Arial, sans-serif; padding: 40px; }' +
+        'h1 { color: #2e7d32; text-align: center; }' +
+        '.periode { background: #e8f5e9; padding: 10px; margin: 20px 0; text-align: center; }' +
+        '.bsu-info { text-align: center; font-size: 16px; margin: 10px 0; }' +
+        'table { width: 100%; border-collapse: collapse; margin: 20px 0; }' +
+        'th { background: #2e7d32; color: white; padding: 10px; }' +
+        'td { padding: 8px; border-bottom: 1px solid #ddd; }' +
+        '.total-row { background: #e8f5e9; font-weight: bold; }' +
+        '.footer { margin-top: 40px; text-align: center; font-size: 11px; }' +
+        '</style></head><body>' +
+        '<h1>BANK SAMPAH DIGITAL</h1>' +
+        '<div class="bsu-info"><strong>' + bsuDisplay + '</strong>' + (bsuKetua ? ' (Ketua: ' + bsuKetua + ')' : '') + '</div>' +
+        '<div class="periode"><strong>Laporan Tahunan ' + tahun + '</strong></div>' +
+        '<table><thead><tr><th>Bulan</th><th>Berat (kg)</th><th>Nilai (Rp)</th><th>Transaksi</th></tr></thead><tbody>' +
+        tabelDetail +
+        '<tr class="total-row"><td><strong>TOTAL</strong></td><td><strong>' + laporan.totalBerat.toFixed(2) + ' kg</strong></td><td><strong>Rp ' + laporan.totalNilai.toLocaleString() + '</strong></td><td><strong>' + laporan.totalCount + '</strong></td></tr>' +
+        '</tbody></table>' +
+        '<div class="footer"><p>Dicetak: ' + formatTanggalIndo(new Date()) + ' | Dicetak oleh: ' + (sessionStorage.getItem('adminName') || 'Admin') + '</p></div>' +
+        '</body></html>';
+    
+    var blob = new Blob([htmlContent], { type: 'application/msword' });
+    var link = document.createElement('a');
+    var url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = 'Laporan_Tahunan_BSU_' + bsuDisplay + '_' + tahun + '.doc';
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('Laporan Word berhasil diekspor', false);
+}
+
+function exportLaporanBSUExcel(bsuNama, tahun) {
+    var laporan = generateLaporanTahunanBSU(bsuNama, tahun);
+    var bsuDisplay = bsuNama === 'all' ? 'Semua BSU' : bsuNama;
+    
+    var bsuKetua = '';
+    if (bsuNama !== 'all') {
+        var bsuData = dataBSUWithKetua.find(function(b) { return b.nama === bsuNama; });
+        if (bsuData) bsuKetua = bsuData.ketua;
+    }
+    
+    var headers = ['No', 'Bulan', 'Berat (kg)', 'Nilai (Rp)', 'Transaksi'];
+    var rows = [];
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    
+    for (var i = 0; i < months.length; i++) {
+        var row = laporan.rows[i];
+        rows.push([i+1, months[i], row.berat.toFixed(2), row.nilai, row.count]);
+    }
+    
+    rows.push(['', 'TOTAL', laporan.totalBerat.toFixed(2), laporan.totalNilai, laporan.totalCount]);
+    
+    var csvContent = '\uFEFF';
+    csvContent += 'Laporan Tahunan BSU\n';
+    csvContent += 'Nama BSU: ' + bsuDisplay + (bsuKetua ? ' (Ketua: ' + bsuKetua + ')' : '') + '\n';
+    csvContent += 'Tahun: ' + tahun + '\n\n';
+    csvContent += headers.join(',') + '\n';
+    
+    for (var i = 0; i < rows.length; i++) {
+        csvContent += rows[i].join(',') + '\n';
+    }
+    
+    var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    var link = document.createElement('a');
+    var url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = 'Laporan_Tahunan_BSU_' + bsuDisplay + '_' + tahun + '.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('Laporan Excel berhasil diekspor', false);
+}
+
+// ==================== FUNGSI BUKU TABUNGAN ====================
+
+function generateTabunganNasabah(bsuNama) {
+    var filteredData = daftarSampah.filter(function(item) {
+        if (bsuNama !== 'all' && item.bsu !== bsuNama) return false;
+        return true;
+    });
+    
+    filteredData.sort(function(a, b) {
+        return new Date(a.tanggal) - new Date(b.tanggal);
+    });
+    
+    var saldo = 0;
+    var history = [];
+    
+    for (var i = 0; i < filteredData.length; i++) {
+        var item = filteredData[i];
+        var nilai = item.berat * item.hargaPerKg;
+        saldo += nilai;
+        history.push({
+            tanggal: item.tanggal || '-',
+            nama: item.nama,
+            berat: item.berat,
+            hargaPerKg: item.hargaPerKg,
+            nilai: nilai,
+            saldo: saldo
+        });
+    }
+    
+    return {
+        bsu: bsuNama,
+        history: history,
+        totalSaldo: saldo,
+        totalTransaksi: history.length
+    };
+}
+
+function renderBukuTabungan(containerId, bsuNama) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    
+    var data = generateTabunganNasabah(bsuNama);
+    var bsuDisplay = bsuNama === 'all' ? 'Semua BSU' : bsuNama;
+    
+    var bsuKetua = '';
+    if (bsuNama !== 'all') {
+        var bsuData = dataBSUWithKetua.find(function(b) { return b.nama === bsuNama; });
+        if (bsuData) bsuKetua = bsuData.ketua;
+    }
+    
+    if (data.history.length === 0) {
+        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">' +
+            '<i class="fas fa-wallet" style="font-size:2rem;display:block;margin-bottom:12px;"></i>' +
+            'Tidak ada data untuk ' + bsuDisplay +
+            '</div>';
+        return;
+    }
+    
+    var html = '<div class="tabungan-card">' +
+        '<div class="tabungan-header">' +
+        '<h3><i class="fas fa-wallet"></i> Buku Tabungan</h3>' +
+        '<span class="no-rek">' + bsuDisplay + (bsuKetua ? ' | Ketua: ' + bsuKetua : '') + '</span>' +
+        '</div>' +
+        '<div class="tabungan-saldo">' +
+        '<div class="saldo-label">Total Saldo</div>' +
+        '<div class="saldo-value">Rp ' + data.totalSaldo.toLocaleString() + '</div>' +
+        '<div style="font-size:0.7rem;color:var(--text-muted);">Total Transaksi: ' + data.totalTransaksi + '</div>' +
+        '</div>' +
+        '<div style="overflow-x:auto;">' +
+        '<table class="tabungan-table">' +
+        '<thead><tr><th>Tanggal</th><th>Nama Sampah</th><th>Berat (kg)</th><th>Harga/kg</th><th>Nilai (Debit)</th><th>Saldo</th></tr></thead>' +
+        '<tbody>';
+    
+    for (var i = 0; i < data.history.length; i++) {
+        var item = data.history[i];
+        var tgl = item.tanggal ? item.tanggal : '-';
+        var rowClass = (i % 2 === 0) ? '' : 'row-alt';
+        html += '<tr class="' + rowClass + '">' +
+            '<td>' + tgl + '</td>' +
+            '<td>' + escapeHtml(item.nama) + '</td>' +
+            '<td>' + item.berat.toFixed(2) + '</td>' +
+            '<td>Rp ' + item.hargaPerKg.toLocaleString() + '</td>' +
+            '<td class="debit">Rp ' + item.nilai.toLocaleString() + '</td>' +
+            '<td><strong>Rp ' + item.saldo.toLocaleString() + '</strong></td>' +
+            '</tr>';
+    }
+    
+    html += '</tbody></table>' +
+        '</div>' +
+        '<div style="margin-top:16px;text-align:right;font-size:0.7rem;color:var(--text-muted);">' +
+        'Dicetak: ' + formatTanggalIndo(new Date()) +
+        '</div>' +
+        '</div>';
+    
+    container.innerHTML = html;
+}
+
+function exportTabunganExcel(bsuNama) {
+    var data = generateTabunganNasabah(bsuNama);
+    var bsuDisplay = bsuNama === 'all' ? 'Semua BSU' : bsuNama;
+    
+    var bsuKetua = '';
+    if (bsuNama !== 'all') {
+        var bsuData = dataBSUWithKetua.find(function(b) { return b.nama === bsuNama; });
+        if (bsuData) bsuKetua = bsuData.ketua;
+    }
+    
+    if (data.history.length === 0) {
+        showToast('Tidak ada data untuk diekspor!', true);
+        return;
+    }
+    
+    var headers = ['Tanggal', 'Nama Sampah', 'Berat (kg)', 'Harga/kg (Rp)', 'Nilai (Rp)', 'Saldo (Rp)'];
+    var rows = [];
+    
+    for (var i = 0; i < data.history.length; i++) {
+        var item = data.history[i];
+        rows.push([
+            item.tanggal || '-',
+            '"' + item.nama + '"',
+            item.berat.toFixed(2),
+            item.hargaPerKg,
+            item.nilai,
+            item.saldo
+        ]);
+    }
+    
+    var csvContent = '\uFEFF';
+    csvContent += 'BUKU TABUNGAN NASABAH\n';
+    csvContent += 'Nama BSU: ' + bsuDisplay + (bsuKetua ? ' (Ketua: ' + bsuKetua + ')' : '') + '\n';
+    csvContent += 'Total Saldo: Rp ' + data.totalSaldo.toLocaleString() + '\n';
+    csvContent += 'Total Transaksi: ' + data.totalTransaksi + '\n\n';
+    csvContent += headers.join(',') + '\n';
+    
+    for (var i = 0; i < rows.length; i++) {
+        csvContent += rows[i].join(',') + '\n';
+    }
+    
+    var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    var link = document.createElement('a');
+    var url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = 'Buku_Tabungan_' + bsuDisplay + '_' + new Date().toISOString().slice(0,10) + '.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('Buku tabungan berhasil diekspor!', false);
+}
+
 // ==================== CRUD OPERATIONS ====================
 window.tambahSampah = function() {
     if (!isAdmin) {
@@ -1433,104 +2458,118 @@ function updateTrenChart() {
     });
 }
 
-// ==================== LAPORAN FUNGSI ====================
+// ==================== FUNGSI EKSPOR PDF DAN WORD (DIPERBAIKI) ====================
+
+function getRekapPerNamaSampah(data) {
+    var rekap = {};
+    for (var i = 0; i < data.length; i++) {
+        var item = data[i];
+        var nama = item.nama;
+        if (!rekap[nama]) {
+            rekap[nama] = {
+                nama: nama,
+                totalBerat: 0,
+                totalNilai: 0,
+                jumlahTransaksi: 0
+            };
+        }
+        rekap[nama].totalBerat += item.berat;
+        rekap[nama].totalNilai += (item.berat * item.hargaPerKg);
+        rekap[nama].jumlahTransaksi++;
+    }
+    var result = Object.values(rekap);
+    result.sort(function(a, b) { return b.totalBerat - a.totalBerat; });
+    return result;
+}
+
 function getFilterText() {
     var parts = [];
-    if (currentFilterBSU !== 'all') parts.push('BSU: ' + currentFilterBSU);
-    if (currentFilterRW !== 'all') parts.push('RW: ' + currentFilterRW);
-    if (currentFilterRT !== 'all') parts.push('RT: ' + currentFilterRT);
+    if (currentFilterBSU && currentFilterBSU !== 'all') parts.push('BSU: ' + currentFilterBSU);
+    if (currentFilterRW && currentFilterRW !== 'all') parts.push('RW: ' + currentFilterRW);
+    if (currentFilterRT && currentFilterRT !== 'all') parts.push('RT: ' + currentFilterRT);
     if (parts.length === 0) return 'Semua Data';
     return parts.join(' | ');
 }
 
-function generateLaporanMingguan() {
+function generateLaporanMingguan(data, bsu, rw, rt) {
+    var filtered = filterDataByFilters(data || daftarSampah, bsu || currentFilterBSU, rw || currentFilterRW, rt || currentFilterRT);
     var today = new Date();
     var weekStart = new Date(today);
     weekStart.setDate(today.getDate() - today.getDay());
     
-    var filteredData = filterDataByFilters(daftarSampah, currentFilterBSU, currentFilterRW, currentFilterRT);
     var totalOrganik = 0, totalNonorganik = 0, totalNilai = 0;
-    
-    for (var i = 0; i < filteredData.length; i++) {
-        var item = filteredData[i];
+    for (var i = 0; i < filtered.length; i++) {
+        var item = filtered[i];
         if (item.jenis === 'organik') totalOrganik += item.berat;
         else totalNonorganik += item.berat;
         totalNilai += (item.berat * item.hargaPerKg);
     }
     var totalBerat = totalOrganik + totalNonorganik;
-    
-    var filterText = getFilterText();
     
     return {
         title: 'Laporan Mingguan Bank Sampah Digital',
         periode: formatTanggalIndo(weekStart) + ' s/d ' + formatTanggalIndo(today),
-        data: filteredData,
+        data: filtered,
         totalOrganik: totalOrganik,
         totalNonorganik: totalNonorganik,
         totalBerat: totalBerat,
         totalNilai: totalNilai,
-        jumlahItem: filteredData.length,
-        filterInfo: filterText
+        jumlahItem: filtered.length,
+        filterInfo: getFilterText()
     };
 }
 
-function generateLaporanBulanan() {
+function generateLaporanBulanan(data, bsu, rw, rt) {
+    var filtered = filterDataByFilters(data || daftarSampah, bsu || currentFilterBSU, rw || currentFilterRW, rt || currentFilterRT);
     var today = new Date();
-    var filteredData = filterDataByFilters(daftarSampah, currentFilterBSU, currentFilterRW, currentFilterRT);
     var totalOrganik = 0, totalNonorganik = 0, totalNilai = 0;
-    
-    for (var i = 0; i < filteredData.length; i++) {
-        var item = filteredData[i];
+    for (var i = 0; i < filtered.length; i++) {
+        var item = filtered[i];
         if (item.jenis === 'organik') totalOrganik += item.berat;
         else totalNonorganik += item.berat;
         totalNilai += (item.berat * item.hargaPerKg);
     }
     var totalBerat = totalOrganik + totalNonorganik;
-    
-    var filterText = getFilterText();
     
     return {
         title: 'Laporan Bulanan Bank Sampah Digital',
         periode: namaBulan[today.getMonth()] + ' ' + today.getFullYear(),
-        data: filteredData,
+        data: filtered,
         totalOrganik: totalOrganik,
         totalNonorganik: totalNonorganik,
         totalBerat: totalBerat,
         totalNilai: totalNilai,
-        jumlahItem: filteredData.length,
-        filterInfo: filterText
+        jumlahItem: filtered.length,
+        filterInfo: getFilterText()
     };
 }
 
-function generateLaporanTahunan() {
+function generateLaporanTahunan(data, bsu, rw, rt) {
+    var filtered = filterDataByFilters(data || daftarSampah, bsu || currentFilterBSU, rw || currentFilterRW, rt || currentFilterRT);
     var today = new Date();
-    var filteredData = filterDataByFilters(daftarSampah, currentFilterBSU, currentFilterRW, currentFilterRT);
     var totalOrganik = 0, totalNonorganik = 0, totalNilai = 0;
-    
-    for (var i = 0; i < filteredData.length; i++) {
-        var item = filteredData[i];
+    for (var i = 0; i < filtered.length; i++) {
+        var item = filtered[i];
         if (item.jenis === 'organik') totalOrganik += item.berat;
         else totalNonorganik += item.berat;
         totalNilai += (item.berat * item.hargaPerKg);
     }
     var totalBerat = totalOrganik + totalNonorganik;
     
-    var filterText = getFilterText();
-    
     return {
         title: 'Laporan Tahunan Bank Sampah Digital',
         periode: 'Tahun ' + today.getFullYear(),
-        data: filteredData,
+        data: filtered,
         totalOrganik: totalOrganik,
         totalNonorganik: totalNonorganik,
         totalBerat: totalBerat,
         totalNilai: totalNilai,
-        jumlahItem: filteredData.length,
-        filterInfo: filterText
+        jumlahItem: filtered.length,
+        filterInfo: getFilterText()
     };
 }
 
-function exportToPDF(laporan, jenisLaporan) {
+function exportFullPDF(laporan, jenisLaporan) {
     var printWindow = window.open('', '_blank');
     var tglCetak = formatTanggalIndo(new Date());
     var admin = sessionStorage.getItem('adminName') || 'Admin';
@@ -1543,39 +2582,55 @@ function exportToPDF(laporan, jenisLaporan) {
             '<td style="border:1px solid #ddd; padding:8px;">' + (item.bsu ? escapeHtml(item.bsu) : '-') + '</td>' +
             '<td style="border:1px solid #ddd; padding:8px;">' + item.rw + ' - ' + item.rt + '</td>' +
             '<td style="border:1px solid #ddd; padding:8px;"><strong>' + escapeHtml(item.nama) + '</strong></td>' +
-            '<td style="border:1px solid #ddd; padding:8px;">' + (item.jenis === 'organik' ? 'Organik' : 'Nonorganik') + '</td>' +
+            '<td style="border:1px solid #ddd; padding:8px;">' + (item.jenis === 'organik' ? '🌿 Organik' : '📦 Nonorganik') + '</td>' +
             '<td style="border:1px solid #ddd; padding:8px; text-align:right;">' + item.berat.toFixed(2) + ' kg</td>' +
-            '<td style="border:1px solid #ddd; padding:8px; text-align:right;">' + formatRupiah(item.hargaPerKg) + '</td>' +
-            '<td style="border:1px solid #ddd; padding:8px; text-align:right;">' + formatRupiah(item.berat * item.hargaPerKg) + '</td>' +
+            '<td style="border:1px solid #ddd; padding:8px; text-align:right;">Rp ' + item.hargaPerKg.toLocaleString() + '</td>' +
+            '<td style="border:1px solid #ddd; padding:8px; text-align:right;">Rp ' + (item.berat * item.hargaPerKg).toLocaleString() + '</td>' +
+            '</tr>';
+    }
+    
+    var rekapHtml = '';
+    var rekapData = getRekapPerNamaSampah(laporan.data);
+    for (var i = 0; i < rekapData.length; i++) {
+        var r = rekapData[i];
+        rekapHtml += '<tr>' +
+            '<td style="border:1px solid #ddd; padding:6px; text-align:center;">' + (i+1) + '</td>' +
+            '<td style="border:1px solid #ddd; padding:6px;">' + escapeHtml(r.nama) + '</td>' +
+            '<td style="border:1px solid #ddd; padding:6px; text-align:right;">' + r.totalBerat.toFixed(2) + ' kg</td>' +
+            '<td style="border:1px solid #ddd; padding:6px; text-align:center;">' + r.jumlahTransaksi + '</td>' +
+            '<td style="border:1px solid #ddd; padding:6px; text-align:right;">Rp ' + r.totalNilai.toLocaleString() + '</td>' +
             '</tr>';
     }
     
     var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + laporan.title + '</title><style>' +
         'body { font-family: "Times New Roman", Arial, sans-serif; padding: 40px; }' +
         '.header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #2e7d32; padding-bottom: 20px; }' +
-        'h1 { color: #2e7d32; margin-bottom: 5px; }' +
+        'h1 { color: #2e7d32; margin-bottom: 5px; font-size: 24px; }' +
         '.subtitle { color: #666; font-size: 14px; }' +
         '.periode { background: #e8f5e9; padding: 12px; border-radius: 8px; text-align: center; margin: 20px 0; font-weight: bold; }' +
         '.filter-info { background: #e3f2fd; padding: 10px; border-radius: 8px; text-align: center; margin: 10px 0; font-size: 12px; color: #1565c0; }' +
-        '.stats { display: flex; gap: 20px; margin: 20px 0; }' +
-        '.stat-card { flex: 1; background: #f5f5f5; border-radius: 12px; padding: 15px; text-align: center; }' +
+        '.stats { display: flex; gap: 20px; margin: 20px 0; flex-wrap: wrap; }' +
+        '.stat-card { flex: 1; min-width: 150px; background: #f5f5f5; border-radius: 12px; padding: 15px; text-align: center; }' +
         '.stat-card.organik { border-top: 4px solid #2e7d32; }' +
         '.stat-card.nonorganik { border-top: 4px solid #f9a825; }' +
         '.stat-card.total { border-top: 4px solid #7b1fa2; }' +
         '.stat-value { font-size: 22px; font-weight: bold; color: #2e7d32; }' +
         '.stat-label { font-size: 12px; color: #666; }' +
         '.info-box { background: #e3f2fd; border-radius: 8px; padding: 12px; margin: 20px 0; text-align: center; }' +
-        'table { width: 100%; border-collapse: collapse; margin: 20px 0; }' +
+        '.section-title { margin-top: 30px; font-size: 18px; color: #2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom: 8px; }' +
+        'table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 11px; }' +
         'th { background: #2e7d32; color: white; padding: 10px; text-align: left; }' +
         'td { padding: 8px; border-bottom: 1px solid #ddd; }' +
         '.footer { margin-top: 40px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }' +
         '.signature { margin-top: 40px; display: flex; justify-content: space-between; }' +
         '.signature-box { text-align: center; }' +
-        '.signature-line { margin-top: 40px; width: 200px; border-top: 1px solid #000; }' +
+        '.signature-line { margin-top: 40px; width: 200px; border-top: 1px solid #000; margin: 0 auto; }' +
+        '.signature-box p { margin-top: 8px; font-size: 12px; }' +
+        '@media print { body { padding: 20px; } .no-print { display: none; } }' +
         '</style></head><body>' +
         '<div class="header">' +
         '<h1>BANK SAMPAH DIGITAL</h1>' +
-        '<div class="subtitle">Mengelola Sampah untuk Bumi yang Lebih Baik</div>' +
+        '<div class="subtitle">BSI Mandiri - Desa Gunung Putri</div>' +
         '</div>' +
         '<h2 style="text-align:center;">' + laporan.title + '</h2>' +
         '<div class="periode">Periode Laporan: ' + laporan.periode + '</div>' +
@@ -1586,11 +2641,13 @@ function exportToPDF(laporan, jenisLaporan) {
         '<div class="stat-card total"><div class="stat-value">' + laporan.totalBerat.toFixed(2) + ' kg</div><div class="stat-label">Total Keseluruhan</div></div>' +
         '</div>' +
         '<div class="info-box">' +
-        '<strong>Total Nilai Sampah:</strong> ' + formatRupiah(laporan.totalNilai) + ' | ' +
+        '<strong>Total Nilai Sampah:</strong> Rp ' + laporan.totalNilai.toLocaleString() + ' | ' +
         '<strong>Jumlah Transaksi:</strong> ' + laporan.jumlahItem + ' item' +
         '</div>' +
-        '<h3>Detail Data Sampah</h3>' +
+        '<div class="section-title"> Detail Data Sampah</div>' +
         '<table><thead><tr><th>No</th><th>BSU</th><th>RW/RT</th><th>Nama Sampah</th><th>Jenis</th><th>Berat</th><th>Harga per Kg</th><th>Total Nilai</th></tr></thead><tbody>' + tabelDetail + '</tbody></table>' +
+        '<div class="section-title"> Rekap per Nama Sampah</div>' +
+        '<table><thead><tr><th>No</th><th>Nama Sampah</th><th>Total Berat</th><th>Transaksi</th><th>Total Nilai</th></tr></thead><tbody>' + rekapHtml + '</tbody></table>' +
         '<div class="footer">' +
         '<p>Dicetak pada: ' + tglCetak + '</p>' +
         '<p>Dicetak oleh: ' + admin + '</p>' +
@@ -1600,77 +2657,118 @@ function exportToPDF(laporan, jenisLaporan) {
         '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Kepala Bank Sampah</p></div>' +
         '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Ketua RW</p></div>' +
         '</div>' +
+        '<div class="no-print" style="text-align:center;margin-top:20px;">' +
+        '<button onclick="window.print()" style="padding:10px 30px;background:#2e7d32;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer;">🖨️ Cetak / Simpan PDF</button>' +
+        '</div>' +
         '</body></html>';
     
     printWindow.document.write(htmlContent);
     printWindow.document.close();
-    printWindow.print();
-    showToast('Laporan siap dicetak', false);
+    
+    setTimeout(function() {
+        printWindow.focus();
+        printWindow.print();
+    }, 500);
+    
+    showToast('Laporan siap dicetak atau disimpan sebagai PDF', false);
 }
 
-function exportToWord(laporan, jenisLaporan) {
+function exportFullWord(laporan, jenisLaporan) {
     var tglCetak = formatTanggalIndo(new Date());
     var admin = sessionStorage.getItem('adminName') || 'Admin';
     
     var tabelDetail = '';
     for (var i = 0; i < laporan.data.length; i++) {
         var item = laporan.data[i];
-        tabelDetail += '<tr>' +
+        var rowBg = (i % 2 === 0) ? '#ffffff' : '#f9f9f9';
+        tabelDetail += '<tr style="background:' + rowBg + ';">' +
             '<td>' + (i+1) + '</td>' +
             '<td>' + (item.bsu ? escapeHtml(item.bsu) : '-') + '</td>' +
             '<td>' + item.rw + ' - ' + item.rt + '</td>' +
             '<td>' + escapeHtml(item.nama) + '</td>' +
             '<td>' + (item.jenis === 'organik' ? 'Organik' : 'Nonorganik') + '</td>' +
-            '<td>' + item.berat.toFixed(2) + ' kg</td>' +
-            '<td>' + formatRupiah(item.hargaPerKg) + '</td>' +
-            '<td>' + formatRupiah(item.berat * item.hargaPerKg) + '</td>' +
+            '<td style="text-align:right;">' + item.berat.toFixed(2) + ' kg</td>' +
+            '<td style="text-align:right;">Rp ' + item.hargaPerKg.toLocaleString() + '</td>' +
+            '<td style="text-align:right;">Rp ' + (item.berat * item.hargaPerKg).toLocaleString() + '</td>' +
+            '</tr>';
+    }
+    
+    var rekapHtml = '';
+    var rekapData = getRekapPerNamaSampah(laporan.data);
+    for (var i = 0; i < rekapData.length; i++) {
+        var r = rekapData[i];
+        var rowBg = (i % 2 === 0) ? '#ffffff' : '#f9f9f9';
+        rekapHtml += '<tr style="background:' + rowBg + ';">' +
+            '<td style="text-align:center;">' + (i+1) + '</td>' +
+            '<td>' + escapeHtml(r.nama) + '</td>' +
+            '<td style="text-align:right;">' + r.totalBerat.toFixed(2) + ' kg</td>' +
+            '<td style="text-align:center;">' + r.jumlahTransaksi + '</td>' +
+            '<td style="text-align:right;">Rp ' + r.totalNilai.toLocaleString() + '</td>' +
             '</tr>';
     }
     
     var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + laporan.title + '</title><style>' +
         'body { font-family: Calibri, Arial, sans-serif; padding: 40px; }' +
-        'h1 { color: #2e7d32; text-align: center; }' +
-        '.periode { background: #e8f5e9; padding: 10px; margin: 20px 0; text-align: center; }' +
+        'h1 { color: #2e7d32; text-align: center; font-size: 24px; }' +
+        'h2 { text-align: center; font-size: 18px; }' +
+        '.periode { background: #e8f5e9; padding: 10px; margin: 20px 0; text-align: center; font-weight: bold; }' +
         '.filter-info { background: #e3f2fd; padding: 8px; margin: 10px 0; text-align: center; font-size: 11px; }' +
         '.stats { display: flex; gap: 20px; margin: 20px 0; }' +
-        '.stat-card { flex: 1; background: #f5f5f5; padding: 15px; text-align: center; }' +
+        '.stat-card { flex: 1; background: #f5f5f5; padding: 15px; text-align: center; border-radius: 8px; }' +
         '.stat-value { font-size: 20px; font-weight: bold; color: #2e7d32; }' +
-        '.info-box { background: #e3f2fd; padding: 10px; margin: 20px 0; text-align: center; }' +
-        'table { width: 100%; border-collapse: collapse; margin: 20px 0; }' +
-        'th { background: #2e7d32; color: white; padding: 10px; }' +
-        'td { padding: 8px; border-bottom: 1px solid #ddd; }' +
-        '.footer { margin-top: 40px; text-align: center; font-size: 11px; }' +
+        '.stat-label { font-size: 11px; color: #666; }' +
+        '.info-box { background: #e3f2fd; padding: 10px; margin: 20px 0; text-align: center; border-radius: 8px; }' +
+        '.section-title { margin-top: 30px; font-size: 16px; color: #2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom: 6px; }' +
+        'table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 11px; }' +
+        'th { background: #2e7d32; color: white; padding: 8px 10px; text-align: left; }' +
+        'td { padding: 6px 10px; border-bottom: 1px solid #ddd; }' +
+        '.footer { margin-top: 40px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }' +
+        '.signature { margin-top: 40px; display: flex; justify-content: space-around; }' +
+        '.signature-box { text-align: center; }' +
+        '.signature-line { margin-top: 40px; width: 200px; border-top: 1px solid #000; margin: 0 auto; }' +
+        '.signature-box p { margin-top: 8px; font-size: 11px; }' +
         '</style></head><body>' +
         '<h1>BANK SAMPAH DIGITAL</h1>' +
-        '<h2 style="text-align:center;">' + laporan.title + '</h2>' +
-        '<div class="periode"><strong>Periode:</strong> ' + laporan.periode + '</div>' +
-        '<div class="filter-info"><strong>Filter:</strong> ' + laporan.filterInfo + '</div>' +
+        '<p style="text-align:center;font-size:12px;color:#666;">BSI Mandiri - Desa Gunung Putri</p>' +
+        '<h2>' + laporan.title + '</h2>' +
+        '<div class="periode">Periode: ' + laporan.periode + '</div>' +
+        '<div class="filter-info">Filter: ' + laporan.filterInfo + '</div>' +
         '<div class="stats">' +
-        '<div class="stat-card"><div class="stat-value">' + laporan.totalOrganik.toFixed(2) + ' kg</div><div>Sampah Organik</div></div>' +
-        '<div class="stat-card"><div class="stat-value">' + laporan.totalNonorganik.toFixed(2) + ' kg</div><div>Sampah Nonorganik</div></div>' +
-        '<div class="stat-card"><div class="stat-value">' + laporan.totalBerat.toFixed(2) + ' kg</div><div>Total Semua</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + laporan.totalOrganik.toFixed(2) + ' kg</div><div class="stat-label">Sampah Organik</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + laporan.totalNonorganik.toFixed(2) + ' kg</div><div class="stat-label">Sampah Nonorganik</div></div>' +
+        '<div class="stat-card"><div class="stat-value">' + laporan.totalBerat.toFixed(2) + ' kg</div><div class="stat-label">Total Semua</div></div>' +
         '</div>' +
-        '<div class="info-box"><strong>Total Nilai: ' + formatRupiah(laporan.totalNilai) + '</strong> | Jumlah Item: ' + laporan.jumlahItem + '</div>' +
-        '<h3>Detail Data Sampah</h3>' +
+        '<div class="info-box"><strong>Total Nilai: Rp ' + laporan.totalNilai.toLocaleString() + '</strong> | Jumlah Item: ' + laporan.jumlahItem + '</div>' +
+        '<div class="section-title">📋 Detail Data Sampah</div>' +
         '<table><thead><tr><th>No</th><th>BSU</th><th>RW/RT</th><th>Nama Sampah</th><th>Jenis</th><th>Berat</th><th>Harga</th><th>Total</th></tr></thead><tbody>' +
         tabelDetail + '</tbody></table>' +
+        '<div class="section-title">📊 Rekap per Nama Sampah</div>' +
+        '<table><thead><tr><th>No</th><th>Nama Sampah</th><th>Total Berat</th><th>Transaksi</th><th>Total Nilai</th></tr></thead><tbody>' +
+        rekapHtml + '</tbody></table>' +
         '<div class="footer"><p>Dicetak: ' + tglCetak + '</p><p>Dicetak oleh: ' + admin + '</p><p>Bank Sampah Digital - Kelola Sampah, Selamatkan Bumi</p></div>' +
+        '<div class="signature">' +
+        '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Kepala Bank Sampah</p></div>' +
+        '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Ketua RW</p></div>' +
+        '</div>' +
         '</body></html>';
     
-    var blob = new Blob([htmlContent], { type: 'application/msword' });
+    var blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
     var link = document.createElement('a');
     var url = URL.createObjectURL(blob);
     link.href = url;
     var fileName = 'Laporan_Bank_Sampah_' + (jenisLaporan === 'mingguan' ? 'Mingguan' : (jenisLaporan === 'bulanan' ? 'Bulanan' : 'Tahunan')) + '_' + new Date().toISOString().slice(0,10) + '.doc';
     link.download = fileName;
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 100);
+    
     showToast('Laporan berhasil diekspor ke Word', false);
 }
 
 function printLaporanLangusng() {
-    var laporan = generateLaporanMingguan();
-    exportToPDF(laporan, 'mingguan');
+    var laporan = generateLaporanMingguan(daftarSampah, currentFilterBSU, currentFilterRW, currentFilterRT);
+    exportFullPDF(laporan, 'mingguan');
 }
 
 function exportDataTamu() {
@@ -1721,7 +2819,7 @@ function exportDataTamu() {
 }
 
 function shareLaporan() {
-    var laporan = generateLaporanMingguan();
+    var laporan = generateLaporanMingguan(daftarSampah, currentFilterBSU, currentFilterRW, currentFilterRT);
     var message = '📊 *Laporan Bank Sampah Digital*\n' +
         'Periode: ' + laporan.periode + '\n' +
         'Total Organik: ' + laporan.totalOrganik.toFixed(2) + ' kg\n' +
@@ -2041,21 +3139,21 @@ function setupLaporanModal() {
     
     if (btnMingguan) {
         btnMingguan.addEventListener('click', function() {
-            var laporan = generateLaporanMingguan();
+            var laporan = generateLaporanMingguan(daftarSampah, currentFilterBSU, currentFilterRW, currentFilterRT);
             showModal(laporan, 'mingguan');
         });
     }
     
     if (btnBulanan) {
         btnBulanan.addEventListener('click', function() {
-            var laporan = generateLaporanBulanan();
+            var laporan = generateLaporanBulanan(daftarSampah, currentFilterBSU, currentFilterRW, currentFilterRT);
             showModal(laporan, 'bulanan');
         });
     }
     
     if (btnTahunan) {
         btnTahunan.addEventListener('click', function() {
-            var laporan = generateLaporanTahunan();
+            var laporan = generateLaporanTahunan(daftarSampah, currentFilterBSU, currentFilterRW, currentFilterRT);
             showModal(laporan, 'tahunan');
         });
     }
@@ -2063,7 +3161,7 @@ function setupLaporanModal() {
     if (exportPDFBtn) {
         exportPDFBtn.addEventListener('click', function() {
             if (currentLaporan) {
-                exportToPDF(currentLaporan, currentJenis);
+                exportFullPDF(currentLaporan, currentJenis);
                 modal.style.display = 'none';
             }
         });
@@ -2072,7 +3170,7 @@ function setupLaporanModal() {
     if (exportWordBtn) {
         exportWordBtn.addEventListener('click', function() {
             if (currentLaporan) {
-                exportToWord(currentLaporan, currentJenis);
+                exportFullWord(currentLaporan, currentJenis);
                 modal.style.display = 'none';
             }
         });
@@ -2163,7 +3261,6 @@ function initSidebar() {
         overlay.addEventListener('click', closeSidebar);
     }
     
-    // SWIPE GESTURE
     var touchStartX = 0;
     var touchEndX = 0;
     var touchStartTime = 0;
@@ -2206,6 +3303,12 @@ function applyRoleBasedUI() {
     var roleWelcomeText = document.getElementById('roleWelcomeText');
     var kelolaSubtext = document.getElementById('kelolaSubtext');
     var formTambahData = document.getElementById('formTambahData');
+    var formTamuInput = document.getElementById('formTamuInput');
+    var laporanTahunanBSU = document.getElementById('laporanTahunanBSU');
+    var bukuTabunganCard = document.getElementById('bukuTabunganCard');
+    
+    var menuVerifikasi = document.getElementById('menuVerifikasi');
+    var menuLaporan = document.getElementById('menuLaporan');
     
     if (roleDisplay) {
         if (isAdmin) {
@@ -2231,9 +3334,9 @@ function applyRoleBasedUI() {
     
     if (roleWelcomeText) {
         if (isAdmin) {
-            roleWelcomeText.innerHTML = '🔑 Anda login sebagai <strong>Administrator</strong> dengan akses penuh';
+            roleWelcomeText.innerHTML = ' Anda login sebagai <strong>Administrator</strong> dengan akses penuh';
         } else {
-            roleWelcomeText.innerHTML = '👁️ Anda login sebagai <strong>Tamu</strong> - hanya dapat melihat data';
+            roleWelcomeText.innerHTML = ' Anda login sebagai <strong>Tamu</strong> - hanya dapat melihat data';
         }
     }
     
@@ -2241,34 +3344,41 @@ function applyRoleBasedUI() {
         if (isAdmin) {
             kelolaSubtext.innerHTML = 'Tambah, edit, atau hapus data sampah';
         } else {
-            kelolaSubtext.innerHTML = '👁️ Mode Tamu - Anda hanya dapat melihat data sampah';
+            kelolaSubtext.innerHTML = ' Mode Tamu - Anda hanya dapat melihat data sampah';
         }
     }
     
     if (formTambahData) {
-        if (isAdmin) {
-            formTambahData.style.display = 'block';
-        } else {
-            formTambahData.style.display = 'none';
-        }
+        formTambahData.style.display = isAdmin ? 'block' : 'none';
+    }
+    
+    if (formTamuInput) {
+        formTamuInput.style.display = isAdmin ? 'none' : 'block';
+    }
+    
+    if (laporanTahunanBSU) {
+        laporanTahunanBSU.style.display = isAdmin ? 'block' : 'none';
+    }
+    
+    if (bukuTabunganCard) {
+        bukuTabunganCard.style.display = isAdmin ? 'block' : 'none';
+    }
+    
+    if (menuVerifikasi) {
+        menuVerifikasi.style.display = isAdmin ? 'flex' : 'none';
+    }
+    if (menuLaporan) {
+        menuLaporan.style.display = isAdmin ? 'flex' : 'none';
     }
     
     var menuKelolaTamu = document.getElementById('menuKelolaTamu');
     if (menuKelolaTamu) {
-        if (!isAdmin) {
-            menuKelolaTamu.style.display = 'none';
-        } else {
-            menuKelolaTamu.style.display = 'flex';
-        }
+        menuKelolaTamu.style.display = isAdmin ? 'flex' : 'none';
     }
     
     var navKelolaTamu = document.getElementById('navKelolaTamu');
     if (navKelolaTamu) {
-        if (!isAdmin) {
-            navKelolaTamu.style.display = 'none';
-        } else {
-            navKelolaTamu.style.display = 'flex';
-        }
+        navKelolaTamu.style.display = isAdmin ? 'flex' : 'none';
     }
 }
 
@@ -2290,29 +3400,43 @@ function refreshAll() {
 
 // ==================== SETUP EVENT LISTENERS ====================
 function setupEventListeners() {
-    // Menu items navigation
+    // Ambil semua menu items
     var menuItems = document.querySelectorAll('.menu-item, .nav-bot-item');
+    
     for (var i = 0; i < menuItems.length; i++) {
-        menuItems[i].addEventListener('click', function(e) {
+        // HAPUS listener lama dengan clone (mencegah duplikasi)
+        var newEl = menuItems[i].cloneNode(true);
+        menuItems[i].parentNode.replaceChild(newEl, menuItems[i]);
+        
+        // TAMBAHKAN listener baru
+        newEl.addEventListener('click', function(e) {
             e.preventDefault();
             var page = this.getAttribute('data-page');
+            
             if (page && page !== 'keluar') {
-                if (page === 'kelola' && !isAdmin) {
-                    showToast('Hanya Admin yang dapat mengakses halaman Kelola!', true);
+                // CEK AKSES - SEMUA halaman admin
+                var adminPages = ['kelola', 'verifikasi', 'laporan', 'bsu', 'nasabah', 'user'];
+                if (adminPages.indexOf(page) !== -1 && !isAdmin) {
+                    showToast('Hanya Admin yang dapat mengakses halaman ini!', true);
                     return;
                 }
+                
+                // Navigasi
                 navigateTo(page);
             }
         });
     }
     
-    // Tambah Sampah
     var tambahBtn = document.getElementById('tambahSampahBtn');
     if (tambahBtn) {
         tambahBtn.addEventListener('click', window.tambahSampah);
     }
     
-    // Filter Jenis
+    var tambahTamuBtn = document.getElementById('tambahTamuBtn');
+    if (tambahTamuBtn) {
+        tambahTamuBtn.addEventListener('click', window.tambahDataTamu);
+    }
+    
     var filterJenis = document.getElementById('filterJenis');
     if (filterJenis) {
         filterJenis.addEventListener('change', function(e) {
@@ -2321,7 +3445,6 @@ function setupEventListeners() {
         });
     }
     
-    // Type Options
     var typeOptions = document.querySelectorAll('.type-option');
     for (var i = 0; i < typeOptions.length; i++) {
         typeOptions[i].addEventListener('click', function() {
@@ -2335,7 +3458,6 @@ function setupEventListeners() {
         });
     }
     
-    // Logout
     var logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
@@ -2358,7 +3480,6 @@ function setupEventListeners() {
         });
     }
     
-    // BSU Search
     var bsuSearchInput = document.getElementById('bsuSearchInput');
     if (bsuSearchInput) {
         bsuSearchInput.addEventListener('input', function(e) {
@@ -2366,13 +3487,11 @@ function setupEventListeners() {
         });
     }
     
-    // Clear BSU
     var clearBsuBtn = document.getElementById('clearBsuBtn');
     if (clearBsuBtn) {
         clearBsuBtn.addEventListener('click', clearSelectedBSU);
     }
     
-    // Search Data
     var searchInput = document.getElementById('searchDataInput');
     var searchClear = document.getElementById('searchClearBtn');
     
@@ -2407,7 +3526,6 @@ function setupEventListeners() {
         });
     }
     
-    // Date Filter
     var dateStartInput = document.getElementById('filterDateStart');
     var dateEndInput = document.getElementById('filterDateEnd');
     var applyDateBtn = document.getElementById('applyDateFilter');
@@ -2435,7 +3553,6 @@ function setupEventListeners() {
         });
     }
     
-    // Export buttons
     var exportExcelBtn = document.getElementById('exportExcelBtn');
     var exportCSVBtn = document.getElementById('exportCSVBtn');
     var exportTamuBtn = document.getElementById('exportTamuBtn');
@@ -2452,13 +3569,11 @@ function setupEventListeners() {
         exportTamuBtn.addEventListener('click', exportDataTamu);
     }
     
-    // Share Laporan
     var shareBtn = document.getElementById('shareLaporanBtn');
     if (shareBtn) {
         shareBtn.addEventListener('click', shareLaporan);
     }
     
-    // Fullscreen & Presentation
     var fullscreenBtn = document.getElementById('fullscreenBtn');
     if (fullscreenBtn) {
         fullscreenBtn.addEventListener('click', function() {
@@ -2473,7 +3588,6 @@ function setupEventListeners() {
         });
     }
     
-    // Backup & Restore
     var backupBtn = document.getElementById('backupBtn');
     if (backupBtn) {
         backupBtn.addEventListener('click', backupData);
@@ -2488,13 +3602,11 @@ function setupEventListeners() {
         });
     }
     
-    // Print Laporan Langsung
     var printBtn = document.getElementById('btnPrintLaporan');
     if (printBtn) {
         printBtn.addEventListener('click', printLaporanLangusng);
     }
     
-    // Clear Logs
     var clearLogsBtn = document.getElementById('clearLogsBtn');
     if (clearLogsBtn) {
         clearLogsBtn.addEventListener('click', function() {
@@ -2504,6 +3616,56 @@ function setupEventListeners() {
                 showToast('Log aktivitas berhasil dihapus', false);
                 logActivity('Hapus Log', 'Menghapus semua log aktivitas');
             });
+        });
+    }
+    
+    var genLaporanBtn = document.getElementById('generateLaporanBSUBtn');
+    if (genLaporanBtn) {
+        genLaporanBtn.addEventListener('click', function() {
+            var bsu = document.getElementById('laporanBSUFilter').value;
+            var tahun = parseInt(document.getElementById('laporanTahunFilter').value);
+            renderLaporanTahunanBSU('laporanBSUContainer', bsu, tahun);
+        });
+    }
+    
+    var genLaporanBtn2 = document.getElementById('generateLaporanBSUBtn2');
+    if (genLaporanBtn2) {
+        genLaporanBtn2.addEventListener('click', function() {
+            var bsu = document.getElementById('laporanBSUFilter2').value;
+            var tahun = parseInt(document.getElementById('laporanTahunFilter2').value);
+            renderLaporanTahunanBSU('laporanBSUContainer2', bsu, tahun);
+        });
+    }
+    
+    var genTabunganBtn = document.getElementById('generateTabunganBtn');
+    if (genTabunganBtn) {
+        genTabunganBtn.addEventListener('click', function() {
+            var bsu = document.getElementById('tabunganBSUFilter').value;
+            renderBukuTabungan('tabunganContainer', bsu);
+        });
+    }
+    
+    var genTabunganBtn2 = document.getElementById('generateTabunganBtn2');
+    if (genTabunganBtn2) {
+        genTabunganBtn2.addEventListener('click', function() {
+            var bsu = document.getElementById('tabunganBSUFilter2').value;
+            renderBukuTabungan('tabunganContainer2', bsu);
+        });
+    }
+    
+    var exportTabunganBtn = document.getElementById('exportTabunganBtn');
+    if (exportTabunganBtn) {
+        exportTabunganBtn.addEventListener('click', function() {
+            var bsu = document.getElementById('tabunganBSUFilter').value;
+            exportTabunganExcel(bsu);
+        });
+    }
+    
+    var exportTabunganBtn2 = document.getElementById('exportTabunganBtn2');
+    if (exportTabunganBtn2) {
+        exportTabunganBtn2.addEventListener('click', function() {
+            var bsu = document.getElementById('tabunganBSUFilter2').value;
+            exportTabunganExcel(bsu);
         });
     }
 }
@@ -2543,7 +3705,6 @@ function togglePresentationMode() {
 // ==================== KEYBOARD SHORTCUTS ====================
 function setupKeyboardShortcuts() {
     document.addEventListener('keydown', function(e) {
-        // Ctrl + S = Simpan
         if (e.ctrlKey && e.key === 's') {
             e.preventDefault();
             if (isAdmin && document.getElementById('kelolaPage').classList.contains('active')) {
@@ -2555,7 +3716,6 @@ function setupKeyboardShortcuts() {
                 }, 300);
             }
         }
-        // Ctrl + F = Cari
         if (e.ctrlKey && e.key === 'f') {
             e.preventDefault();
             var searchInput2 = document.querySelector('.bsu-search input');
@@ -2564,23 +3724,19 @@ function setupKeyboardShortcuts() {
                 searchInput2.select();
             }
         }
-        // Ctrl + P = Print laporan
         if (e.ctrlKey && e.key === 'p') {
             e.preventDefault();
-            var laporan = generateLaporanMingguan();
-            exportToPDF(laporan, 'mingguan');
+            var laporan = generateLaporanMingguan(daftarSampah, currentFilterBSU, currentFilterRW, currentFilterRT);
+            exportFullPDF(laporan, 'mingguan');
         }
-        // Ctrl + E = Export
         if (e.ctrlKey && e.key === 'e') {
             e.preventDefault();
             exportDataTamu();
         }
-        // F11 = Fullscreen
         if (e.key === 'F11') {
             e.preventDefault();
             toggleFullscreen();
         }
-        // Esc = Tutup modal
         if (e.key === 'Escape') {
             var modals = document.querySelectorAll('.modal');
             for (var i = 0; i < modals.length; i++) {
@@ -2590,36 +3746,1236 @@ function setupKeyboardShortcuts() {
     });
 }
 
-// ==================== INISIALISASI ====================
+// ==================== INISIALISASI ULANG ====================
+// Hapus duplikasi inisialisasi, gabungkan semua
+
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing...');
+    console.log('DOM loaded, initializing admin with all features...');
     
-    // Set admin name
+    // 1. Set nama admin
     var adminName = sessionStorage.getItem('adminName') || 'Admin';
     var adminNameSpan = document.getElementById('adminName');
     var welcomeNameSpan = document.getElementById('welcomeName');
     if (adminNameSpan) adminNameSpan.innerText = adminName;
     if (welcomeNameSpan) welcomeNameSpan.innerText = adminName;
     
-    // Init
+    // 2. Inisialisasi sidebar
     initSidebar();
+    
+    // 3. Load data BSU dari localStorage
+    loadBSUData();
+    
+    // 4. Render BSU list di kelola
     renderBSUList('');
+    
+    // 5. Setup auto harga
     setupAutoHarga();
+    
+    // 6. Setup filters
     setupFilters();
+    
+    // 7. Setup laporan modal
     setupLaporanModal();
+    
+    // 8. Setup FAB
     setupFAB();
+    
+    // 9. Setup event listeners utama
     setupEventListeners();
+    
+    // 10. Setup keyboard shortcuts
     setupKeyboardShortcuts();
+    
+    // 11. Load data dari localStorage
     loadDataFromLocal();
+    
+    // 12. Apply role UI
     applyRoleBasedUI();
     
-    // Initial log
+    // 13. Setup upload foto (untuk tamu)
+    setupUploadFoto();
+    setUserBSUForTamu();
+    
+    // 14. Setup data tamu
+    loadTamuDataFromLocal();
+    
+    // 15. RENDER SEMUA HALAMAN MANAJEMEN
+    renderBSUTable();          // Halaman BSU
+    renderUserTable();         // Halaman User
+    renderAdminNasabah('', 'all'); // Halaman Nasabah
+    renderVerifikasiTableWithMassal(); // Halaman Verifikasi dengan massal
+    
+    // 16. Populate semua filter
+    populateUserBSUFilter();
+    populateLogFilters();
+    populateBSUFiltersAdmin();
+    populateBSUFilters();
+    
+    // 17. Update badges
+    updateNasabahBadge();
+    updateLogBadge();
+    updateBSUBadge();
+    updateVerifikasiBadge();
+    
+    // 18. Render Top BSU di dashboard
+    renderTopBSU();
+    
+    // 19. Setup additional event listeners (manajemen)
+    setupAdditionalEventListeners();
+    
+    // 20. Log aktivitas login
     logActivity('Login', 'User ' + sessionStorage.getItem('username') + ' login');
     
-    // Auto refresh every 30 seconds
+    // 21. Auto refresh setiap 30 detik
     setInterval(function() {
         loadDataFromLocal();
+        loadTamuDataFromLocal();
+        // Update halaman yang aktif
+        var activePage = document.querySelector('.page.active');
+        if (activePage) {
+            var id = activePage.id;
+            if (id === 'bsuPage') renderBSUTable();
+            else if (id === 'nasabahPage') renderAdminNasabah('', 'all');
+            else if (id === 'userPage') renderUserTable();
+            else if (id === 'verifikasiPage') renderVerifikasiTableWithMassal();
+        }
+        updateVerifikasiBadge();
     }, 30000);
     
-    console.log('Initialization complete. User role:', userRole);
+    console.log('Admin initialization complete. User role:', userRole);
 });
+
+// =====================================================
+// ADMIN SCRIPT - TAMBAHAN FUNGSI MANAJEMEN
+// =====================================================
+
+// ==================== MANAJEMEN BSU ====================
+
+// Data BSU disimpan di localStorage
+var BSU_STORAGE_KEY = 'bankSampahBSU';
+
+function loadBSUData() {
+    var stored = localStorage.getItem(BSU_STORAGE_KEY);
+    if (stored) {
+        try {
+            dataBSU = JSON.parse(stored);
+            return dataBSU;
+        } catch(e) {
+            dataBSU = getDefaultBSU();
+        }
+    } else {
+        dataBSU = getDefaultBSU();
+        saveBSUData();
+    }
+    return dataBSU;
+}
+
+function getDefaultBSU() {
+    return [
+        { nama: "BSU MEDE 1", rw: "RW01", rt: "RT01", ketua: "Bapak Slamet" },
+        { nama: "BSU MEDE 2", rw: "RW01", rt: "RT02", ketua: "Ibu Siti" },
+        { nama: "BSU MEDE 3", rw: "RW01", rt: "RT03", ketua: "Bapak Agus" },
+        { nama: "BSU MEDE 4", rw: "RW01", rt: "RT04", ketua: "Ibu Dewi" },
+        { nama: "BSU PELANGI CERIA", rw: "RW02", rt: "RT01", ketua: "Bapak Herman" },
+        { nama: "BSU PELANGI 2", rw: "RW02", rt: "RT02", ketua: "Ibu Rina" },
+        { nama: "BSU PELANGI KENANGA", rw: "RW02", rt: "RT03", ketua: "Bapak Joko" },
+        { nama: "BSU PELANGI BUNDA", rw: "RW02", rt: "RT04", ketua: "Ibu Tuti" },
+        { nama: "BSU RW03 RT01", rw: "RW03", rt: "RT01", ketua: "Bapak Eko" },
+        { nama: "BSU RW03 RT02", rw: "RW03", rt: "RT02", ketua: "Ibu Ani" },
+        { nama: "BSU RW03 RT03", rw: "RW03", rt: "RT03", ketua: "Bapak Budi" },
+        { nama: "BSU FORSILA", rw: "RW04", rt: "RT01", ketua: "Ibu Wati" },
+        { nama: "BSU BERSERI 04", rw: "RW04", rt: "RT02", ketua: "Bapak Dodi" },
+        { nama: "BSU BINTANG KEJORA 1", rw: "RW05", rt: "RT01", ketua: "Ibu Lina" },
+        { nama: "BSU BINTANG KEJORA 2", rw: "RW05", rt: "RT02", ketua: "Bapak Deni" },
+        { nama: "BSU TERANG", rw: "RW06", rt: "RT01", ketua: "Ibu Maya" },
+        { nama: "BSU RW06 RT02", rw: "RW06", rt: "RT02", ketua: "Bapak Rudi" },
+        { nama: "BSU RW06 RT03", rw: "RW06", rt: "RT03", ketua: "Ibu Erna" },
+        { nama: "BSU RW06 RT04", rw: "RW06", rt: "RT04", ketua: "Bapak Tono" },
+        { nama: "BSU RW06 RT05", rw: "RW06", rt: "RT05", ketua: "Ibu Yuni" },
+        { nama: "BSU BERSEMI 0107", rw: "RW07", rt: "RT01", ketua: "Bapak Hendra" },
+        { nama: "BSU BERSEMI 07", rw: "RW07", rt: "RT02", ketua: "Ibu Ratna" },
+        { nama: "BSU RW07 RT03", rw: "RW07", rt: "RT03", ketua: "Bapak Feri" },
+        { nama: "BSU RW07 RT04", rw: "RW07", rt: "RT04", ketua: "Ibu Linda" },
+        { nama: "BSU RW07 RT05", rw: "RW07", rt: "RT05", ketua: "Bapak Andi" },
+        { nama: "BSU MENTARI 01", rw: "RW08", rt: "RT01", ketua: "Ibu Nina" },
+        { nama: "BSU MENTARI", rw: "RW08", rt: "RT02", ketua: "Bapak Taufik" },
+        { nama: "BSU KP KIDOEL", rw: "RW09", rt: "all", ketua: "Bapak Kidoel" },
+        { nama: "BSU MAWARGA", rw: "RW10", rt: "RT01", ketua: "Ibu Rose" },
+        { nama: "BSU SRIKANDI", rw: "RW10", rt: "RT02", ketua: "Bapak Srikandi" },
+        { nama: "BSU RW10 RT03", rw: "RW10", rt: "RT03", ketua: "Ibu Mega" },
+        { nama: "BSU RW11 RT01", rw: "RW11", rt: "RT01", ketua: "Bapak Gilang" },
+        { nama: "BSU ZALAK 2", rw: "RW11", rt: "RT02", ketua: "Ibu Zalak" },
+        { nama: "BSU RW11 RT03", rw: "RW11", rt: "RT03", ketua: "Bapak Rizki" },
+        { nama: "BSU RW12 RT01", rw: "RW12", rt: "RT01", ketua: "Ibu Sari" },
+        { nama: "BSU RW12 RT02", rw: "RW12", rt: "RT02", ketua: "Bapak Darma" },
+        { nama: "BSU RW12 RT03", rw: "RW12", rt: "RT03", ketua: "Ibu Ayu" },
+        { nama: "BSU CEMERLANG 1", rw: "RW13", rt: "RT01", ketua: "Bapak Chandra" },
+        { nama: "BSU CEMERLANG 2", rw: "RW13", rt: "RT02", ketua: "Ibu Berlian" },
+        { nama: "BSU CEMERLANG 3", rw: "RW13", rt: "RT03", ketua: "Bapak Gio" },
+        { nama: "BSU RW14 RT01", rw: "RW14", rt: "RT01", ketua: "Ibu Fira" },
+        { nama: "BSU RW14 RT02", rw: "RW14", rt: "RT02", ketua: "Bapak Irfan" },
+        { nama: "BSU RW14 RT03", rw: "RW14", rt: "RT03", ketua: "Ibu Nadia" }
+    ];
+}
+
+function saveBSUData() {
+    localStorage.setItem(BSU_STORAGE_KEY, JSON.stringify(dataBSU));
+}
+
+function renderBSUTable() {
+    var container = document.getElementById('bsuTableBody');
+    var count = document.getElementById('bsuListCount');
+    if (!container) return;
+    
+    if (count) count.textContent = 'Total: ' + dataBSU.length + ' BSU';
+    
+    if (dataBSU.length === 0) {
+        container.innerHTML = '<tr><td colspan="8" style="text-align:center;">Tidak ada BSU</td></tr>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < dataBSU.length; i++) {
+        var bsu = dataBSU[i];
+        // Hitung statistik
+        var stats = getBSUStats(bsu.nama);
+        
+        html += '<tr>' +
+            '<td>' + (i + 1) + '</td>' +
+            '<td><strong>' + escapeHtml(bsu.nama) + '</strong></td>' +
+            '<td>' + bsu.rw + '</td>' +
+            '<td>' + (bsu.rt === 'all' ? 'Semua RT' : bsu.rt) + '</td>' +
+            '<td>' + escapeHtml(bsu.ketua || '-') + '</td>' +
+            '<td>' + stats.count + '</td>' +
+            '<td>' + stats.berat.toFixed(2) + ' kg</td>' +
+            '<td>' +
+                '<button class="btn-edit-bsu" onclick="editBSU(\'' + bsu.nama + '\')" style="padding:4px 10px;background:#f9a825;color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem;margin-right:4px;">✏️</button>' +
+                '<button class="btn-delete-bsu" onclick="deleteBSU(\'' + bsu.nama + '\')" style="padding:4px 10px;background:#ef5350;color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem;">🗑️</button>' +
+            '</td>' +
+            '</tr>';
+    }
+    container.innerHTML = html;
+}
+
+function getBSUStats(bsuNama) {
+    var filtered = daftarSampah.filter(function(item) {
+        return item.bsu === bsuNama;
+    });
+    var berat = 0;
+    for (var i = 0; i < filtered.length; i++) {
+        berat += filtered[i].berat;
+    }
+    return { count: filtered.length, berat: berat };
+}
+
+window.tambahBSU = function() {
+    var nama = document.getElementById('bsuNamaInput').value.trim();
+    var rw = document.getElementById('bsuRWInput').value;
+    var rt = document.getElementById('bsuRTInput').value;
+    var ketua = document.getElementById('bsuKetuaInput').value.trim();
+    
+    if (!nama) {
+        showToast('Nama BSU wajib diisi!', true);
+        return;
+    }
+    
+    // Cek duplikat
+    for (var i = 0; i < dataBSU.length; i++) {
+        if (dataBSU[i].nama === nama) {
+            showToast('BSU dengan nama tersebut sudah ada!', true);
+            return;
+        }
+    }
+    
+    dataBSU.push({ nama: nama, rw: rw, rt: rt, ketua: ketua || '-' });
+    saveBSUData();
+    renderBSUTable();
+    populateBSUFilters();
+    renderBSUList('');
+    
+    document.getElementById('bsuNamaInput').value = '';
+    document.getElementById('bsuKetuaInput').value = '';
+    
+    showToast('BSU ' + nama + ' berhasil ditambahkan!', false);
+    logActivity('Tambah BSU', 'Menambah BSU: ' + nama);
+};
+
+window.editBSU = function(namaLama) {
+    var bsu = null;
+    for (var i = 0; i < dataBSU.length; i++) {
+        if (dataBSU[i].nama === namaLama) {
+            bsu = dataBSU[i];
+            break;
+        }
+    }
+    if (!bsu) {
+        showToast('BSU tidak ditemukan!', true);
+        return;
+    }
+    
+    var namaBaru = prompt('Nama BSU:', bsu.nama);
+    if (!namaBaru) return;
+    var rwBaru = prompt('RW:', bsu.rw);
+    if (!rwBaru) return;
+    var rtBaru = prompt('RT:', bsu.rt);
+    if (!rtBaru) return;
+    var ketuaBaru = prompt('Ketua BSU:', bsu.ketua || '');
+    
+    // Cek duplikat jika nama berubah
+    if (namaBaru !== namaLama) {
+        for (var i = 0; i < dataBSU.length; i++) {
+            if (dataBSU[i].nama === namaBaru) {
+                showToast('BSU dengan nama tersebut sudah ada!', true);
+                return;
+            }
+        }
+        // Update nama di data sampah
+        for (var j = 0; j < daftarSampah.length; j++) {
+            if (daftarSampah[j].bsu === namaLama) {
+                daftarSampah[j].bsu = namaBaru;
+            }
+        }
+        saveDataToLocal();
+    }
+    
+    bsu.nama = namaBaru;
+    bsu.rw = rwBaru;
+    bsu.rt = rtBaru;
+    bsu.ketua = ketuaBaru || '-';
+    
+    saveBSUData();
+    renderBSUTable();
+    populateBSUFilters();
+    renderBSUList('');
+    refreshAll();
+    
+    showToast('BSU berhasil diupdate!', false);
+    logActivity('Edit BSU', 'Mengedit BSU: ' + namaBaru);
+};
+
+window.deleteBSU = function(nama) {
+    showConfirm('Hapus BSU', 'Yakin ingin menghapus BSU "' + nama + '"? Data yang terkait akan tetap ada.', function() {
+        var newArray = [];
+        for (var i = 0; i < dataBSU.length; i++) {
+            if (dataBSU[i].nama !== nama) {
+                newArray.push(dataBSU[i]);
+            }
+        }
+        dataBSU = newArray;
+        saveBSUData();
+        renderBSUTable();
+        populateBSUFilters();
+        renderBSUList('');
+        refreshAll();
+        showToast('BSU berhasil dihapus!', false);
+        logActivity('Hapus BSU', 'Menghapus BSU: ' + nama);
+    });
+};
+
+// ==================== MANAJEMEN NASABAH ====================
+
+function getNasabahUnikAdmin(bsuFilter) {
+    var nasabahMap = {};
+    
+    for (var i = 0; i < daftarSampah.length; i++) {
+        var item = daftarSampah[i];
+        var nama = item.namaNasabah || '-';
+        if (nama !== '-' && nama !== 'undefined' && nama !== 'null') {
+            if (bsuFilter && bsuFilter !== 'all') {
+                if (item.bsu !== bsuFilter) continue;
+            }
+            if (!nasabahMap[nama]) {
+                nasabahMap[nama] = {
+                    nama: nama,
+                    totalBerat: 0,
+                    totalNilai: 0,
+                    totalTransaksi: 0,
+                    bsu: item.bsu || '-'
+                };
+            }
+            var harga = item.hargaPerKg || getHargaByNamaSampah(item.nama);
+            var nilai = item.berat * harga;
+            nasabahMap[nama].totalBerat += item.berat;
+            nasabahMap[nama].totalNilai += nilai;
+            nasabahMap[nama].totalTransaksi++;
+        }
+    }
+    
+    var result = Object.values(nasabahMap);
+    result.sort(function(a, b) { return b.totalNilai - a.totalNilai; });
+    return result;
+}
+
+function renderAdminNasabah(searchTerm, bsuFilter) {
+    var container = document.getElementById('adminNasabahBody');
+    var count = document.getElementById('adminNasabahCount');
+    if (!container) return;
+    
+    var nasabahList = getNasabahUnikAdmin(bsuFilter);
+    
+    if (searchTerm) {
+        var term = searchTerm.toLowerCase();
+        nasabahList = nasabahList.filter(function(n) {
+            return n.nama.toLowerCase().includes(term);
+        });
+    }
+    
+    if (count) count.textContent = 'Total: ' + nasabahList.length + ' nasabah';
+    
+    if (nasabahList.length === 0) {
+        container.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tidak ada nasabah</td></tr>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < nasabahList.length; i++) {
+        var n = nasabahList[i];
+        html += '<tr>' +
+            '<td>' + (i + 1) + '</td>' +
+            '<td><strong>' + escapeHtml(n.nama) + '</strong></td>' +
+            '<td>' + escapeHtml(n.bsu) + '</td>' +
+            '<td>' + n.totalBerat.toFixed(2) + ' kg</td>' +
+            '<td>' + n.totalTransaksi + '</td>' +
+            '<td class="nasabah-total-value">' + formatRupiah(n.totalNilai) + '</td>' +
+            '<td><button onclick="lihatDetailNasabah(\'' + escapeHtml(n.nama) + '\')" style="padding:4px 12px;background:#0d6efd;color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem;">👁 Detail</button></td>' +
+            '</tr>';
+    }
+    container.innerHTML = html;
+}
+
+window.lihatDetailNasabah = function(nama) {
+    var modal = document.getElementById('detailNasabahModal');
+    var body = document.getElementById('detailNasabahBody');
+    if (!modal || !body) return;
+    
+    // Cari semua transaksi nasabah
+    var transaksi = [];
+    var totalNilai = 0;
+    for (var i = 0; i < daftarSampah.length; i++) {
+        var item = daftarSampah[i];
+        if (item.namaNasabah === nama) {
+            var harga = item.hargaPerKg || getHargaByNamaSampah(item.nama);
+            var nilai = item.berat * harga;
+            totalNilai += nilai;
+            transaksi.push({
+                tanggal: item.tanggal || '-',
+                nama: item.nama,
+                bsu: item.bsu || '-',
+                rw: item.rw || '-',
+                rt: item.rt || '-',
+                berat: item.berat,
+                hargaPerKg: harga,
+                nilai: nilai
+            });
+        }
+    }
+    
+    transaksi.sort(function(a, b) {
+        return new Date(a.tanggal) - new Date(b.tanggal);
+    });
+    
+    var html = '<div style="margin-bottom:16px;">' +
+        '<h3 style="color:var(--primary);">' + escapeHtml(nama) + '</h3>' +
+        '<p style="color:var(--text-muted);font-size:0.85rem;">Total Transaksi: ' + transaksi.length + ' | Total Nilai: ' + formatRupiah(totalNilai) + '</p>' +
+        '</div>';
+    
+    if (transaksi.length === 0) {
+        html += '<p style="text-align:center;color:var(--text-muted);">Tidak ada transaksi</p>';
+    } else {
+        html += '<div style="overflow-x:auto;"><table class="data-table" style="font-size:0.8rem;">' +
+            '<thead><tr><th>Tanggal</th><th>Nama Sampah</th><th>BSU</th><th>RW/RT</th><th>Berat</th><th>Harga</th><th>Nilai</th></tr></thead><tbody>';
+        
+        for (var i = 0; i < transaksi.length; i++) {
+            var t = transaksi[i];
+            var tgl = t.tanggal ? formatTanggalIndo(t.tanggal) : '-';
+            html += '<tr>' +
+                '<td>' + tgl + '</td>' +
+                '<td>' + escapeHtml(t.nama) + '</td>' +
+                '<td>' + escapeHtml(t.bsu) + '</td>' +
+                '<td>' + escapeHtml(t.rw) + ' - ' + escapeHtml(t.rt) + '</td>' +
+                '<td>' + t.berat.toFixed(2) + ' kg</td>' +
+                '<td>' + formatRupiah(t.hargaPerKg) + '</td>' +
+                '<td class="nasabah-total-value">' + formatRupiah(t.nilai) + '</td>' +
+                '</tr>';
+        }
+        
+        html += '</tbody></table></div>';
+    }
+    
+    body.innerHTML = html;
+    modal.style.display = 'block';
+};
+
+function closeDetailNasabah() {
+    document.getElementById('detailNasabahModal').style.display = 'none';
+}
+
+// ==================== MANAJEMEN USER ====================
+
+var USERS_STORAGE_KEY = 'bankSampahUsers';
+
+function loadUsersData() {
+    var stored = localStorage.getItem(USERS_STORAGE_KEY);
+    if (stored) {
+        try {
+            return JSON.parse(stored);
+        } catch(e) {
+            return getDefaultUsers();
+        }
+    }
+    return getDefaultUsers();
+}
+
+function getDefaultUsers() {
+    var users = [
+        { username: 'admin', password: 'admin123', nama: 'Administrator', role: 'admin', bsuId: null, bsuNama: null, bsuRW: null, bsuRT: null }
+    ];
+    for (var i = 0; i < dataBSU.length; i++) {
+        var bsu = dataBSU[i];
+        var usernameBSU = bsu.nama.toLowerCase().replace(/ /g, '_');
+        users.push({
+            username: usernameBSU,
+            password: 'bsu123',
+            nama: bsu.ketua || 'Ketua BSU',
+            role: 'tamu',
+            bsuId: 'bsu_' + bsu.nama.toLowerCase().replace(/ /g, '_'),
+            bsuNama: bsu.nama,
+            bsuRW: bsu.rw,
+            bsuRT: bsu.rt
+        });
+    }
+    return users;
+}
+
+function saveUsersData(users) {
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+}
+
+function renderUserTable() {
+    var container = document.getElementById('userTableBody');
+    var count = document.getElementById('userListCount');
+    if (!container) return;
+    
+    var users = loadUsersData();
+    
+    if (count) count.textContent = 'Total: ' + users.length + ' user';
+    
+    if (users.length === 0) {
+        container.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tidak ada user</td></tr>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < users.length; i++) {
+        var user = users[i];
+        var roleLabel = user.role === 'admin' ? '👑 Admin' : '👤 BSU';
+        var bsuLabel = user.bsuNama || '-';
+        var rwrtLabel = user.bsuRW ? user.bsuRW + ' - ' + (user.bsuRT || 'all') : '-';
+        
+        html += '<tr>' +
+            '<td>' + (i + 1) + '</td>' +
+            '<td><strong>' + escapeHtml(user.username) + '</strong></td>' +
+            '<td>' + escapeHtml(user.nama || '-') + '</td>' +
+            '<td>' + roleLabel + '</td>' +
+            '<td>' + escapeHtml(bsuLabel) + '</td>' +
+            '<td>' + rwrtLabel + '</td>' +
+            '<td>' +
+                '<button onclick="resetPasswordUser(\'' + escapeHtml(user.username) + '\')" style="padding:4px 10px;background:#f9a825;color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem;margin-right:4px;">🔑</button>' +
+                '<button onclick="deleteUser(\'' + escapeHtml(user.username) + '\')" style="padding:4px 10px;background:#ef5350;color:white;border:none;border-radius:4px;cursor:pointer;font-size:0.7rem;">🗑️</button>' +
+            '</td>' +
+            '</tr>';
+    }
+    container.innerHTML = html;
+}
+
+window.tambahUser = function() {
+    var username = document.getElementById('userUsernameInput').value.trim();
+    var password = document.getElementById('userPasswordInput').value.trim();
+    var role = document.getElementById('userRoleInput').value;
+    var bsuNama = document.getElementById('userBSUInput').value;
+    var nama = document.getElementById('userNamaInput').value.trim();
+    
+    if (!username) {
+        showToast('Username wajib diisi!', true);
+        return;
+    }
+    if (!password) {
+        showToast('Password wajib diisi!', true);
+        return;
+    }
+    if (role === 'tamu' && !bsuNama) {
+        showToast('Pilih BSU untuk role Tamu!', true);
+        return;
+    }
+    
+    var users = loadUsersData();
+    
+    // Cek duplikat
+    for (var i = 0; i < users.length; i++) {
+        if (users[i].username === username) {
+            showToast('Username sudah digunakan!', true);
+            return;
+        }
+    }
+    
+    var bsuData = null;
+    if (bsuNama) {
+        for (var i = 0; i < dataBSU.length; i++) {
+            if (dataBSU[i].nama === bsuNama) {
+                bsuData = dataBSU[i];
+                break;
+            }
+        }
+    }
+    
+    users.push({
+        username: username,
+        password: password,
+        nama: nama || (bsuData ? bsuData.ketua : 'User'),
+        role: role,
+        bsuId: bsuData ? 'bsu_' + bsuData.nama.toLowerCase().replace(/ /g, '_') : null,
+        bsuNama: bsuData ? bsuData.nama : null,
+        bsuRW: bsuData ? bsuData.rw : null,
+        bsuRT: bsuData ? bsuData.rt : null
+    });
+    
+    saveUsersData(users);
+    renderUserTable();
+    populateUserBSUFilter();
+    
+    document.getElementById('userUsernameInput').value = '';
+    document.getElementById('userPasswordInput').value = 'bsu123';
+    document.getElementById('userNamaInput').value = '';
+    
+    showToast('User berhasil ditambahkan!', false);
+    logActivity('Tambah User', 'Menambah user: ' + username);
+};
+
+window.resetPasswordUser = function(username) {
+    showConfirm('Reset Password', 'Reset password untuk user "' + username + '" ke "bsu123"?', function() {
+        var users = loadUsersData();
+        for (var i = 0; i < users.length; i++) {
+            if (users[i].username === username) {
+                users[i].password = 'bsu123';
+                break;
+            }
+        }
+        saveUsersData(users);
+        renderUserTable();
+        showToast('Password berhasil direset!', false);
+        logActivity('Reset Password', 'Reset password user: ' + username);
+    });
+};
+
+window.deleteUser = function(username) {
+    if (username === 'admin') {
+        showToast('Tidak bisa menghapus user admin utama!', true);
+        return;
+    }
+    showConfirm('Hapus User', 'Yakin ingin menghapus user "' + username + '"?', function() {
+        var users = loadUsersData();
+        var newUsers = [];
+        for (var i = 0; i < users.length; i++) {
+            if (users[i].username !== username) {
+                newUsers.push(users[i]);
+            }
+        }
+        saveUsersData(newUsers);
+        renderUserTable();
+        showToast('User berhasil dihapus!', false);
+        logActivity('Hapus User', 'Menghapus user: ' + username);
+    });
+};
+
+function populateUserBSUFilter() {
+    var select = document.getElementById('userBSUInput');
+    if (!select) return;
+    
+    var html = '<option value="">Pilih BSU</option>';
+    for (var i = 0; i < dataBSU.length; i++) {
+        html += '<option value="' + escapeHtml(dataBSU[i].nama) + '">' + escapeHtml(dataBSU[i].nama) + '</option>';
+    }
+    select.innerHTML = html;
+}
+
+function populateLogFilters() {
+    var logs = JSON.parse(localStorage.getItem('bankSampahLogs') || '[]');
+    
+    var userSelect = document.getElementById('logUserFilter');
+    var actionSelect = document.getElementById('logActionFilter');
+    
+    if (userSelect) {
+        var users = {};
+        for (var i = 0; i < logs.length; i++) {
+            users[logs[i].user] = true;
+        }
+        var html = '<option value="all">Semua User</option>';
+        for (var user in users) {
+            html += '<option value="' + escapeHtml(user) + '">' + escapeHtml(user) + '</option>';
+        }
+        userSelect.innerHTML = html;
+    }
+    
+    if (actionSelect) {
+        var actions = {};
+        for (var i = 0; i < logs.length; i++) {
+            actions[logs[i].action] = true;
+        }
+        var html = '<option value="all">Semua Aksi</option>';
+        for (var action in actions) {
+            html += '<option value="' + escapeHtml(action) + '">' + escapeHtml(action) + '</option>';
+        }
+        actionSelect.innerHTML = html;
+    }
+}
+
+// ==================== VERIFIKASI MASSAL ====================
+
+function renderVerifikasiTableWithMassal() {
+    var container = document.getElementById('verifikasiTableBody');
+    var count = document.getElementById('verifikasiPageCount');
+    if (!container) return;
+    
+    var statusFilter = document.getElementById('verifikasiStatusFilter') ? document.getElementById('verifikasiStatusFilter').value : 'all';
+    var bsuFilter = document.getElementById('verifikasiBSUFilter') ? document.getElementById('verifikasiBSUFilter').value : 'all';
+    
+    var filtered = dataTamuMenunggu.slice();
+    
+    if (statusFilter !== 'all') {
+        filtered = filtered.filter(function(item) { return item.status === statusFilter; });
+    }
+    if (bsuFilter !== 'all') {
+        filtered = filtered.filter(function(item) { return item.bsu === bsuFilter; });
+    }
+    
+    filtered.sort(function(a, b) {
+        if (a.status === 'pending' && b.status !== 'pending') return -1;
+        if (a.status !== 'pending' && b.status === 'pending') return 1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+    
+    if (count) count.textContent = 'Total: ' + filtered.length + ' data';
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<tr><td colspan="10" style="text-align:center;">Tidak ada data</td></tr>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < filtered.length; i++) {
+        var item = filtered[i];
+        var statusText = '';
+        var statusClass = '';
+        if (item.status === 'pending') {
+            statusText = '⏳ Menunggu';
+            statusClass = 'pending';
+        } else if (item.status === 'verified') {
+            statusText = '✅ Diverifikasi';
+            statusClass = 'verified';
+        } else if (item.status === 'rejected') {
+            statusText = '❌ Ditolak';
+            statusClass = 'rejected';
+        }
+        
+        var isPending = item.status === 'pending';
+        
+        html += '<tr>' +
+            '<td><input type="checkbox" class="verifikasi-checkbox" data-id="' + item.id + '" ' + (isPending ? '' : 'disabled') + '></td>' +
+            '<td>' + (i + 1) + '</td>' +
+            '<td>' + escapeHtml(item.namaNasabah || '-') + '</td>' +
+            '<td>' + escapeHtml(item.nama) + '</td>' +
+            '<td>' + item.berat.toFixed(2) + ' kg</td>' +
+            '<td>' + escapeHtml(item.bsu) + '</td>' +
+            '<td>' + escapeHtml(item.ketua) + '</td>' +
+            '<td>' + item.tanggal + '</td>' +
+            '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+            '<td>' +
+                (isPending ? 
+                    '<button onclick="verifikasiDataTamu(' + item.id + ', \'verified\', null)" style="padding:2px 8px;font-size:0.6rem;background:#2e7d32;color:white;border:none;border-radius:4px;cursor:pointer;">✓</button> ' +
+                    '<button onclick="verifikasiDenganHarga(' + item.id + ')" style="padding:2px 8px;font-size:0.6rem;background:#f9a825;color:white;border:none;border-radius:4px;cursor:pointer;">💰</button> ' +
+                    '<button onclick="verifikasiDataTamu(' + item.id + ', \'rejected\', null)" style="padding:2px 8px;font-size:0.6rem;background:#ef5350;color:white;border:none;border-radius:4px;cursor:pointer;">✕</button> ' +
+                    '<button onclick="lihatDetailTamu(' + item.id + ')" style="padding:2px 8px;font-size:0.6rem;background:#0d6efd;color:white;border:none;border-radius:4px;cursor:pointer;">👁</button>'
+                : 
+                    '<button onclick="lihatDetailTamu(' + item.id + ')" style="padding:2px 8px;font-size:0.6rem;background:#0d6efd;color:white;border:none;border-radius:4px;cursor:pointer;">👁</button>'
+                ) +
+            '</td>' +
+            '</tr>';
+    }
+    container.innerHTML = html;
+}
+
+window.verifikasiMassal = function() {
+    var checkboxes = document.querySelectorAll('.verifikasi-checkbox:checked');
+    if (checkboxes.length === 0) {
+        showToast('Pilih data yang akan diverifikasi!', true);
+        return;
+    }
+    
+    showConfirm('Verifikasi Massal', 'Verifikasi ' + checkboxes.length + ' data sekaligus?', function() {
+        var count = 0;
+        for (var i = 0; i < checkboxes.length; i++) {
+            var id = parseInt(checkboxes[i].getAttribute('data-id'));
+            for (var j = 0; j < dataTamuMenunggu.length; j++) {
+                if (dataTamuMenunggu[j].id === id && dataTamuMenunggu[j].status === 'pending') {
+                    var item = dataTamuMenunggu[j];
+                    var harga = getHargaByNamaSampah(item.nama);
+                    
+                    daftarSampah.push({
+                        id: Date.now() + count,
+                        rw: item.rw || 'RW01',
+                        rt: item.rt || 'RT01',
+                        nama: item.nama,
+                        jenis: 'nonorganik',
+                        berat: item.berat,
+                        hargaPerKg: harga,
+                        tanggal: item.tanggal || new Date().toISOString(),
+                        bsu: item.bsu,
+                        verifiedFromTamu: true,
+                        verifiedTamuId: item.id,
+                        namaNasabah: item.namaNasabah || '',
+                        verifiedBy: sessionStorage.getItem('username') || 'Admin',
+                        verifiedAt: new Date().toISOString()
+                    });
+                    
+                    item.status = 'verified';
+                    item.hargaPerKg = harga;
+                    item.verifiedBy = sessionStorage.getItem('username') || 'Admin';
+                    item.verifiedAt = new Date().toISOString();
+                    count++;
+                }
+            }
+        }
+        
+        saveDataToLocal();
+        saveTamuDataToLocal();
+        refreshAll();
+        renderVerifikasiTableWithMassal();
+        renderVerifikasiHistory();
+        updateVerifikasiCard();
+        
+        showToast(count + ' data berhasil diverifikasi!', false);
+        logActivity('Verifikasi Massal', 'Memverifikasi ' + count + ' data secara massal');
+    });
+};
+
+// ==================== TOP 5 BSU ====================
+
+function renderTopBSU() {
+    var container = document.getElementById('topBSUList');
+    if (!container) return;
+    
+    var bsuPerformance = {};
+    for (var i = 0; i < daftarSampah.length; i++) {
+        var item = daftarSampah[i];
+        var bsu = item.bsu || 'Tanpa BSU';
+        if (!bsuPerformance[bsu]) {
+            bsuPerformance[bsu] = { berat: 0, nilai: 0, count: 0 };
+        }
+        var harga = item.hargaPerKg || getHargaByNamaSampah(item.nama);
+        bsuPerformance[bsu].berat += item.berat;
+        bsuPerformance[bsu].nilai += (item.berat * harga);
+        bsuPerformance[bsu].count++;
+    }
+    
+    var sorted = Object.keys(bsuPerformance).sort(function(a, b) {
+        return bsuPerformance[b].nilai - bsuPerformance[a].nilai;
+    });
+    
+    var top = sorted.slice(0, 5);
+    
+    if (top.length === 0) {
+        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">Belum ada data</div>';
+        return;
+    }
+    
+    var maxValue = 0;
+    for (var i = 0; i < top.length; i++) {
+        if (bsuPerformance[top[i]].nilai > maxValue) {
+            maxValue = bsuPerformance[top[i]].nilai;
+        }
+    }
+    maxValue = maxValue || 1;
+    
+    var html = '';
+    for (var i = 0; i < top.length; i++) {
+        var bsu = top[i];
+        var data = bsuPerformance[bsu];
+        var percent = (data.nilai / maxValue) * 100;
+        var medal = '';
+        if (i === 0) medal = '🥇';
+        else if (i === 1) medal = '🥈';
+        else if (i === 2) medal = '🥉';
+        
+        html += '<div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--primary-bg);">' +
+            '<div style="font-size:1.2rem;font-weight:700;min-width:40px;color:var(--text-muted);">' + medal + '</div>' +
+            '<div style="flex:1;">' +
+                '<div style="font-weight:600;font-size:0.9rem;">' + escapeHtml(bsu) + '</div>' +
+                '<div style="font-size:0.7rem;color:var(--text-muted);">' + data.count + ' transaksi | ' + data.berat.toFixed(2) + ' kg</div>' +
+            '</div>' +
+            '<div style="text-align:right;min-width:120px;">' +
+                '<div style="font-weight:700;color:var(--primary);font-size:0.9rem;">' + formatRupiah(data.nilai) + '</div>' +
+            '</div>' +
+            '<div style="width:80px;height:8px;background:var(--primary-bg);border-radius:4px;overflow:hidden;">' +
+                '<div style="height:100%;width:' + percent + '%;background:linear-gradient(90deg,var(--primary-light),var(--primary-lighter));border-radius:4px;"></div>' +
+            '</div>' +
+        '</div>';
+    }
+    container.innerHTML = html;
+}
+
+// ==================== FUNGSI RESET DATA ====================
+
+window.resetAllData = function() {
+    showConfirm('Reset Semua Data', '⚠️ Tindakan ini akan menghapus SEMUA data termasuk sampah, user, dan log. Lanjutkan?', function() {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(DATA_TAMU_KEY);
+        localStorage.removeItem('bankSampahLogs');
+        localStorage.removeItem('bankSampahUsers');
+        
+        // Reset BSU ke default
+        dataBSU = getDefaultBSU();
+        saveBSUData();
+        
+        // Reset users
+        var defaultUsers = getDefaultUsers();
+        saveUsersData(defaultUsers);
+        
+        // Reload data
+        daftarSampah = [];
+        dataTamuMenunggu = [];
+        saveDataToLocal();
+        saveTamuDataToLocal();
+        
+        showToast('Semua data berhasil direset! Halaman akan reload...', false);
+        logActivity('Reset Data', 'Merreset semua data sistem');
+        setTimeout(function() { location.reload(); }, 1500);
+    });
+};
+
+// ==================== UPDATE FUNGSI YANG SUDAH ADA ====================
+
+// Update fungsi refreshAll untuk include top BSU
+var originalRefreshAll = refreshAll;
+refreshAll = function() {
+    originalRefreshAll();
+    renderTopBSU();
+    updateNasabahBadge();
+    updateLogBadge();
+    updateBSUBadge();
+};
+
+// Update fungsi updateDashboard untuk include total nasabah
+var originalUpdateDashboard = updateDashboard;
+updateDashboard = function() {
+    originalUpdateDashboard();
+    var nasabah = getNasabahUnikAdmin('all');
+    var totalNasabahEl = document.getElementById('totalNasabahAll');
+    if (totalNasabahEl) totalNasabahEl.textContent = nasabah.length;
+};
+
+// ==================== BADGE UPDATE ====================
+
+function updateNasabahBadge() {
+    var nasabah = getNasabahUnikAdmin('all');
+    var badge = document.getElementById('nasabahBadge');
+    if (badge) badge.textContent = nasabah.length;
+}
+
+function updateLogBadge() {
+    var logs = JSON.parse(localStorage.getItem('bankSampahLogs') || '[]');
+    var badge = document.getElementById('logBadge');
+    if (badge) badge.textContent = logs.length;
+}
+
+function updateBSUBadge() {
+    var badge = document.getElementById('bsuBadge');
+    if (badge) badge.textContent = dataBSU.length;
+}
+
+function updateVerifikasiBadge() {
+    var pending = dataTamuMenunggu.filter(function(item) { return item.status === 'pending'; });
+    var badge = document.getElementById('verifikasiBadge');
+    if (badge) {
+        badge.textContent = pending.length;
+        badge.style.display = pending.length > 0 ? 'inline-block' : 'none';
+    }
+}
+
+// Override updateVerifikasiCard untuk badge
+var originalUpdateVerifikasiCard = updateVerifikasiCard;
+updateVerifikasiCard = function() {
+    originalUpdateVerifikasiCard();
+    updateVerifikasiBadge();
+};
+
+// ==================== SETUP EVENT LISTENERS (TAMBAHAN) ====================
+
+function setupAdditionalEventListeners() {
+    // BSU Management
+    var tambahBSUBtn = document.getElementById('tambahBSUBtn');
+    if (tambahBSUBtn) {
+        tambahBSUBtn.addEventListener('click', window.tambahBSU);
+    }
+    
+    // Nasabah Management
+    var nasabahSearchBtn = document.getElementById('adminNasabahSearchBtn');
+    if (nasabahSearchBtn) {
+        nasabahSearchBtn.addEventListener('click', function() {
+            var search = document.getElementById('adminNasabahSearch').value || '';
+            var bsu = document.getElementById('adminNasabahBSUFilter').value || 'all';
+            renderAdminNasabah(search, bsu);
+        });
+    }
+    
+    var nasabahResetBtn = document.getElementById('adminNasabahResetBtn');
+    if (nasabahResetBtn) {
+        nasabahResetBtn.addEventListener('click', function() {
+            document.getElementById('adminNasabahSearch').value = '';
+            document.getElementById('adminNasabahBSUFilter').value = 'all';
+            renderAdminNasabah('', 'all');
+        });
+    }
+    
+    var nasabahSearchInput = document.getElementById('adminNasabahSearch');
+    if (nasabahSearchInput) {
+        nasabahSearchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                var search = document.getElementById('adminNasabahSearch').value || '';
+                var bsu = document.getElementById('adminNasabahBSUFilter').value || 'all';
+                renderAdminNasabah(search, bsu);
+            }
+        });
+    }
+    
+    // User Management
+    var tambahUserBtn = document.getElementById('tambahUserBtn');
+    if (tambahUserBtn) {
+        tambahUserBtn.addEventListener('click', window.tambahUser);
+    }
+    
+    // Verifikasi Massal
+    var verifikasiMassalBtn = document.getElementById('verifikasiMassalBtn');
+    if (verifikasiMassalBtn) {
+        verifikasiMassalBtn.addEventListener('click', window.verifikasiMassal);
+    }
+    
+    var selectAllCheckbox = document.getElementById('verifikasiSelectAll');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            var checkboxes = document.querySelectorAll('.verifikasi-checkbox:not(:disabled)');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = this.checked;
+            }
+        });
+    }
+    
+    // Verifikasi Filter
+    var verifikasiFilterBtn = document.getElementById('verifikasiFilterBtn');
+    if (verifikasiFilterBtn) {
+        verifikasiFilterBtn.addEventListener('click', renderVerifikasiTableWithMassal);
+    }
+    
+    var verifikasiResetBtn = document.getElementById('verifikasiResetBtn');
+    if (verifikasiResetBtn) {
+        verifikasiResetBtn.addEventListener('click', function() {
+            document.getElementById('verifikasiStatusFilter').value = 'all';
+            document.getElementById('verifikasiBSUFilter').value = 'all';
+            renderVerifikasiTableWithMassal();
+        });
+    }
+    
+    // Log Filter
+    var logFilterBtn = document.getElementById('logFilterBtn');
+    if (logFilterBtn) {
+        logFilterBtn.addEventListener('click', renderFilteredLogs);
+    }
+    
+    var logResetBtn = document.getElementById('logResetBtn');
+    if (logResetBtn) {
+        logResetBtn.addEventListener('click', function() {
+            document.getElementById('logUserFilter').value = 'all';
+            document.getElementById('logActionFilter').value = 'all';
+            renderFilteredLogs();
+        });
+    }
+    
+    var logExportBtn = document.getElementById('logExportBtn');
+    if (logExportBtn) {
+        logExportBtn.addEventListener('click', exportLogs);
+    }
+    
+    // Reset All Data
+    var resetAllDataBtn = document.getElementById('resetAllDataBtn');
+    if (resetAllDataBtn) {
+        resetAllDataBtn.addEventListener('click', window.resetAllData);
+    }
+    
+    // Clear Logs
+    var clearLogsBtn2 = document.getElementById('clearLogsBtn2');
+    if (clearLogsBtn2) {
+        clearLogsBtn2.addEventListener('click', function() {
+            showConfirm('Hapus Log', 'Yakin ingin menghapus semua log aktivitas?', function() {
+                localStorage.removeItem('bankSampahLogs');
+                renderActivityLogs();
+                renderFilteredLogs();
+                updateLogBadge();
+                showToast('Log aktivitas berhasil dihapus', false);
+                logActivity('Hapus Log', 'Menghapus semua log aktivitas');
+            });
+        });
+    }
+}
+
+// ==================== FILTERED LOGS ====================
+
+function renderFilteredLogs() {
+    var container = document.getElementById('fullActivityLogBody');
+    var count = document.getElementById('logCount');
+    if (!container) return;
+    
+    var logs = JSON.parse(localStorage.getItem('bankSampahLogs') || '[]');
+    
+    var userFilter = document.getElementById('logUserFilter') ? document.getElementById('logUserFilter').value : 'all';
+    var actionFilter = document.getElementById('logActionFilter') ? document.getElementById('logActionFilter').value : 'all';
+    
+    if (userFilter !== 'all') {
+        logs = logs.filter(function(log) { return log.user === userFilter; });
+    }
+    if (actionFilter !== 'all') {
+        logs = logs.filter(function(log) { return log.action === actionFilter; });
+    }
+    
+    if (count) count.textContent = 'Total: ' + logs.length + ' log';
+    
+    if (logs.length === 0) {
+        container.innerHTML = '<tr><td colspan="4" style="text-align:center;">Tidak ada aktivitas</td></tr>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < logs.length; i++) {
+        var log = logs[i];
+        var date = new Date(log.timestamp);
+        var timeStr = date.toLocaleDateString('id-ID') + ' ' + date.toLocaleTimeString('id-ID');
+        html += '<tr>' +
+            '<td>' + timeStr + '</td>' +
+            '<td>' + escapeHtml(log.user) + '</td>' +
+            '<td>' + escapeHtml(log.action) + '</td>' +
+            '<td>' + escapeHtml(log.detail || '-') + '</td>' +
+            '</tr>';
+    }
+    container.innerHTML = html;
+}
+
+function exportLogs() {
+    var logs = JSON.parse(localStorage.getItem('bankSampahLogs') || '[]');
+    
+    var userFilter = document.getElementById('logUserFilter') ? document.getElementById('logUserFilter').value : 'all';
+    var actionFilter = document.getElementById('logActionFilter') ? document.getElementById('logActionFilter').value : 'all';
+    
+    if (userFilter !== 'all') {
+        logs = logs.filter(function(log) { return log.user === userFilter; });
+    }
+    if (actionFilter !== 'all') {
+        logs = logs.filter(function(log) { return log.action === actionFilter; });
+    }
+    
+    if (logs.length === 0) {
+        showToast('Tidak ada log untuk diekspor!', true);
+        return;
+    }
+    
+    var headers = ['Waktu', 'User', 'Aksi', 'Detail'];
+    var rows = [];
+    for (var i = 0; i < logs.length; i++) {
+        var log = logs[i];
+        var date = new Date(log.timestamp);
+        var timeStr = date.toLocaleDateString('id-ID') + ' ' + date.toLocaleTimeString('id-ID');
+        rows.push([
+            '"' + timeStr + '"',
+            '"' + log.user + '"',
+            '"' + log.action + '"',
+            '"' + (log.detail || '-') + '"'
+        ]);
+    }
+    
+    var csvContent = '\uFEFF' + headers.join(',') + '\n';
+    for (var i = 0; i < rows.length; i++) {
+        csvContent += rows[i].join(',') + '\n';
+    }
+    
+    var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    var link = document.createElement('a');
+    var url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = 'Log_Aktivitas_' + new Date().toISOString().slice(0,10) + '.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    showToast('Log berhasil diekspor!', false);
+}
+
+// ==================== UPDATE INISIALISASI ====================
+
+// Override inisialisasi
+var originalInit = function() {
+    console.log('Initializing admin with new features...');
+    
+    // Load BSU data
+    loadBSUData();
+    
+    // Render BSU table
+    renderBSUTable();
+    
+    // Render User table
+    renderUserTable();
+    
+    // Render Nasabah table
+    renderAdminNasabah('', 'all');
+    
+    // Populate filters
+    populateUserBSUFilter();
+    populateLogFilters();
+    populateBSUFiltersAdmin();
+    
+    // Render Verifikasi
+    renderVerifikasiTableWithMassal();
+    
+    // Setup additional events
+    setupAdditionalEventListeners();
+    
+    // Update badges
+    updateNasabahBadge();
+    updateLogBadge();
+    updateBSUBadge();
+    updateVerifikasiBadge();
+    
+    // Render Top BSU
+    renderTopBSU();
+    
+    console.log('Admin initialization complete');
+};
+
+// Panggil inisialisasi setelah DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Tunggu inisialisasi utama selesai
+    setTimeout(function() {
+        originalInit();
+    }, 500);
+});
+
+// ==================== POPULATE BSU FILTERS ADMIN ====================
+
+function populateBSUFiltersAdmin() {
+    var filterSelects = document.querySelectorAll('#adminNasabahBSUFilter, #verifikasiBSUFilter');
+    for (var s = 0; s < filterSelects.length; s++) {
+        var select = filterSelects[s];
+        if (!select) continue;
+        var html = '<option value="all">Semua BSU</option>';
+        for (var i = 0; i < dataBSU.length; i++) {
+            html += '<option value="' + escapeHtml(dataBSU[i].nama) + '">' + escapeHtml(dataBSU[i].nama) + '</option>';
+        }
+        select.innerHTML = html;
+    }
+}
