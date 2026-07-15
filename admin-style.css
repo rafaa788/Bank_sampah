@@ -130,26 +130,6 @@ body {
     }
 }
 
-@keyframes ripple {
-    0% {
-        transform: scale(0);
-        opacity: 0.5;
-    }
-    100% {
-        transform: scale(4);
-        opacity: 0;
-    }
-}
-
-@keyframes borderGlow {
-    0%, 100% {
-        border-color: rgba(46, 125, 74, 0.2);
-    }
-    50% {
-        border-color: rgba(46, 125, 74, 0.5);
-    }
-}
-
 .animate-fade-up {
     animation: fadeInUp 0.6s ease forwards;
 }
@@ -1725,6 +1705,7 @@ body {
     .data-list { padding: 12px; }
     .data-item { padding: 12px 14px; }
 }
+
 /* =====================================================
    TAMBAHAN FITUR BARU
    ===================================================== */
@@ -2071,902 +2052,1603 @@ body {
 }
 
 /* =====================================================
-   TAMBAHAN FITUR BARU - SEARCH, RANKING, EXPORT
+   TAMBAHAN CSS UNTUK FITUR TAMU & ADMIN
    ===================================================== */
 
-/* ===== SEARCH BAR ===== */
-.search-bar-container {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-    align-items: center;
-    width: 100%;
-}
-
-.search-bar-container .search-input-wrapper {
-    flex: 1;
-    min-width: 200px;
-    position: relative;
-}
-
-.search-bar-container .search-input-wrapper i {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-
-.search-bar-container .search-input-wrapper input {
-    width: 100%;
-    padding: 12px 16px 12px 42px;
-    background: var(--primary-bg-light);
-    border: 2px solid transparent;
-    border-radius: var(--radius-xs);
-    font-size: 0.9rem;
-    transition: var(--transition);
-    font-family: 'Inter', sans-serif;
-    color: var(--text-dark);
-}
-
-.search-bar-container .search-input-wrapper input:focus {
-    outline: none;
-    border-color: var(--primary-light);
+/* ===== VERIFIKASI CARD ===== */
+.verifikasi-card {
     background: var(--white);
-    box-shadow: 0 0 0 4px rgba(46, 125, 74, 0.06);
-}
-
-.search-bar-container .search-input-wrapper input::placeholder {
-    color: var(--text-muted);
-}
-
-.search-bar-container .search-clear {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 8px 12px;
-    border-radius: 8px;
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid #f9a825;
     transition: var(--transition);
-    display: none;
-    position: absolute;
-    right: 4px;
-    top: 50%;
-    transform: translateY(-50%);
 }
 
-.search-bar-container .search-clear.show {
-    display: inline-block;
+.verifikasi-card:hover {
+    box-shadow: var(--shadow-hover);
 }
 
-.search-bar-container .search-clear:hover {
-    background: var(--primary-bg);
+.verifikasi-card .verifikasi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.verifikasi-card .verifikasi-header h4 {
+    color: var(--primary);
+    font-size: 0.95rem;
+}
+
+.verifikasi-card .status-badge {
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 700;
+}
+
+.verifikasi-card .status-badge.pending {
+    background: rgba(249, 168, 37, 0.15);
+    color: #f9a825;
+}
+
+.verifikasi-card .status-badge.verified {
+    background: rgba(46, 125, 74, 0.15);
     color: var(--primary);
 }
 
-/* ===== DATE FILTER ===== */
-.date-filter-group {
+.verifikasi-card .status-badge.rejected {
+    background: rgba(239, 83, 80, 0.15);
+    color: #ef5350;
+}
+
+/* ===== FOTO PREVIEW ===== */
+.foto-preview {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     flex-wrap: wrap;
-    align-items: flex-end;
+    margin: 8px 0;
 }
 
-.date-filter-group .form-group {
-    min-width: 130px;
+.foto-preview img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: var(--radius-xs);
+    border: 2px solid var(--primary-bg);
+    cursor: pointer;
+    transition: var(--transition);
 }
 
-.date-filter-group .form-group label {
+.foto-preview img:hover {
+    transform: scale(1.05);
+    border-color: var(--primary-light);
+}
+
+/* ===== FORM UPLOAD FOTO ===== */
+.upload-area {
+    border: 2px dashed rgba(46, 125, 74, 0.2);
+    border-radius: var(--radius-xs);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--primary-bg-light);
+}
+
+.upload-area:hover {
+    border-color: var(--primary-light);
+    background: var(--primary-bg);
+}
+
+.upload-area i {
+    font-size: 2rem;
+    color: var(--primary-light);
+    margin-bottom: 8px;
+}
+
+.upload-area p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.upload-area input[type="file"] {
+    display: none;
+}
+
+/* ===== BUKU TABUNGAN ===== */
+.tabungan-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+}
+
+.tabungan-card .tabungan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--primary-bg);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+
+.tabungan-card .tabungan-header h3 {
+    color: var(--primary);
+    font-size: 1rem;
+}
+
+.tabungan-card .tabungan-header .no-rek {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.tabungan-card .tabungan-saldo {
+    text-align: center;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary-bg), var(--white));
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+}
+
+.tabungan-card .tabungan-saldo .saldo-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.tabungan-card .tabungan-saldo .saldo-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.tabungan-card .tabungan-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.tabungan-card .tabungan-table th {
+    background: var(--primary-bg-light);
+    padding: 10px 12px;
+    text-align: left;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+.tabungan-card .tabungan-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--primary-bg);
+}
+
+.tabungan-card .tabungan-table .debit {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* ===== LAPORAN TAHUNAN BSU ===== */
+.laporan-bsu-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.laporan-bsu-card .laporan-bsu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--primary-bg);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.laporan-bsu-card .laporan-bsu-header h4 {
+    color: var(--primary);
+    font-size: 0.95rem;
+}
+
+.laporan-bsu-card .laporan-bsu-header .periode-text {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.laporan-bsu-card table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.laporan-bsu-card table th {
+    background: var(--primary-bg-light);
+    padding: 8px 10px;
+    text-align: left;
+    color: var(--primary);
+    font-weight: 600;
     font-size: 0.65rem;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
-    color: var(--text-muted);
-    display: block;
-    margin-bottom: 4px;
 }
 
-.date-filter-group .form-group input {
-    padding: 10px 14px;
-    background: var(--primary-bg-light);
-    border: 2px solid transparent;
+.laporan-bsu-card table td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--primary-bg);
+}
+
+.laporan-bsu-card table .total-row {
+    background: var(--primary-bg);
+    font-weight: 700;
+}
+
+.laporan-bsu-card .export-bsu-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.laporan-bsu-card .export-bsu-actions button {
+    padding: 8px 20px;
+    border: none;
     border-radius: var(--radius-xs);
-    font-size: 0.85rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    cursor: pointer;
     transition: var(--transition);
-    font-family: 'Inter', sans-serif;
-    color: var(--text-dark);
-    width: 100%;
+    color: white;
 }
 
-.date-filter-group .form-group input:focus {
-    outline: none;
-    border-color: var(--primary-light);
+.laporan-bsu-card .export-bsu-actions .btn-pdf-bsu {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.laporan-bsu-card .export-bsu-actions .btn-word-bsu {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+}
+
+.laporan-bsu-card .export-bsu-actions .btn-excel-bsu {
+    background: linear-gradient(135deg, #1e7e34, #28a745);
+}
+
+.laporan-bsu-card .export-bsu-actions button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== METRIK LANJUTAN ===== */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.metric-card {
     background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    border-left: 4px solid var(--primary-light);
 }
 
-.date-filter-group .btn-filter-date {
+.metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+}
+
+.metric-card .metric-icon {
+    font-size: 1.5rem;
+    margin-bottom: 6px;
+}
+
+.metric-card .metric-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.metric-card .metric-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-card.bsu-terbaik {
+    border-left-color: #f9a825;
+}
+
+.metric-card.bsu-terbaik .metric-value {
+    color: #f9a825;
+}
+
+/* ===== WILAYAH VISUALISASI ===== */
+.wilayah-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 6px;
+    margin: 12px 0;
+}
+
+/* ===== PRESENTATION MODE ===== */
+.presentation-mode {
+    font-size: 1.1rem;
+}
+
+.presentation-mode .app-header {
+    padding: 20px 40px;
+}
+
+.presentation-mode .page-container {
+    padding: 40px 48px;
+}
+
+.presentation-mode .data-table {
+    font-size: 1rem;
+}
+
+.presentation-mode .data-table th,
+.presentation-mode .data-table td {
+    padding: 16px 20px;
+}
+
+.presentation-mode .stat-card .stat-value {
+    font-size: 2.5rem;
+}
+
+.presentation-mode .summary-card .value {
+    font-size: 2rem;
+}
+
+.presentation-mode .chart-container {
+    height: 400px;
+}
+
+/* ===== TAMU DASHBOARD ===== */
+.tamu-stats-wilayah {
+    background: var(--primary-bg);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin: 12px 0;
+    border: 1px solid rgba(46, 125, 74, 0.1);
+}
+
+.tamu-stats-wilayah h4 {
+    color: var(--primary);
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.tamu-stats-wilayah p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 4px 0;
+}
+
+/* ===== BSU TERDEKAT ===== */
+.bsu-terdekat-card {
+    background: linear-gradient(135deg, var(--primary-bg), var(--white));
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    border: 1px solid rgba(46, 125, 74, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.bsu-terdekat-card .location-icon {
+    font-size: 2rem;
+    color: var(--primary);
+}
+
+.bsu-terdekat-card .bsu-info {
+    flex: 1;
+}
+
+.bsu-terdekat-card .bsu-info h4 {
+    font-size: 0.9rem;
+    color: var(--primary);
+    margin-bottom: 2px;
+}
+
+.bsu-terdekat-card .bsu-info p {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* ===== SHARE BUTTON ===== */
+.btn-share {
     padding: 10px 20px;
+    background: linear-gradient(135deg, #25d366, #128c7e);
+    color: white;
+    border: none;
+    border-radius: var(--radius-xs);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-share:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
+}
+
+/* ===== PRESENTATION TOGGLE ===== */
+.btn-presentation {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #7b1fa2, #9c27b0);
+    color: white;
+    border: none;
+    border-radius: var(--radius-xs);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-presentation:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(123, 31, 162, 0.3);
+}
+
+/* ===== EXPORT TAMU ===== */
+.btn-export-tamu {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+    color: white;
+    border: none;
+    border-radius: var(--radius-xs);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-export-tamu:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(13, 110, 253, 0.3);
+}
+
+/* ===== VERIFIKASI BUTTONS ===== */
+.btn-verify {
+    padding: 6px 16px;
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
     color: white;
     border: none;
     border-radius: var(--radius-xs);
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     cursor: pointer;
     transition: var(--transition);
-    height: 42px;
-    white-space: nowrap;
 }
 
-.date-filter-group .btn-filter-date:hover {
+.btn-verify:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(46, 125, 74, 0.25);
+    box-shadow: 0 4px 16px rgba(46, 125, 74, 0.3);
 }
 
-.date-filter-group .btn-filter-date i {
-    margin-right: 6px;
-}
-
-/* ===== RANKING RW/RT ===== */
-.ranking-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.ranking-card {
-    background: var(--white);
-    border-radius: var(--radius);
-    padding: 20px 24px;
-    box-shadow: var(--shadow);
-    transition: var(--transition);
-}
-
-.ranking-card:hover {
-    box-shadow: var(--shadow-hover);
-    transform: translateY(-3px);
-}
-
-.ranking-card .ranking-title {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.ranking-card .ranking-title i {
-    color: var(--primary-lighter);
-}
-
-.ranking-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 12px;
+.btn-reject {
+    padding: 6px 16px;
+    background: rgba(239, 83, 80, 0.1);
+    color: #ef5350;
+    border: 1px solid rgba(239, 83, 80, 0.2);
     border-radius: var(--radius-xs);
-    margin-bottom: 4px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    cursor: pointer;
     transition: var(--transition);
 }
 
-.ranking-item:hover {
+.btn-reject:hover {
+    background: rgba(239, 83, 80, 0.2);
+}
+
+.btn-detail {
+    padding: 6px 16px;
+    background: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+    border: 1px solid rgba(13, 110, 253, 0.2);
+    border-radius: var(--radius-xs);
+    font-weight: 600;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-detail:hover {
+    background: rgba(13, 110, 253, 0.2);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .metrics-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .presentation-mode .page-container {
+        padding: 20px 16px;
+    }
+    
+    .presentation-mode .data-table th,
+    .presentation-mode .data-table td {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+    
+    .presentation-mode .stat-card .stat-value {
+        font-size: 1.8rem;
+    }
+    
+    .presentation-mode .summary-card .value {
+        font-size: 1.4rem;
+    }
+    
+    .wilayah-grid {
+        grid-template-columns: repeat(7, 1fr);
+    }
+    
+    .foto-preview img {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .tabungan-card .tabungan-table {
+        font-size: 0.7rem;
+    }
+    
+    .tabungan-card .tabungan-table th,
+    .tabungan-card .tabungan-table td {
+        padding: 6px 8px;
+    }
+    
+    .laporan-bsu-card table {
+        font-size: 0.7rem;
+    }
+    
+    .laporan-bsu-card table th,
+    .laporan-bsu-card table td {
+        padding: 5px 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .wilayah-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .btn-share, .btn-presentation, .btn-export-tamu {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .btn-verify, .btn-reject, .btn-detail {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* =====================================================
+   TAMBAHAN CSS UNTUK LAPORAN & TABUNGAN
+   ===================================================== */
+
+/* ===== LAPORAN BSU TABLE ===== */
+.laporan-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.laporan-table th {
+    background: var(--primary);
+    color: white;
+    padding: 10px 14px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
+.laporan-table td {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--primary-bg);
+    text-align: center;
+}
+
+.laporan-table .row-alt {
     background: var(--primary-bg-light);
 }
 
-.ranking-item .rank-number {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.75rem;
-    flex-shrink: 0;
-}
-
-.ranking-item .rank-number.gold {
-    background: linear-gradient(135deg, #ffd700, #ffb300);
-    color: white;
-}
-
-.ranking-item .rank-number.silver {
-    background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
-    color: white;
-}
-
-.ranking-item .rank-number.bronze {
-    background: linear-gradient(135deg, #cd7f32, #b8652a);
-    color: white;
-}
-
-.ranking-item .rank-number.normal {
+.laporan-table .total-row {
     background: var(--primary-bg);
-    color: var(--text-muted);
-}
-
-.ranking-item .rank-name {
-    flex: 1;
-    font-weight: 500;
-    font-size: 0.85rem;
-    color: var(--text-dark);
-}
-
-.ranking-item .rank-value {
     font-weight: 700;
-    font-size: 0.85rem;
-    color: var(--primary);
 }
 
-.ranking-item .rank-medal {
-    font-size: 1.2rem;
+.laporan-table .total-row td {
+    padding: 12px 14px;
+}
+
+/* ===== TABUNGAN TABLE ===== */
+.tabungan-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.tabungan-table th {
+    background: var(--primary);
+    color: white;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+.tabungan-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--primary-bg);
+}
+
+.tabungan-table .row-alt {
+    background: var(--primary-bg-light);
+}
+
+.tabungan-table .debit {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* ===== HEADER LAPORAN ===== */
+.laporan-bsu-card .laporan-bsu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--primary-bg);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.laporan-bsu-card .laporan-bsu-header h4 {
+    color: var(--primary);
+    font-size: 0.95rem;
+}
+
+.laporan-bsu-card .laporan-bsu-header .periode-text {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    background: var(--primary-bg-light);
+    padding: 4px 14px;
+    border-radius: 20px;
+}
+
+/* ===== TABUNGAN HEADER ===== */
+.tabungan-card .tabungan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--primary-bg);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tabungan-card .tabungan-header h3 {
+    color: var(--primary);
+    font-size: 1rem;
+}
+
+.tabungan-card .tabungan-header .no-rek {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    background: var(--primary-bg-light);
+    padding: 4px 14px;
+    border-radius: 20px;
+}
+
+.tabungan-card .tabungan-saldo {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--primary-bg), var(--white));
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    border: 1px solid rgba(46, 125, 74, 0.1);
+}
+
+.tabungan-card .tabungan-saldo .saldo-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.tabungan-card .tabungan-saldo .saldo-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary);
 }
 
 /* ===== EXPORT BUTTONS ===== */
-.export-group {
+.export-bsu-actions {
     display: flex;
     gap: 8px;
+    margin-top: 16px;
     flex-wrap: wrap;
-    width: 100%;
 }
 
-.btn-export-excel {
-    padding: 10px 20px;
+.export-bsu-actions button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: var(--radius-xs);
+    font-weight: 600;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+    color: white;
+}
+
+.export-bsu-actions .btn-pdf-bsu {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.export-bsu-actions .btn-word-bsu {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+}
+
+.export-bsu-actions .btn-excel-bsu {
     background: linear-gradient(135deg, #1e7e34, #28a745);
-    color: white;
-    border: none;
-    border-radius: var(--radius-xs);
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
-.btn-export-excel:hover {
+.export-bsu-actions button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3);
-}
-
-.btn-export-csv {
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #0d6efd, #0a58ca);
-    color: white;
-    border: none;
-    border-radius: var(--radius-xs);
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-export-csv:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(13, 110, 253, 0.3);
-}
-
-/* ===== SEARCH HIGHLIGHT ===== */
-.highlight {
-    background: rgba(46, 125, 74, 0.15);
-    padding: 0 4px;
-    border-radius: 4px;
-    font-weight: 600;
-    color: var(--primary);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-    .search-bar-container {
-        flex-direction: column;
-        align-items: stretch;
+    .laporan-table {
+        font-size: 0.7rem;
     }
     
-    .search-bar-container .search-input-wrapper {
-        min-width: auto;
+    .laporan-table th,
+    .laporan-table td {
+        padding: 6px 8px;
     }
     
-    .date-filter-group {
-        flex-direction: column;
-        align-items: stretch;
+    .tabungan-table {
+        font-size: 0.7rem;
     }
     
-    .date-filter-group .form-group {
-        min-width: auto;
+    .tabungan-table th,
+    .tabungan-table td {
+        padding: 6px 8px;
     }
     
-    .date-filter-group .btn-filter-date {
-        width: 100%;
-        justify-content: center;
+    .tabungan-card .tabungan-saldo .saldo-value {
+        font-size: 1.5rem;
     }
     
-    .ranking-container {
-        grid-template-columns: 1fr;
-    }
-    
-    .export-group {
+    .export-bsu-actions {
         flex-direction: column;
     }
     
-    .export-group .btn-export-excel,
-    .export-group .btn-export-csv {
+    .export-bsu-actions button {
         width: 100%;
         justify-content: center;
     }
 }
 
 @media (max-width: 480px) {
-    .ranking-card {
-        padding: 16px;
+    .laporan-bsu-card .laporan-bsu-header {
+        flex-direction: column;
+        text-align: center;
     }
     
-    .ranking-item {
-        padding: 6px 10px;
-        font-size: 0.8rem;
-    }
-    
-    .ranking-item .rank-name {
-        font-size: 0.75rem;
-    }
-    
-    .ranking-item .rank-value {
-        font-size: 0.75rem;
+    .tabungan-card .tabungan-header {
+        flex-direction: column;
+        text-align: center;
     }
 }
 
 /* =====================================================
-   FITUR PREMIUM - TAMBAHAN
+   TAMBAHAN CSS UNTUK FITUR VERIFIKASI & LAPORAN
    ===================================================== */
 
-/* ===== METRIK LANJUTAN ===== */
-.metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.metric-card {
+/* ===== VERIFIKASI CARD ===== */
+.verifikasi-card {
     background: var(--white);
     border-radius: var(--radius);
-    padding: 16px 20px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
     box-shadow: var(--shadow);
+    border-left: 4px solid #f9a825;
     transition: var(--transition);
-    border-left: 4px solid var(--primary-light);
 }
 
-.metric-card:hover {
-    transform: translateY(-3px);
+.verifikasi-card:hover {
     box-shadow: var(--shadow-hover);
 }
 
-.metric-card .metric-icon {
-    font-size: 1.5rem;
-    margin-bottom: 6px;
+.verifikasi-card .verifikasi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
-.metric-card .metric-value {
-    font-size: 1.4rem;
+.verifikasi-card .verifikasi-header h4 {
+    color: var(--primary);
+    font-size: 0.95rem;
+}
+
+.verifikasi-card .verifikasi-header h4 i {
+    margin-right: 8px;
+    color: var(--primary-lighter);
+}
+
+.verifikasi-card .status-badge {
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 700;
+}
+
+.verifikasi-card .status-badge.pending {
+    background: rgba(249, 168, 37, 0.15);
+    color: #f9a825;
+}
+
+.verifikasi-card .status-badge.verified {
+    background: rgba(46, 125, 74, 0.15);
+    color: var(--primary);
+}
+
+.verifikasi-card .status-badge.rejected {
+    background: rgba(239, 83, 80, 0.15);
+    color: #ef5350;
+}
+
+/* ===== FOTO PREVIEW ===== */
+.foto-preview {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 8px 0;
+}
+
+.foto-preview img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: var(--radius-xs);
+    border: 2px solid var(--primary-bg);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.foto-preview img:hover {
+    transform: scale(1.05);
+    border-color: var(--primary-light);
+}
+
+/* ===== FORM UPLOAD FOTO ===== */
+.upload-area {
+    border: 2px dashed rgba(46, 125, 74, 0.2);
+    border-radius: var(--radius-xs);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--primary-bg-light);
+}
+
+.upload-area:hover {
+    border-color: var(--primary-light);
+    background: var(--primary-bg);
+}
+
+.upload-area i {
+    font-size: 2rem;
+    color: var(--primary-light);
+    margin-bottom: 8px;
+}
+
+.upload-area p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.upload-area input[type="file"] {
+    display: none;
+}
+
+/* ===== BUKU TABUNGAN ===== */
+.tabungan-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.tabungan-card .tabungan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--primary-bg);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tabungan-card .tabungan-header h3 {
+    color: var(--primary);
+    font-size: 1rem;
+}
+
+.tabungan-card .tabungan-header .no-rek {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    background: var(--primary-bg-light);
+    padding: 4px 14px;
+    border-radius: 20px;
+}
+
+.tabungan-card .tabungan-saldo {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--primary-bg), var(--white));
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    border: 1px solid rgba(46, 125, 74, 0.1);
+}
+
+.tabungan-card .tabungan-saldo .saldo-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.tabungan-card .tabungan-saldo .saldo-value {
+    font-size: 2rem;
     font-weight: 800;
     color: var(--primary);
 }
 
-.metric-card .metric-label {
+.tabungan-card .tabungan-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.tabungan-card .tabungan-table th {
+    background: var(--primary);
+    color: white;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+.tabungan-card .tabungan-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--primary-bg);
+}
+
+.tabungan-card .tabungan-table .row-alt {
+    background: var(--primary-bg-light);
+}
+
+.tabungan-card .tabungan-table .debit {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* ===== LAPORAN BSU TABLE ===== */
+.laporan-bsu-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.laporan-bsu-card .laporan-bsu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--primary-bg);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.laporan-bsu-card .laporan-bsu-header h4 {
+    color: var(--primary);
+    font-size: 0.95rem;
+}
+
+.laporan-bsu-card .laporan-bsu-header .periode-text {
     font-size: 0.7rem;
     color: var(--text-muted);
+    background: var(--primary-bg-light);
+    padding: 4px 14px;
+    border-radius: 20px;
+}
+
+.laporan-bsu-card .laporan-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.laporan-bsu-card .laporan-table th {
+    background: var(--primary);
+    color: white;
+    padding: 10px 14px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
-.metric-card.bsu-terbaik {
-    border-left-color: #f9a825;
+.laporan-bsu-card .laporan-table td {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--primary-bg);
+    text-align: center;
 }
 
-.metric-card.bsu-terbaik .metric-value {
+.laporan-bsu-card .laporan-table .row-alt {
+    background: var(--primary-bg-light);
+}
+
+.laporan-bsu-card .laporan-table .total-row {
+    background: var(--primary-bg);
+    font-weight: 700;
+}
+
+.laporan-bsu-card .laporan-table .total-row td {
+    padding: 12px 14px;
+}
+
+/* ===== EXPORT BUTTONS ===== */
+.export-bsu-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.export-bsu-actions button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: var(--radius-xs);
+    font-weight: 600;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+    color: white;
+}
+
+.export-bsu-actions .btn-pdf-bsu {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.export-bsu-actions .btn-word-bsu {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+}
+
+.export-bsu-actions .btn-excel-bsu {
+    background: linear-gradient(135deg, #1e7e34, #28a745);
+}
+
+.export-bsu-actions button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== VERIFIKASI BUTTONS ===== */
+.btn-verify {
+    padding: 6px 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border: none;
+    border-radius: var(--radius-xs);
+    font-weight: 600;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-verify:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(46, 125, 74, 0.3);
+}
+
+.btn-reject {
+    padding: 6px 16px;
+    background: rgba(239, 83, 80, 0.1);
+    color: #ef5350;
+    border: 1px solid rgba(239, 83, 80, 0.2);
+    border-radius: var(--radius-xs);
+    font-weight: 600;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-reject:hover {
+    background: rgba(239, 83, 80, 0.2);
+}
+
+.btn-detail {
+    padding: 6px 16px;
+    background: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+    border: 1px solid rgba(13, 110, 253, 0.2);
+    border-radius: var(--radius-xs);
+    font-weight: 600;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-detail:hover {
+    background: rgba(13, 110, 253, 0.2);
+}
+
+/* ===== VERIFIKASI TABLE ===== */
+#verifikasiTable .status-badge {
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 700;
+}
+
+#verifikasiTable .status-badge.pending {
+    background: rgba(249, 168, 37, 0.15);
     color: #f9a825;
 }
 
-/* ===== WILAYAH VISUALISASI ===== */
-.wilayah-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
-    gap: 6px;
-    margin: 12px 0;
+#verifikasiTable .status-badge.verified {
+    background: rgba(46, 125, 74, 0.15);
+    color: var(--primary);
 }
 
-.wilayah-item {
+#verifikasiTable .status-badge.rejected {
+    background: rgba(239, 83, 80, 0.15);
+    color: #ef5350;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .foto-preview img {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .tabungan-card .tabungan-table {
+        font-size: 0.7rem;
+    }
+    
+    .tabungan-card .tabungan-table th,
+    .tabungan-card .tabungan-table td {
+        padding: 6px 8px;
+    }
+    
+    .tabungan-card .tabungan-saldo .saldo-value {
+        font-size: 1.5rem;
+    }
+    
+    .laporan-bsu-card .laporan-table {
+        font-size: 0.7rem;
+    }
+    
+    .laporan-bsu-card .laporan-table th,
+    .laporan-bsu-card .laporan-table td {
+        padding: 6px 8px;
+    }
+    
+    .export-bsu-actions {
+        flex-direction: column;
+    }
+    
+    .export-bsu-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .laporan-bsu-card .laporan-bsu-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .tabungan-card .tabungan-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .verifikasi-card .verifikasi-header {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn-verify, .btn-reject, .btn-detail {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* =====================================================
+   STYLE UNTUK CETAK / PRINT
+   ===================================================== */
+
+.no-print {
+    display: block !important;
+}
+
+@media print {
+    /* Sembunyikan elemen yang tidak perlu saat print */
+    .no-print {
+        display: none !important;
+    }
+    .sidebar,
+    .app-header,
+    .bottom-nav,
+    .fab,
+    .filter-card,
+    .menu-toggle,
+    .sidebar-overlay,
+    .breadcrumb,
+    .laporan-buttons,
+    .role-badge,
+    .profile-avatar,
+    .btn-primary,
+    .logout-btn {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .page-container {
+        padding: 20px !important;
+        max-width: 100% !important;
+    }
+    
+    .page {
+        display: block !important;
+    }
+    
+    .page.active {
+        display: block !important;
+    }
+    
+    body {
+        background: white !important;
+        font-size: 11px !important;
+    }
+    
+    .data-table-card,
+    .chart-card,
+    .form-card,
+    .welcome-card,
+    .summary-grid,
+    .stats-container,
+    .ranking-container {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        background: white !important;
+    }
+    
+    .data-table {
+        font-size: 10px !important;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 4px 8px !important;
+        border: 1px solid #ddd !important;
+    }
+    
+    .data-table thead th {
+        background: #2e7d32 !important;
+        color: white !important;
+    }
+    
+    .stat-card,
+    .summary-card,
+    .metric-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    
+    .welcome-card {
+        border: 2px solid #2e7d32 !important;
+    }
+    
+    .chart-container {
+        height: 200px !important;
+    }
+    
+    .ranking-card {
+        page-break-inside: avoid;
+    }
+    
+    .modal {
+        display: none !important;
+    }
+    
+    .toast {
+        display: none !important;
+    }
+}
+
+/* =====================================================
+   STYLE UNTUK CETAK / PRINT
+   ===================================================== */
+
+.no-print {
+    display: block !important;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    .sidebar,
+    .app-header,
+    .bottom-nav,
+    .fab,
+    .filter-card,
+    .menu-toggle,
+    .sidebar-overlay,
+    .breadcrumb,
+    .laporan-buttons,
+    .role-badge,
+    .profile-avatar,
+    .btn-primary,
+    .logout-btn,
+    .btn-filter-date,
+    .export-group,
+    .btn-export-excel,
+    .btn-export-csv,
+    .btn-export-tamu,
+    .btn-share,
+    .btn-presentation,
+    .btn-laporan {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .page-container {
+        padding: 20px !important;
+        max-width: 100% !important;
+    }
+    
+    .page {
+        display: block !important;
+    }
+    
+    .page.active {
+        display: block !important;
+    }
+    
+    body {
+        background: white !important;
+        font-size: 11px !important;
+    }
+    
+    .data-table-card,
+    .chart-card,
+    .form-card,
+    .welcome-card,
+    .summary-grid,
+    .stats-container,
+    .ranking-container,
+    .tabungan-card,
+    .laporan-bsu-card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        background: white !important;
+    }
+    
+    .data-table {
+        font-size: 10px !important;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 4px 8px !important;
+        border: 1px solid #ddd !important;
+    }
+    
+    .data-table thead th {
+        background: #2e7d32 !important;
+        color: white !important;
+    }
+    
+    .stat-card,
+    .summary-card,
+    .metric-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    
+    .welcome-card {
+        border: 2px solid #2e7d32 !important;
+    }
+    
+    .chart-container {
+        height: 200px !important;
+    }
+    
+    .ranking-card {
+        page-break-inside: avoid;
+    }
+    
+    .modal {
+        display: none !important;
+    }
+    
+    .toast {
+        display: none !important;
+    }
+    
+    /* Untuk laporan PDF */
+    .laporan-table th {
+        background: #2e7d32 !important;
+        color: white !important;
+    }
+    .laporan-table td {
+        border: 1px solid #ddd !important;
+    }
+    .total-row {
+        background: #e8f5e9 !important;
+        font-weight: bold !important;
+    }
+}
+
+/* =====================================================
+   ADMIN STYLE - TAMBAHAN UNTUK MANAJEMEN
+   ===================================================== */
+
+/* ===== MENU BADGE ===== */
+.menu-badge {
+    margin-left: auto;
+    background: var(--primary-bg);
+    color: var(--primary);
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    min-width: 20px;
     text-align: center;
-    padding: 8px 4px;
-    border-radius: 8px;
-    background: var(--primary-bg-light);
-    border: 1px solid rgba(46, 125, 74, 0.1);
+}
+
+.menu-badge.pending-badge {
+    background: rgba(249, 168, 37, 0.15);
+    color: #f9a825;
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* ===== BSU TABLE ===== */
+.btn-edit-bsu, .btn-delete-bsu {
     transition: var(--transition);
-    cursor: default;
 }
 
-.wilayah-item:hover {
-    transform: scale(1.05);
-    box-shadow: var(--shadow);
+.btn-edit-bsu:hover, .btn-delete-bsu:hover {
+    transform: scale(1.1);
 }
 
-.wilayah-item .wilayah-rw {
-    font-size: 0.65rem;
+/* ===== NASABAH TABLE ===== */
+.nasabah-total-value {
     font-weight: 700;
     color: var(--primary);
 }
 
-.wilayah-item .wilayah-berat {
-    font-size: 0.7rem;
-    color: var(--text-muted);
+/* ===== DETAIL NASABAH MODAL ===== */
+#detailNasabahModal .modal-content {
+    max-width: 700px;
 }
 
-/* ===== PRESENTATION MODE ===== */
-.presentation-mode {
-    font-size: 1.1rem;
-}
-
-.presentation-mode .app-header {
-    padding: 20px 40px;
-}
-
-.presentation-mode .page-container {
-    padding: 40px 48px;
-}
-
-.presentation-mode .data-table {
-    font-size: 1rem;
-}
-
-.presentation-mode .data-table th,
-.presentation-mode .data-table td {
-    padding: 16px 20px;
-}
-
-.presentation-mode .stat-card .stat-value {
-    font-size: 2.5rem;
-}
-
-.presentation-mode .summary-card .value {
-    font-size: 2rem;
-}
-
-.presentation-mode .chart-container {
-    height: 400px;
-}
-
-/* ===== FULLSCREEN TOGGLE ===== */
-.fullscreen-btn {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 8px 12px;
-    border-radius: var(--radius-xs);
-    transition: var(--transition);
-    font-size: 1rem;
-}
-
-.fullscreen-btn:hover {
-    background: var(--primary-bg);
-    color: var(--primary);
-}
-
-/* ===== TAMU DASHBOARD ===== */
-.tamu-stats-wilayah {
-    background: var(--primary-bg);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    margin: 12px 0;
-    border: 1px solid rgba(46, 125, 74, 0.1);
-}
-
-.tamu-stats-wilayah h4 {
-    color: var(--primary);
-    font-size: 0.85rem;
-    margin-bottom: 8px;
-}
-
-.tamu-stats-wilayah p {
+#detailNasabahModal .data-table {
     font-size: 0.8rem;
-    color: var(--text-muted);
-    margin: 4px 0;
 }
 
-/* ===== BSU TERDEKAT ===== */
-.bsu-terdekat-card {
-    background: linear-gradient(135deg, var(--primary-bg), var(--white));
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    border: 1px solid rgba(46, 125, 74, 0.1);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.bsu-terdekat-card .location-icon {
-    font-size: 2rem;
-    color: var(--primary);
-}
-
-.bsu-terdekat-card .bsu-info {
-    flex: 1;
-}
-
-.bsu-terdekat-card .bsu-info h4 {
-    font-size: 0.9rem;
-    color: var(--primary);
-    margin-bottom: 2px;
-}
-
-.bsu-terdekat-card .bsu-info p {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-/* ===== SHARE BUTTON ===== */
-.btn-share {
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #25d366, #128c7e);
-    color: white;
-    border: none;
-    border-radius: var(--radius-xs);
-    font-weight: 600;
-    font-size: 0.85rem;
+/* ===== VERIFIKASI MASSAL ===== */
+#verifikasiSelectAll {
+    width: 16px;
+    height: 16px;
     cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
-.btn-share:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
-}
-
-/* ===== PRESENTATION TOGGLE ===== */
-.btn-presentation {
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #7b1fa2, #9c27b0);
-    color: white;
-    border: none;
-    border-radius: var(--radius-xs);
-    font-weight: 600;
-    font-size: 0.85rem;
+.verifikasi-checkbox {
+    width: 16px;
+    height: 16px;
     cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
-.btn-presentation:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(123, 31, 162, 0.3);
+.verifikasi-checkbox:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
-/* ===== EXPORT TAMU ===== */
-.btn-export-tamu {
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #0d6efd, #0a58ca);
-    color: white;
-    border: none;
-    border-radius: var(--radius-xs);
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-export-tamu:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(13, 110, 253, 0.3);
+/* ===== TOP BSU LIST ===== */
+#topBSUList {
+    padding: 4px 0;
 }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-    .metrics-grid {
-        grid-template-columns: 1fr 1fr;
+    .menu-badge {
+        font-size: 0.5rem;
+        padding: 1px 8px;
     }
     
-    .presentation-mode .page-container {
-        padding: 20px 16px;
+    #detailNasabahModal .modal-content {
+        max-width: 95%;
+        margin: 10% auto;
     }
     
-    .presentation-mode .data-table th,
-    .presentation-mode .data-table td {
-        padding: 10px 12px;
-        font-size: 0.85rem;
+    #detailNasabahModal .data-table {
+        font-size: 0.7rem;
     }
     
-    .presentation-mode .stat-card .stat-value {
-        font-size: 1.8rem;
-    }
-    
-    .presentation-mode .summary-card .value {
-        font-size: 1.4rem;
-    }
-    
-    .wilayah-grid {
-        grid-template-columns: repeat(7, 1fr);
+    #detailNasabahModal .data-table th,
+    #detailNasabahModal .data-table td {
+        padding: 4px 6px;
     }
 }
 
 @media (max-width: 480px) {
-    .metrics-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .wilayah-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    .btn-share, .btn-presentation, .btn-export-tamu {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-/* =====================================================
-   FITUR PREMIUM - TAMBAHAN
-   ===================================================== */
-
-/* ===== METRIK LANJUTAN ===== */
-.metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.metric-card {
-    background: var(--white);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    box-shadow: var(--shadow);
-    transition: var(--transition);
-    border-left: 4px solid var(--primary-light);
-}
-
-.metric-card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-hover);
-}
-
-.metric-card .metric-icon {
-    font-size: 1.5rem;
-    margin-bottom: 6px;
-}
-
-.metric-card .metric-value {
-    font-size: 1.4rem;
-    font-weight: 800;
-    color: var(--primary);
-}
-
-.metric-card .metric-label {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.metric-card.bsu-terbaik {
-    border-left-color: #f9a825;
-}
-
-.metric-card.bsu-terbaik .metric-value {
-    color: #f9a825;
-}
-
-/* ===== WILAYAH VISUALISASI ===== */
-.wilayah-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
-    gap: 6px;
-    margin: 12px 0;
-}
-
-/* ===== PRESENTATION MODE ===== */
-.presentation-mode {
-    font-size: 1.1rem;
-}
-
-.presentation-mode .app-header {
-    padding: 20px 40px;
-}
-
-.presentation-mode .page-container {
-    padding: 40px 48px;
-}
-
-.presentation-mode .data-table {
-    font-size: 1rem;
-}
-
-.presentation-mode .data-table th,
-.presentation-mode .data-table td {
-    padding: 16px 20px;
-}
-
-.presentation-mode .stat-card .stat-value {
-    font-size: 2.5rem;
-}
-
-.presentation-mode .summary-card .value {
-    font-size: 2rem;
-}
-
-.presentation-mode .chart-container {
-    height: 400px;
-}
-
-/* ===== TAMU DASHBOARD ===== */
-.tamu-stats-wilayah {
-    background: var(--primary-bg);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    margin: 12px 0;
-    border: 1px solid rgba(46, 125, 74, 0.1);
-}
-
-.tamu-stats-wilayah h4 {
-    color: var(--primary);
-    font-size: 0.85rem;
-    margin-bottom: 8px;
-}
-
-.tamu-stats-wilayah p {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin: 4px 0;
-}
-
-/* ===== BSU TERDEKAT ===== */
-.bsu-terdekat-card {
-    background: linear-gradient(135deg, var(--primary-bg), var(--white));
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    border: 1px solid rgba(46, 125, 74, 0.1);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.bsu-terdekat-card .location-icon {
-    font-size: 2rem;
-    color: var(--primary);
-}
-
-.bsu-terdekat-card .bsu-info {
-    flex: 1;
-}
-
-.bsu-terdekat-card .bsu-info h4 {
-    font-size: 0.9rem;
-    color: var(--primary);
-    margin-bottom: 2px;
-}
-
-.bsu-terdekat-card .bsu-info p {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-/* ===== SHARE BUTTON ===== */
-.btn-share {
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #25d366, #128c7e);
-    color: white;
-    border: none;
-    border-radius: var(--radius-xs);
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-share:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
-}
-
-/* ===== PRESENTATION TOGGLE ===== */
-.btn-presentation {
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #7b1fa2, #9c27b0);
-    color: white;
-    border: none;
-    border-radius: var(--radius-xs);
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-presentation:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(123, 31, 162, 0.3);
-}
-
-/* ===== EXPORT TAMU ===== */
-.btn-export-tamu {
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #0d6efd, #0a58ca);
-    color: white;
-    border: none;
-    border-radius: var(--radius-xs);
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-export-tamu:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(13, 110, 253, 0.3);
-}
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-    .metrics-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-    
-    .presentation-mode .page-container {
-        padding: 20px 16px;
-    }
-    
-    .presentation-mode .data-table th,
-    .presentation-mode .data-table td {
-        padding: 10px 12px;
-        font-size: 0.85rem;
-    }
-    
-    .presentation-mode .stat-card .stat-value {
-        font-size: 1.8rem;
-    }
-    
-    .presentation-mode .summary-card .value {
-        font-size: 1.4rem;
-    }
-    
-    .wilayah-grid {
-        grid-template-columns: repeat(7, 1fr);
-    }
-}
-
-@media (max-width: 480px) {
-    .metrics-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .wilayah-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    .btn-share, .btn-presentation, .btn-export-tamu {
-        width: 100%;
-        justify-content: center;
+    .menu-badge {
+        display: none;
     }
 }
