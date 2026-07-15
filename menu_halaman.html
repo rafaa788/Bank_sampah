@@ -35,7 +35,7 @@
                 <i class="fas fa-tachometer-alt"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="#" class="nav-bot-item" data-page="kelola" id="navKelolaTamu">
+            <a href="#" class="nav-bot-item" data-page="kelola">
                 <i class="fas fa-recycle"></i>
                 <span>Kelola</span>
             </a>
@@ -70,12 +70,13 @@
                 </div>
             </div>
             <div class="sidebar-menu">
+                <!-- ===== MENU UTAMA ===== -->
                 <div class="menu-label">Menu Utama</div>
                 <a href="#" class="menu-item active" data-page="dashboard">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="#" class="menu-item" data-page="kelola" id="menuKelolaTamu">
+                <a href="#" class="menu-item" data-page="kelola">
                     <i class="fas fa-recycle"></i>
                     <span>Kelola Sampah</span>
                 </a>
@@ -83,7 +84,39 @@
                     <i class="fas fa-chart-line"></i>
                     <span>Statistik</span>
                 </a>
-                <div class="menu-label" style="margin-top:16px;">Pengaturan</div>
+
+                <!-- ===== MANAJEMEN ===== -->
+                <div class="menu-label">Manajemen</div>
+                <a href="#" class="menu-item" data-page="bsu">
+                    <i class="fas fa-building"></i>
+                    <span>Manajemen BSU</span>
+                    <span class="menu-badge" id="bsuBadge">0</span>
+                </a>
+                <a href="#" class="menu-item" data-page="nasabah">
+                    <i class="fas fa-users"></i>
+                    <span>Manajemen Nasabah</span>
+                    <span class="menu-badge" id="nasabahBadge">0</span>
+                </a>
+                <a href="#" class="menu-item" data-page="user">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Manajemen User</span>
+                    <span class="menu-badge" id="userBadge">0</span>
+                </a>
+
+                <!-- ===== VERIFIKASI & LAPORAN ===== -->
+                <div class="menu-label">Verifikasi & Laporan</div>
+                <a href="#" class="menu-item" data-page="verifikasi" id="menuVerifikasi">
+                    <i class="fas fa-check-double"></i>
+                    <span>Verifikasi Data</span>
+                    <span class="menu-badge pending-badge" id="verifikasiBadge">0</span>
+                </a>
+                <a href="#" class="menu-item" data-page="laporan">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Laporan & Tabungan</span>
+                </a>
+
+                <!-- ===== PENGATURAN ===== -->
+                <div class="menu-label">Pengaturan</div>
                 <a href="#" class="menu-item" data-page="pengaturan">
                     <i class="fas fa-cog"></i>
                     <span>Pengaturan</span>
@@ -91,10 +124,11 @@
                 <a href="#" class="menu-item" data-page="aktivitas">
                     <i class="fas fa-history"></i>
                     <span>Aktivitas</span>
+                    <span class="menu-badge" id="logBadge">0</span>
                 </a>
             </div>
             <div class="sidebar-footer">
-                <div class="role-display" id="roleDisplay"> Admin</div>
+                <div class="role-display" id="roleDisplay">👑 Admin</div>
                 <button id="logoutBtn" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Keluar</span>
@@ -115,10 +149,7 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    <div id="breadcrumbHeader" style="display:none; font-size:0.7rem; color:var(--text-muted);">
-                        <i class="fas fa-home"></i> <span id="breadcrumbText">Dashboard</span>
-                    </div>
-                    <span class="role-badge" id="roleBadge"> Admin</span>
+                    <span class="role-badge" id="roleBadge">👑 Admin</span>
                     <div class="profile-avatar tooltip-trigger">
                         <i class="fas fa-user-circle"></i>
                         <span class="online-dot"></span>
@@ -140,18 +171,17 @@
                         <div class="welcome-emoji">🌱</div>
                         <div class="welcome-text">
                             <h2>Selamat datang di BSI Mandiri <span id="welcomeName">Admin</span>!</h2>
-                            <p id="roleWelcomeText">🔑 Anda login sebagai <strong>Administrator</strong> dengan akses penuh</p>
+                            <p> Anda login sebagai <strong>Administrator</strong> dengan akses penuh</p>
                         </div>
                     </div>
 
-                    <!-- ===== DASHBOARD SUMMARY CARD ===== -->
+                    <!-- ===== SUMMARY CARD ===== -->
                     <div class="summary-grid">
                         <div class="summary-card animate-fade-up delay-1">
                             <div class="icon-box"><i class="fas fa-seedling"></i></div>
                             <div class="info">
                                 <div class="label">Total Organik</div>
                                 <div class="value" id="summaryOrganik">0 kg</div>
-                                <span class="trend up" id="summaryOrganikTrend">↑ 0%</span>
                             </div>
                         </div>
                         <div class="summary-card animate-fade-up delay-2">
@@ -159,7 +189,6 @@
                             <div class="info">
                                 <div class="label">Total Nonorganik</div>
                                 <div class="value" id="summaryNonorganik">0 kg</div>
-                                <span class="trend down" id="summaryNonorganikTrend">↓ 0%</span>
                             </div>
                         </div>
                         <div class="summary-card animate-fade-up delay-3">
@@ -167,7 +196,6 @@
                             <div class="info">
                                 <div class="label">Total Semua</div>
                                 <div class="value" id="summaryTotal">0 kg</div>
-                                <span class="trend up" id="summaryTotalTrend">↑ 0%</span>
                             </div>
                         </div>
                         <div class="summary-card animate-fade-up delay-4">
@@ -175,7 +203,6 @@
                             <div class="info">
                                 <div class="label">Total Transaksi</div>
                                 <div class="value" id="summaryTransaksi">0</div>
-                                <span class="trend up" id="summaryTransaksiTrend">↑ 0</span>
                             </div>
                         </div>
                     </div>
@@ -197,6 +224,19 @@
                             <div class="metric-value" id="bsuTerbaik">-</div>
                             <div class="metric-label">BSU dengan Performa Terbaik</div>
                         </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">👥</div>
+                            <div class="metric-value" id="totalNasabahAll">0</div>
+                            <div class="metric-label">Total Nasabah</div>
+                        </div>
+                    </div>
+
+                    <!-- ===== TOP 5 BSU ===== -->
+                    <div class="chart-card animate-fade-up delay-3">
+                        <h3><i class="fas fa-trophy"></i> Top 5 BSU Berdasarkan Performa</h3>
+                        <div id="topBSUList">
+                            <div style="text-align:center;color:var(--text-muted);padding:20px;">Memuat data...</div>
+                        </div>
                     </div>
 
                     <!-- ===== GRAFIK TREN 7 HARI ===== -->
@@ -207,31 +247,8 @@
                         </div>
                     </div>
 
-                    <!-- ===== VISUALISASI WILAYAH ===== -->
-                    <div class="chart-card animate-fade-up delay-4">
-                        <h3><i class="fas fa-map-marked-alt"></i> Visualisasi Wilayah (per RW)</h3>
-                        <div id="wilayahVisualisasi" class="wilayah-grid">
-                            <div style="text-align:center;color:var(--text-muted);padding:20px;">Memuat data...</div>
-                        </div>
-                    </div>
-
-                    <!-- ===== BSU TERDEKAT (UNTUK TAMU) ===== -->
-                    <div class="bsu-terdekat-card animate-fade-up delay-4" id="bsuTerdekatCard">
-                        <div class="location-icon">📍</div>
-                        <div class="bsu-info">
-                            <h4>BSU Terdekat</h4>
-                            <div id="bsuTerdekat">Memuat...</div>
-                        </div>
-                    </div>
-
-                    <!-- ===== TAMU STATISTIK WILAYAH ===== -->
-                    <div class="tamu-stats-wilayah animate-fade-up delay-4" id="tamuStatsWilayah">
-                        <h4>📊 Statistik Wilayah Anda</h4>
-                        <p>Memuat data wilayah...</p>
-                    </div>
-
                     <!-- ===== RANKING RW/RT ===== -->
-                    <div class="ranking-container animate-fade-up delay-2" id="rankingContainer">
+                    <div class="ranking-container animate-fade-up delay-4">
                         <div class="ranking-card">
                             <div class="ranking-title"><i class="fas fa-trophy"></i> 🏆 Ranking RW</div>
                             <div id="rankingRWList">
@@ -246,8 +263,19 @@
                         </div>
                     </div>
 
+                    <!-- ===== VERIFIKASI CARD ===== -->
+                    <div class="verifikasi-card animate-fade-up delay-4" id="verifikasiCard">
+                        <div class="verifikasi-header">
+                            <h4><i class="fas fa-check-double"></i> Verifikasi Data Tamu</h4>
+                            <span class="status-badge pending" id="verifikasiCount">0 data menunggu</span>
+                        </div>
+                        <div id="verifikasiList">
+                            <div style="text-align:center;color:var(--text-muted);padding:20px;">Tidak ada data menunggu verifikasi</div>
+                        </div>
+                    </div>
+
                     <!-- ===== FILTER WILAYAH ===== -->
-                    <div class="filter-card animate-fade-up delay-3">
+                    <div class="filter-card animate-fade-up delay-4">
                         <div class="filter-header">
                             <i class="fas fa-filter"></i>
                             <h3>Filter Data per Wilayah</h3>
@@ -283,7 +311,7 @@
                     </div>
 
                     <!-- ===== STATISTIK ===== -->
-                    <div class="stat-grid animate-fade-up delay-4">
+                    <div class="stat-grid animate-fade-up delay-5">
                         <div class="stat-card stat-organik">
                             <div class="stat-bg"></div>
                             <div class="stat-icon"><i class="fas fa-seedling"></i></div>
@@ -315,7 +343,7 @@
                         </div>
                     </div>
 
-                    <!-- ===== LAPORAN ===== -->
+                    <!-- ===== LAPORAN BUTTONS ===== -->
                     <div class="laporan-buttons animate-fade-up delay-5">
                         <button id="btnLaporanMingguan" class="btn-laporan mingguan">
                             <i class="fas fa-calendar-week"></i> Laporan Mingguan
@@ -358,7 +386,7 @@
                 </div>
 
                 <!-- ============================================================ -->
-                <!-- ===== KELOLA PAGE ===== -->
+                <!-- ===== KELOLA PAGE (SAMA SEPERTI SEBELUMNYA) ===== -->
                 <!-- ============================================================ -->
                 <div id="kelolaPage" class="page">
                     <div class="breadcrumb">
@@ -368,11 +396,11 @@
                         <div class="icon-wrapper"><i class="fas fa-recycle"></i></div>
                         <div>
                             <h2>Kelola Sampah</h2>
-                            <p id="kelolaSubtext">Tambah, edit, atau hapus data sampah</p>
+                            <p>Tambah, edit, atau hapus data sampah</p>
                         </div>
                     </div>
 
-                    <!-- ===== BSU SELECTOR ===== -->
+                    <!-- BSU Selector -->
                     <div class="bsu-selector-card animate-fade-up">
                         <div class="bsu-selector-header">
                             <i class="fas fa-building"></i>
@@ -397,79 +425,7 @@
                         </div>
                     </div>
 
-                    <!-- ===== SEARCH & FILTER TANGGAL ===== -->
-                    <div class="filter-card animate-fade-up">
-                        <div class="filter-header">
-                            <i class="fas fa-search"></i>
-                            <h3>Cari & Filter Data</h3>
-                        </div>
-                        <div class="filter-body">
-                            <div class="search-bar-container">
-                                <div class="search-input-wrapper">
-                                    <i class="fas fa-search"></i>
-                                    <input type="text" id="searchDataInput" placeholder="Cari nama sampah, BSU, RW, RT...">
-                                    <button class="search-clear" id="searchClearBtn"><i class="fas fa-times"></i></button>
-                                </div>
-                                <div class="date-filter-group">
-                                    <div class="form-group" style="min-width:130px;">
-                                        <label>Dari Tanggal</label>
-                                        <input type="date" id="filterDateStart">
-                                    </div>
-                                    <div class="form-group" style="min-width:130px;">
-                                        <label>Sampai Tanggal</label>
-                                        <input type="date" id="filterDateEnd">
-                                    </div>
-                                    <button class="btn-filter-date" id="applyDateFilter">
-                                        <i class="fas fa-calendar-check"></i> Terapkan
-                                    </button>
-                                    <button class="btn-filter-date" id="clearDateFilter" style="background:var(--text-muted);">
-                                        <i class="fas fa-times"></i> Reset
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ===== EXPORT BUTTONS ===== -->
-                    <div class="filter-card animate-fade-up delay-2">
-                        <div class="filter-header">
-                            <i class="fas fa-download"></i>
-                            <h3>Ekspor Data</h3>
-                        </div>
-                        <div class="filter-body">
-                            <div class="export-group">
-                                <button class="btn-export-excel" id="exportExcelBtn">
-                                    <i class="fas fa-file-excel"></i> Ekspor ke Excel (.csv)
-                                </button>
-                                <button class="btn-export-csv" id="exportCSVBtn">
-                                    <i class="fas fa-file-csv"></i> Ekspor ke CSV
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ===== EXPORT UNTUK TAMU ===== -->
-                    <div class="filter-card animate-fade-up delay-2">
-                        <div class="filter-header">
-                            <i class="fas fa-download"></i>
-                            <h3>Ekspor Data (Tamu & Admin)</h3>
-                        </div>
-                        <div class="filter-body">
-                            <div style="display:flex;gap:12px;flex-wrap:wrap;width:100%;">
-                                <button class="btn-export-tamu" id="exportTamuBtn">
-                                    <i class="fas fa-file-csv"></i> Ekspor Data (CSV)
-                                </button>
-                                <button class="btn-share" id="shareLaporanBtn">
-                                    <i class="fab fa-whatsapp"></i> Share ke WhatsApp
-                                </button>
-                            </div>
-                            <small style="color:var(--text-muted);font-size:0.7rem;margin-top:8px;display:block;">
-                                💡 Tamu dapat mengekspor data yang difilter
-                            </small>
-                        </div>
-                    </div>
-
-                    <!-- ===== FORM TAMBAH DATA ===== -->
+                    <!-- Form Tambah Data -->
                     <div class="form-card animate-fade-up delay-3" id="formTambahData">
                         <div class="form-header">
                             <i class="fas fa-plus-circle"></i>
@@ -501,10 +457,16 @@
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
+                                    <label><i class="fas fa-user"></i> Nama Nasabah</label>
+                                    <input type="text" id="inputNamaNasabah" placeholder="Masukkan nama nasabah">
+                                </div>
+                                <div class="form-group">
                                     <label><i class="fas fa-tag"></i> Nama Sampah</label>
                                     <input type="text" id="namaSampah" placeholder="Contoh: Daun Kering" list="sampahDatalist">
                                     <datalist id="sampahDatalist"></datalist>
                                 </div>
+                            </div>
+                            <div class="form-row">
                                 <div class="form-group sampah-preset">
                                     <label><i class="fas fa-list"></i> Pilih dari daftar</label>
                                     <div class="preset-buttons" id="presetSampahContainer"></div>
@@ -540,7 +502,40 @@
                         </div>
                     </div>
 
-                    <!-- ===== DAFTAR SAMPAH ===== -->
+                    <!-- Search & Filter -->
+                    <div class="filter-card animate-fade-up">
+                        <div class="filter-header">
+                            <i class="fas fa-search"></i>
+                            <h3>Cari & Filter Data</h3>
+                        </div>
+                        <div class="filter-body">
+                            <div class="search-bar-container">
+                                <div class="search-input-wrapper">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="searchDataInput" placeholder="Cari nama sampah, BSU, RW, RT...">
+                                    <button class="search-clear" id="searchClearBtn"><i class="fas fa-times"></i></button>
+                                </div>
+                                <div class="date-filter-group">
+                                    <div class="form-group" style="min-width:130px;">
+                                        <label>Dari Tanggal</label>
+                                        <input type="date" id="filterDateStart">
+                                    </div>
+                                    <div class="form-group" style="min-width:130px;">
+                                        <label>Sampai Tanggal</label>
+                                        <input type="date" id="filterDateEnd">
+                                    </div>
+                                    <button class="btn-filter-date" id="applyDateFilter">
+                                        <i class="fas fa-calendar-check"></i> Terapkan
+                                    </button>
+                                    <button class="btn-filter-date" id="clearDateFilter" style="background:var(--text-muted);">
+                                        <i class="fas fa-times"></i> Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Daftar Sampah -->
                     <div class="data-card animate-fade-up delay-4">
                         <div class="card-header">
                             <div class="header-left">
@@ -561,7 +556,7 @@
                 </div>
 
                 <!-- ============================================================ -->
-                <!-- ===== STATISTIK PAGE ===== -->
+                <!-- ===== STATISTIK PAGE (SAMA SEPERTI SEBELUMNYA) ===== -->
                 <!-- ============================================================ -->
                 <div id="statistikPage" class="page">
                     <div class="breadcrumb">
@@ -575,7 +570,6 @@
                         </div>
                     </div>
 
-                    <!-- ===== FILTER STATISTIK ===== -->
                     <div class="filter-card animate-fade-up">
                         <div class="filter-header">
                             <i class="fas fa-chart-bar"></i>
@@ -628,7 +622,6 @@
                         </div>
                     </div>
 
-                    <!-- ===== CHARTS ===== -->
                     <div class="chart-card animate-fade-up delay-3">
                         <h3><i class="fas fa-chart-pie"></i> Grafik Jenis Sampah</h3>
                         <div class="chart-filter">
@@ -645,7 +638,6 @@
                         <div class="chart-container"><canvas id="namaSampahChart"></canvas></div>
                     </div>
 
-                    <!-- ===== STATS ===== -->
                     <div class="stats-container animate-fade-up delay-5">
                         <div class="stat-big-card organik-bg">
                             <div class="stat-big-icon"><i class="fas fa-seedling"></i></div>
@@ -673,7 +665,6 @@
                         </div>
                     </div>
 
-                    <!-- ===== REKAP ===== -->
                     <div class="data-table-card animate-fade-up delay-5">
                         <div class="card-header">
                             <div class="header-left">
@@ -690,6 +681,502 @@
                                     <tr><td colspan="4" style="text-align:center;">Memuat data...</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <!-- Laporan Tahunan BSU -->
+                    <div class="chart-card animate-fade-up delay-5" id="laporanTahunanBSU">
+                        <h3><i class="fas fa-calendar-year"></i> Laporan Tahunan per BSU</h3>
+                        <div class="filter-body" style="padding:0 0 16px 0;">
+                            <div class="form-group" style="min-width:180px;">
+                                <label>Pilih BSU</label>
+                                <select id="laporanBSUFilter">
+                                    <option value="all">Semua BSU</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="min-width:180px;">
+                                <label>Pilih Tahun</label>
+                                <select id="laporanTahunFilter">
+                                    <option value="2024">2024</option>
+                                    <option value="2025" selected>2025</option>
+                                    <option value="2026">2026</option>
+                                </select>
+                            </div>
+                            <button class="btn-filter-date" id="generateLaporanBSUBtn">
+                                <i class="fas fa-chart-bar"></i> Generate Laporan
+                            </button>
+                        </div>
+                        <div id="laporanBSUContainer">
+                            <div style="text-align:center;color:var(--text-muted);padding:40px;">
+                                <i class="fas fa-file-alt" style="font-size:2rem;display:block;margin-bottom:12px;"></i>
+                                Pilih BSU dan Tahun untuk melihat laporan
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Buku Tabungan -->
+                    <div class="chart-card animate-fade-up delay-5" id="bukuTabunganCard">
+                        <h3><i class="fas fa-wallet"></i> Buku Tabungan Nasabah</h3>
+                        <div class="filter-body" style="padding:0 0 16px 0;">
+                            <div class="form-group" style="min-width:200px;">
+                                <label>Pilih Nasabah (BSU)</label>
+                                <select id="tabunganBSUFilter">
+                                    <option value="all">Semua BSU</option>
+                                </select>
+                            </div>
+                            <button class="btn-filter-date" id="generateTabunganBtn">
+                                <i class="fas fa-wallet"></i> Lihat Tabungan
+                            </button>
+                            <button class="btn-filter-date" id="exportTabunganBtn" style="background:linear-gradient(135deg,#1e7e34,#28a745);">
+                                <i class="fas fa-file-excel"></i> Ekspor Excel
+                            </button>
+                        </div>
+                        <div id="tabunganContainer">
+                            <div style="text-align:center;color:var(--text-muted);padding:40px;">
+                                <i class="fas fa-wallet" style="font-size:2rem;display:block;margin-bottom:12px;"></i>
+                                Pilih BSU untuk melihat buku tabungan
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- ===== MANAJEMEN BSU PAGE ===== -->
+                <!-- ============================================================ -->
+                <div id="bsuPage" class="page">
+                    <div class="breadcrumb">
+                        <i class="fas fa-home"></i> <span>Manajemen BSU</span>
+                    </div>
+                    <div class="page-title">
+                        <div class="icon-wrapper"><i class="fas fa-building"></i></div>
+                        <div>
+                            <h2>Manajemen Bank Sampah Unit (BSU)</h2>
+                            <p>Kelola semua BSU yang terdaftar</p>
+                        </div>
+                    </div>
+
+                    <!-- Form Tambah BSU -->
+                    <div class="form-card animate-fade-up">
+                        <div class="form-header">
+                            <i class="fas fa-plus-circle"></i>
+                            <h3>Tambah BSU Baru</h3>
+                        </div>
+                        <div class="form-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label><i class="fas fa-building"></i> Nama BSU <span class="required">*</span></label>
+                                    <input type="text" id="bsuNamaInput" placeholder="Contoh: BSU MEDE 5">
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-map-marker-alt"></i> RW <span class="required">*</span></label>
+                                    <select id="bsuRWInput">
+                                        <option value="RW01">RW 01</option><option value="RW02">RW 02</option>
+                                        <option value="RW03">RW 03</option><option value="RW04">RW 04</option>
+                                        <option value="RW05">RW 05</option><option value="RW06">RW 06</option>
+                                        <option value="RW07">RW 07</option><option value="RW08">RW 08</option>
+                                        <option value="RW09">RW 09</option><option value="RW10">RW 10</option>
+                                        <option value="RW11">RW 11</option><option value="RW12">RW 12</option>
+                                        <option value="RW13">RW 13</option><option value="RW14">RW 14</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-home"></i> RT <span class="required">*</span></label>
+                                    <select id="bsuRTInput">
+                                        <option value="RT01">RT 01</option><option value="RT02">RT 02</option>
+                                        <option value="RT03">RT 03</option><option value="RT04">RT 04</option>
+                                        <option value="RT05">RT 05</option>
+                                        <option value="all">Semua RT</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-user-tie"></i> Ketua BSU <span class="required">*</span></label>
+                                    <input type="text" id="bsuKetuaInput" placeholder="Nama Ketua BSU">
+                                </div>
+                            </div>
+                            <button id="tambahBSUBtn" class="btn-primary">
+                                <i class="fas fa-save"></i> Tambah BSU
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Daftar BSU -->
+                    <div class="data-table-card animate-fade-up delay-2">
+                        <div class="card-header">
+                            <div class="header-left">
+                                <i class="fas fa-list"></i>
+                                <h3>Daftar BSU</h3>
+                            </div>
+                            <span class="data-count" id="bsuListCount">Total: 0 BSU</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table" id="bsuTable">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Nama BSU</th>
+                                        <th>RW</th>
+                                        <th>RT</th>
+                                        <th>Ketua</th>
+                                        <th>Total Transaksi</th>
+                                        <th>Total Berat</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bsuTableBody">
+                                    <tr><td colspan="8" style="text-align:center;">Tidak ada BSU</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- ===== MANAJEMEN NASABAH PAGE ===== -->
+                <!-- ============================================================ -->
+                <div id="nasabahPage" class="page">
+                    <div class="breadcrumb">
+                        <i class="fas fa-home"></i> <span>Manajemen Nasabah</span>
+                    </div>
+                    <div class="page-title">
+                        <div class="icon-wrapper"><i class="fas fa-users"></i></div>
+                        <div>
+                            <h2>Manajemen Nasabah</h2>
+                            <p>Daftar semua nasabah dan total tabungannya</p>
+                        </div>
+                    </div>
+
+                    <div class="filter-card animate-fade-up">
+                        <div class="filter-header">
+                            <i class="fas fa-search"></i>
+                            <h3>Cari Nasabah</h3>
+                        </div>
+                        <div class="filter-body">
+                            <div class="form-group" style="flex:2;">
+                                <label><i class="fas fa-user"></i> Cari Nama Nasabah</label>
+                                <input type="text" id="adminNasabahSearch" placeholder="Ketik nama nasabah...">
+                            </div>
+                            <div class="form-group" style="flex:1;">
+                                <label><i class="fas fa-building"></i> Filter BSU</label>
+                                <select id="adminNasabahBSUFilter">
+                                    <option value="all">Semua BSU</option>
+                                </select>
+                            </div>
+                            <button class="btn-filter-date" id="adminNasabahSearchBtn">
+                                <i class="fas fa-search"></i> Cari
+                            </button>
+                            <button class="btn-filter-date" id="adminNasabahResetBtn" style="background:var(--text-muted);">
+                                <i class="fas fa-times"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="data-table-card animate-fade-up delay-2">
+                        <div class="card-header">
+                            <div class="header-left">
+                                <i class="fas fa-users"></i>
+                                <h3>Daftar Nasabah</h3>
+                            </div>
+                            <span class="data-count" id="adminNasabahCount">Total: 0 nasabah</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table" id="adminNasabahTable">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Nama Nasabah</th>
+                                        <th>BSU</th>
+                                        <th>Total Berat</th>
+                                        <th>Total Transaksi</th>
+                                        <th>Total Tabungan</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminNasabahBody">
+                                    <tr><td colspan="7" style="text-align:center;">Tidak ada nasabah</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Detail Nasabah Modal -->
+                    <div id="detailNasabahModal" class="modal">
+                        <div class="modal-content" style="max-width:700px;">
+                            <div class="modal-header">
+                                <h2><i class="fas fa-user"></i> Detail Nasabah</h2>
+                                <span class="modal-close" onclick="closeDetailNasabah()">&times;</span>
+                            </div>
+                            <div class="modal-body" id="detailNasabahBody">
+                                <div style="text-align:center;padding:20px;">Memuat data...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- ===== MANAJEMEN USER PAGE ===== -->
+                <!-- ============================================================ -->
+                <div id="userPage" class="page">
+                    <div class="breadcrumb">
+                        <i class="fas fa-home"></i> <span>Manajemen User</span>
+                    </div>
+                    <div class="page-title">
+                        <div class="icon-wrapper"><i class="fas fa-user-cog"></i></div>
+                        <div>
+                            <h2>Manajemen User</h2>
+                            <p>Kelola semua user yang terdaftar</p>
+                        </div>
+                    </div>
+
+                    <!-- Form Tambah User -->
+                    <div class="form-card animate-fade-up">
+                        <div class="form-header">
+                            <i class="fas fa-user-plus"></i>
+                            <h3>Tambah User Baru</h3>
+                        </div>
+                        <div class="form-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label><i class="fas fa-user"></i> Username <span class="required">*</span></label>
+                                    <input type="text" id="userUsernameInput" placeholder="Masukkan username">
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-lock"></i> Password <span class="required">*</span></label>
+                                    <input type="text" id="userPasswordInput" placeholder="Masukkan password" value="bsu123">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label><i class="fas fa-user-tag"></i> Role <span class="required">*</span></label>
+                                    <select id="userRoleInput">
+                                        <option value="admin">Admin</option>
+                                        <option value="tamu" selected>BSU (Tamu)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-building"></i> BSU <span class="required">*</span></label>
+                                    <select id="userBSUInput">
+                                        <option value="">Pilih BSU</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-user"></i> Nama Lengkap</label>
+                                    <input type="text" id="userNamaInput" placeholder="Nama lengkap">
+                                </div>
+                            </div>
+                            <button id="tambahUserBtn" class="btn-primary">
+                                <i class="fas fa-save"></i> Tambah User
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Daftar User -->
+                    <div class="data-table-card animate-fade-up delay-2">
+                        <div class="card-header">
+                            <div class="header-left">
+                                <i class="fas fa-list"></i>
+                                <h3>Daftar User</h3>
+                            </div>
+                            <span class="data-count" id="userListCount">Total: 0 user</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table" id="userTable">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Username</th>
+                                        <th>Nama</th>
+                                        <th>Role</th>
+                                        <th>BSU</th>
+                                        <th>RW/RT</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userTableBody">
+                                    <tr><td colspan="7" style="text-align:center;">Tidak ada user</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- ===== VERIFIKASI PAGE (SAMA SEPERTI SEBELUMNYA) ===== -->
+                <!-- ============================================================ -->
+                <div id="verifikasiPage" class="page">
+                    <div class="breadcrumb">
+                        <i class="fas fa-home"></i> <span>Verifikasi Data</span>
+                    </div>
+                    <div class="page-title">
+                        <div class="icon-wrapper"><i class="fas fa-check-double"></i></div>
+                        <div>
+                            <h2>Verifikasi Data Tamu</h2>
+                            <p>Crosscheck dan verifikasi data yang diinput oleh tamu</p>
+                        </div>
+                    </div>
+
+                    <!-- Filter -->
+                    <div class="filter-card animate-fade-up">
+                        <div class="filter-header">
+                            <i class="fas fa-filter"></i>
+                            <h3>Filter Data Verifikasi</h3>
+                        </div>
+                        <div class="filter-body">
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="verifikasiStatusFilter">
+                                    <option value="all">Semua</option>
+                                    <option value="pending">⏳ Menunggu</option>
+                                    <option value="verified">✅ Diverifikasi</option>
+                                    <option value="rejected">❌ Ditolak</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>BSU</label>
+                                <select id="verifikasiBSUFilter">
+                                    <option value="all">Semua BSU</option>
+                                </select>
+                            </div>
+                            <button class="btn-filter-date" id="verifikasiFilterBtn">
+                                <i class="fas fa-filter"></i> Terapkan
+                            </button>
+                            <button class="btn-filter-date" id="verifikasiResetBtn" style="background:var(--text-muted);">
+                                <i class="fas fa-times"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Data Menunggu Verifikasi -->
+                    <div class="data-table-card animate-fade-up">
+                        <div class="card-header">
+                            <div class="header-left">
+                                <i class="fas fa-clock"></i>
+                                <h3>Data Verifikasi</h3>
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <button id="verifikasiMassalBtn" class="btn-filter-date" style="background:linear-gradient(135deg,#2e7d32,#4caf7a);padding:6px 14px;font-size:0.7rem;">
+                                    <i class="fas fa-check-double"></i> Verifikasi Massal
+                                </button>
+                                <span class="data-count" id="verifikasiPageCount">Total: 0 data</span>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table" id="verifikasiTable">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="verifikasiSelectAll"></th>
+                                        <th>No</th>
+                                        <th>Nasabah</th>
+                                        <th>Nama Sampah</th>
+                                        <th>Berat (kg)</th>
+                                        <th>BSU</th>
+                                        <th>Ketua</th>
+                                        <th>Tanggal</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="verifikasiTableBody">
+                                    <tr><td colspan="10" style="text-align:center;">Tidak ada data</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- ===== LAPORAN PAGE (SAMA SEPERTI SEBELUMNYA) ===== -->
+                <!-- ============================================================ -->
+                <div id="laporanPage" class="page">
+                    <div class="breadcrumb">
+                        <i class="fas fa-home"></i> <span>Laporan & Tabungan</span>
+                    </div>
+                    <div class="page-title">
+                        <div class="icon-wrapper"><i class="fas fa-file-alt"></i></div>
+                        <div>
+                            <h2>Laporan & Buku Tabungan</h2>
+                            <p>Kelola laporan tahunan per BSU dan buku tabungan nasabah</p>
+                        </div>
+                    </div>
+
+                    <!-- Export Data -->
+                    <div class="filter-card animate-fade-up">
+                        <div class="filter-header">
+                            <i class="fas fa-download"></i>
+                            <h3>Ekspor Data</h3>
+                        </div>
+                        <div class="filter-body">
+                            <div class="export-group">
+                                <button class="btn-export-excel" id="exportExcelBtn">
+                                    <i class="fas fa-file-excel"></i> Ekspor ke Excel (.csv)
+                                </button>
+                                <button class="btn-export-csv" id="exportCSVBtn">
+                                    <i class="fas fa-file-csv"></i> Ekspor ke CSV
+                                </button>
+                                <button class="btn-export-tamu" id="exportTamuBtn">
+                                    <i class="fas fa-file-csv"></i> Ekspor Data Tamu
+                                </button>
+                                <button class="btn-share" id="shareLaporanBtn">
+                                    <i class="fab fa-whatsapp"></i> Share ke WhatsApp
+                                </button>
+                            </div>
+                            <small style="color:var(--text-muted);font-size:0.7rem;margin-top:8px;display:block;">
+                                💡 Ekspor data berdasarkan filter yang sedang aktif
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Laporan Tahunan -->
+                    <div class="chart-card animate-fade-up">
+                        <h3><i class="fas fa-calendar-year"></i> Laporan Tahunan per BSU</h3>
+                        <div class="filter-body" style="padding:0 0 16px 0;">
+                            <div class="form-group" style="min-width:180px;">
+                                <label>Pilih BSU</label>
+                                <select id="laporanBSUFilter2">
+                                    <option value="all">Semua BSU</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="min-width:180px;">
+                                <label>Pilih Tahun</label>
+                                <select id="laporanTahunFilter2">
+                                    <option value="2024">2024</option>
+                                    <option value="2025" selected>2025</option>
+                                    <option value="2026">2026</option>
+                                </select>
+                            </div>
+                            <button class="btn-filter-date" id="generateLaporanBSUBtn2">
+                                <i class="fas fa-chart-bar"></i> Generate Laporan
+                            </button>
+                        </div>
+                        <div id="laporanBSUContainer2">
+                            <div style="text-align:center;color:var(--text-muted);padding:40px;">
+                                <i class="fas fa-file-alt" style="font-size:2rem;display:block;margin-bottom:12px;"></i>
+                                Pilih BSU dan Tahun untuk melihat laporan
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Buku Tabungan -->
+                    <div class="chart-card animate-fade-up delay-2">
+                        <h3><i class="fas fa-wallet"></i> Buku Tabungan Nasabah</h3>
+                        <div class="filter-body" style="padding:0 0 16px 0;">
+                            <div class="form-group" style="min-width:200px;">
+                                <label>Pilih Nasabah (BSU)</label>
+                                <select id="tabunganBSUFilter2">
+                                    <option value="all">Semua BSU</option>
+                                </select>
+                            </div>
+                            <button class="btn-filter-date" id="generateTabunganBtn2">
+                                <i class="fas fa-wallet"></i> Lihat Tabungan
+                            </button>
+                            <button class="btn-filter-date" id="exportTabunganBtn2" style="background:linear-gradient(135deg,#1e7e34,#28a745);">
+                                <i class="fas fa-file-excel"></i> Ekspor Excel
+                            </button>
+                        </div>
+                        <div id="tabunganContainer2">
+                            <div style="text-align:center;color:var(--text-muted);padding:40px;">
+                                <i class="fas fa-wallet" style="font-size:2rem;display:block;margin-bottom:12px;"></i>
+                                Pilih BSU untuk melihat buku tabungan
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -709,7 +1196,7 @@
                         </div>
                     </div>
 
-                    <!-- ===== BACKUP & RESTORE ===== -->
+                    <!-- Backup & Restore -->
                     <div class="form-card animate-fade-up">
                         <div class="form-header">
                             <i class="fas fa-database"></i>
@@ -733,7 +1220,32 @@
                         </div>
                     </div>
 
-                    <!-- ===== MODE TAMPILAN ===== -->
+                    <!-- Reset Data -->
+                    <div class="form-card animate-fade-up delay-1">
+                        <div class="form-header" style="background:rgba(239,83,80,0.08);">
+                            <i class="fas fa-trash-alt" style="color:#ef5350;"></i>
+                            <h3 style="color:#ef5350;">Reset Data</h3>
+                        </div>
+                        <div class="form-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label><i class="fas fa-trash"></i> Hapus Semua Data</label>
+                                    <button id="resetAllDataBtn" class="btn-primary" style="background:linear-gradient(135deg,#ef5350,#d32f2f);">
+                                        <i class="fas fa-trash-alt"></i> Reset Semua Data
+                                    </button>
+                                    <small style="color:var(--text-muted);font-size:0.7rem;margin-top:4px;">⚠️ Tindakan ini tidak dapat dibatalkan!</small>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-trash"></i> Hapus Log Aktivitas</label>
+                                    <button id="clearLogsBtn2" class="btn-primary" style="background:linear-gradient(135deg,#ef5350,#d32f2f);">
+                                        <i class="fas fa-trash-alt"></i> Hapus Semua Log
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mode Tampilan -->
                     <div class="form-card animate-fade-up delay-2">
                         <div class="form-header">
                             <i class="fas fa-display"></i>
@@ -754,28 +1266,7 @@
                         </div>
                     </div>
 
-                    <!-- ===== ACTIVITY LOG ===== -->
-                    <div class="data-table-card animate-fade-up delay-2">
-                        <div class="card-header">
-                            <div class="header-left">
-                                <i class="fas fa-history"></i>
-                                <h3>Aktivitas Terakhir</h3>
-                            </div>
-                            <button id="clearLogsBtn" style="background:rgba(239,83,80,0.1);border:none;padding:6px 16px;border-radius:12px;color:#ef5350;cursor:pointer;font-weight:600;font-size:0.7rem;">
-                                <i class="fas fa-trash"></i> Hapus Log
-                            </button>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="data-table">
-                                <thead><tr><th>Waktu</th><th>User</th><th>Aksi</th><th>Detail</th></tr></thead>
-                                <tbody id="activityLogBody">
-                                    <tr><td colspan="4" style="text-align:center;">Tidak ada aktivitas</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- ===== KEYBOARD SHORTCUT ===== -->
+                    <!-- Keyboard Shortcut -->
                     <div class="form-card animate-fade-up delay-3">
                         <div class="form-header">
                             <i class="fas fa-keyboard"></i>
@@ -818,6 +1309,38 @@
                             <p>Riwayat semua aktivitas pengguna</p>
                         </div>
                     </div>
+
+                    <!-- Filter Log -->
+                    <div class="filter-card animate-fade-up">
+                        <div class="filter-header">
+                            <i class="fas fa-filter"></i>
+                            <h3>Filter Log</h3>
+                        </div>
+                        <div class="filter-body">
+                            <div class="form-group">
+                                <label>User</label>
+                                <select id="logUserFilter">
+                                    <option value="all">Semua User</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Aksi</label>
+                                <select id="logActionFilter">
+                                    <option value="all">Semua Aksi</option>
+                                </select>
+                            </div>
+                            <button class="btn-filter-date" id="logFilterBtn">
+                                <i class="fas fa-filter"></i> Terapkan
+                            </button>
+                            <button class="btn-filter-date" id="logResetBtn" style="background:var(--text-muted);">
+                                <i class="fas fa-times"></i> Reset
+                            </button>
+                            <button class="btn-filter-date" id="logExportBtn" style="background:linear-gradient(135deg,#1e7e34,#28a745);">
+                                <i class="fas fa-file-excel"></i> Ekspor Log
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="data-table-card animate-fade-up">
                         <div class="card-header">
                             <div class="header-left">
