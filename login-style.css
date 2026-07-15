@@ -760,3 +760,63 @@ body::after {
     border-color: #ef5350;
     animation: shakeError 0.4s ease;
 }
+
+/* ===== BSU INFO ===== */
+.bsu-info-container {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(46, 125, 74, 0.08);
+}
+
+.bsu-info-container .bsu-label {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.bsu-info-container .bsu-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-height: 140px;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+
+.bsu-info-container .bsu-chip {
+    font-size: 0.55rem;
+    background: var(--white);
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(46, 125, 74, 0.12);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.3s ease;
+}
+
+.bsu-info-container .bsu-chip:hover {
+    border-color: var(--primary-light);
+    background: var(--primary-bg-light);
+}
+
+.bsu-info-container .bsu-chip .bsu-name {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.bsu-info-container .bsu-chip .bsu-cred {
+    color: var(--text-muted);
+    font-size: 0.5rem;
+}
+
+@media (max-width: 480px) {
+    .bsu-info-container .bsu-chip {
+        font-size: 0.5rem;
+        padding: 2px 8px;
+    }
+}
