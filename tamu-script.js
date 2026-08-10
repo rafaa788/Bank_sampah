@@ -1,5 +1,5 @@
 // =====================================================
-// TAMU-SCRIPT.JS - DENGAN 3 FOTO UPLOAD & FIX SIMPAN
+// TAMU-SCRIPT.JS - OPTIMASI ANDROID
 // =====================================================
 
 // ==================== CEK LOGIN ====================
@@ -24,6 +24,7 @@ var currentUserRT = '';
 var currentUserName = '';
 var bsuTrenChart = null;
 var currentTabunganFilter = 'all';
+var isAndroid = /android/i.test(navigator.userAgent);
 
 // ==================== DATA BSU LENGKAP ====================
 var dataBSU = [
@@ -128,7 +129,10 @@ function showToast(message, isError) {
     toast.classList.add('show');
     toast.style.background = isError ? '#ef5350' : '#2e7d32';
     
-    setTimeout(function() {
+    // Hapus timeout sebelumnya
+    if (toast._timeout) clearTimeout(toast._timeout);
+    
+    toast._timeout = setTimeout(function() {
         toast.classList.remove('show');
     }, 3000);
 }
@@ -187,6 +191,25 @@ function getHargaByNamaSampah(namaSampah) {
     return 2000;
 }
 
+// ==================== ANDROID DETECTION ====================
+function isAndroidDevice() {
+    return /android/i.test(navigator.userAgent);
+}
+
+// ==================== HANDLE INPUT FOCUS (Android keyboard) ====================
+function setupAndroidInputHandling() {
+    if (!isAndroidDevice()) return;
+    
+    var inputs = document.querySelectorAll('input, select, textarea');
+    for (var i = 0; i < inputs.length; i++) {
+        inputs[i].addEventListener('focus', function() {
+            setTimeout(function() {
+                this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }.bind(this), 300);
+        });
+    }
+}
+
 // ==================== SET USER BSU ====================
 function setUserBSU() {
     var userBSU = sessionStorage.getItem('userBSU') || '';
@@ -234,7 +257,6 @@ function setUserBSU() {
 // ==================== SAVE & LOAD DATA TAMU ====================
 function saveTamuDataLocal() {
     localStorage.setItem(DATA_TAMU_KEY, JSON.stringify(dataTamuMenunggu));
-    console.log('Data tamu disimpan:', dataTamuMenunggu.length, 'data');
 }
 
 function loadTamuDataLocal() {
@@ -242,9 +264,7 @@ function loadTamuDataLocal() {
     if (stored) {
         try {
             dataTamuMenunggu = JSON.parse(stored);
-            console.log('Data tamu dimuat dari localStorage:', dataTamuMenunggu.length, 'data');
         } catch(e) {
-            console.error('Error parsing data tamu:', e);
             dataTamuMenunggu = [];
         }
     } else {
@@ -256,10 +276,8 @@ function loadTamuDataLocal() {
 
 // ==================== LOAD DATA ====================
 function loadTamuData() {
-    // Load dari localStorage
     loadTamuDataLocal();
     
-    // Load daftar sampah dari localStorage admin
     var storedSampah = localStorage.getItem(STORAGE_KEY);
     if (storedSampah) {
         try {
@@ -274,8 +292,6 @@ function loadTamuData() {
     renderNasabahList('');
     renderBukuTabunganTamuWithFilter();
     updateNasabahDatalist();
-    
-    // Cek data pending dan kirim notifikasi ke admin
     checkPendingData();
 }
 
@@ -285,8 +301,6 @@ function checkPendingData() {
         return item.status === 'pending';
     });
     if (pending.length > 0) {
-        console.log('Ada ' + pending.length + ' data pending menunggu verifikasi');
-        // Kirim sinyal ke admin melalui localStorage
         localStorage.setItem('tamuDataPending', JSON.stringify({
             count: pending.length,
             lastUpdate: new Date().toISOString()
@@ -310,7 +324,6 @@ function getDataBSUWithTamu() {
     var result = [];
     var usedIds = {};
     
-    // Data dari daftarSampah (yang sudah diverifikasi)
     for (var i = 0; i < daftarSampah.length; i++) {
         var item = daftarSampah[i];
         if (item.bsu === currentUserBSU) {
@@ -321,7 +334,6 @@ function getDataBSUWithTamu() {
         }
     }
     
-    // Data dari dataTamuMenunggu yang sudah verified
     for (var j = 0; j < dataTamuMenunggu.length; j++) {
         var tamu = dataTamuMenunggu[j];
         if (tamu.status === 'verified' && tamu.bsu === currentUserBSU && !usedIds[tamu.id]) {
@@ -437,7 +449,7 @@ function renderTopNasabah(nasabahList) {
     if (count) count.textContent = 'Total: ' + nasabahList.length + ' nasabah';
     
     if (nasabahList.length === 0) {
-        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">Belum ada data nasabah</div>';
+        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:0.75rem;">Belum ada data nasabah</div>';
         return;
     }
     
@@ -454,7 +466,7 @@ function renderTopNasabah(nasabahList) {
             '<div class="nasabah-rank">' + medal + ' ' + (i + 1) + '</div>' +
             '<div class="nasabah-info">' +
                 '<div class="nasabah-name">' + escapeHtml(n.nama) + '</div>' +
-                '<div class="nasabah-detail">' + n.totalTransaksi + ' transaksi | ' + n.totalBerat.toFixed(2) + ' kg</div>' +
+                '<div class="nasabah-detail">' + n.totalTransaksi + ' transaksi | ' + n.totalBerat.toFixed(1) + ' kg</div>' +
             '</div>' +
             '<div class="nasabah-total">' + formatRupiah(n.totalNilai) + '</div>' +
         '</div>';
@@ -522,7 +534,8 @@ function updateBsuTrenChart(dataBsu) {
                     backgroundColor: 'rgba(46,125,50,0.1)',
                     fill: true,
                     tension: 0.4,
-                    pointRadius: 3
+                    pointRadius: 2,
+                    pointHoverRadius: 5
                 },
                 {
                     label: 'Nonorganik',
@@ -531,7 +544,8 @@ function updateBsuTrenChart(dataBsu) {
                     backgroundColor: 'rgba(249,168,37,0.1)',
                     fill: true,
                     tension: 0.4,
-                    pointRadius: 3
+                    pointRadius: 2,
+                    pointHoverRadius: 5
                 },
                 {
                     label: 'Total',
@@ -541,7 +555,8 @@ function updateBsuTrenChart(dataBsu) {
                     fill: true,
                     tension: 0.4,
                     borderDash: [5, 5],
-                    pointRadius: 2
+                    pointRadius: 1,
+                    pointHoverRadius: 4
                 }
             ]
         },
@@ -551,7 +566,11 @@ function updateBsuTrenChart(dataBsu) {
             plugins: {
                 legend: {
                     position: 'top',
-                    labels: { font: { size: 10 }, boxWidth: 12 }
+                    labels: { 
+                        font: { size: 9 }, 
+                        boxWidth: 10,
+                        padding: 6
+                    }
                 },
                 tooltip: {
                     callbacks: {
@@ -564,11 +583,11 @@ function updateBsuTrenChart(dataBsu) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: 'Berat (kg)', font: { size: 10 } },
-                    ticks: { font: { size: 10 } }
+                    title: { display: true, text: 'Berat (kg)', font: { size: 8 } },
+                    ticks: { font: { size: 8 } }
                 },
                 x: {
-                    ticks: { font: { size: 10 } }
+                    ticks: { font: { size: 8 }, maxRotation: 30 }
                 }
             }
         }
@@ -593,16 +612,16 @@ function renderNasabahList(searchTerm) {
     if (count) count.textContent = 'Total: ' + nasabahList.length + ' nasabah';
     
     if (nasabahList.length === 0) {
-        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">' +
-            '<i class="fas fa-users" style="font-size:2rem;display:block;margin-bottom:12px;opacity:0.3;"></i>' +
-            '<p>Belum ada nasabah terdaftar</p>' +
+        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:30px 16px;">' +
+            '<i class="fas fa-users" style="font-size:1.8rem;display:block;margin-bottom:8px;opacity:0.3;"></i>' +
+            '<p style="font-size:0.75rem;">Belum ada nasabah terdaftar</p>' +
             '</div>';
         return;
     }
     
     var html = '<div class="nasabah-table-wrapper">' +
         '<table class="nasabah-table">' +
-        '<thead><tr><th>No</th><th>Nama Nasabah</th><th>RW/RT</th><th>Total Berat</th><th>Total Transaksi</th><th>Total Tabungan</th></tr></thead>' +
+        '<thead><tr><th>No</th><th>Nama Nasabah</th><th>RW/RT</th><th>Berat</th><th>Transaksi</th><th>Tabungan</th></tr></thead>' +
         '<tbody>';
     
     for (var i = 0; i < nasabahList.length; i++) {
@@ -612,7 +631,7 @@ function renderNasabahList(searchTerm) {
             '<td>' + (i + 1) + '</td>' +
             '<td><strong>' + escapeHtml(n.nama) + '</strong></td>' +
             '<td>' + n.rw + ' - ' + n.rt + '</td>' +
-            '<td>' + n.totalBerat.toFixed(2) + ' kg</td>' +
+            '<td>' + n.totalBerat.toFixed(1) + ' kg</td>' +
             '<td>' + n.totalTransaksi + '</td>' +
             '<td class="nasabah-total-value">' + formatRupiah(n.totalNilai) + '</td>' +
             '</tr>';
@@ -693,7 +712,7 @@ function updateNasabahDatalist() {
     }
     
     if (filterSelect) {
-        var html3 = '<option value="all">📊 Semua Nasabah (Rekap)</option>';
+        var html3 = '<option value="all">📊 Semua Nasabah</option>';
         html3 += '<option value="__separator__" disabled>──────────</option>';
         for (var i = 0; i < nasabahList.length; i++) {
             html3 += '<option value="' + escapeHtml(nasabahList[i].nama) + '">👤 ' + escapeHtml(nasabahList[i].nama) + ' (Rp ' + nasabahList[i].totalNilai.toLocaleString() + ')</option>';
@@ -702,7 +721,7 @@ function updateNasabahDatalist() {
     }
 }
 
-// ==================== RENDER TABUNGAN DENGAN NAMA SAMPAH ====================
+// ==================== RENDER TABUNGAN ====================
 function renderBukuTabunganTamuWithFilter() {
     var container = document.getElementById('tabunganTamuContainer');
     if (!container) return;
@@ -724,10 +743,10 @@ function renderBukuTabunganTamuWithFilter() {
     var data = generateTabunganNasabah(namaNasabah);
     
     if (data.history.length === 0) {
-        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:60px 20px;">' +
-            '<i class="fas fa-wallet" style="font-size:3rem;display:block;margin-bottom:16px;opacity:0.3;"></i>' +
-            '<p style="font-size:1rem;">Tidak ada data untuk nasabah <strong>' + escapeHtml(namaNasabah) + '</strong></p>' +
-            '<p style="font-size:0.85rem;color:var(--text-muted);">Pastikan nama nasabah sudah diverifikasi oleh Admin</p>' +
+        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px 16px;">' +
+            '<i class="fas fa-wallet" style="font-size:2rem;display:block;margin-bottom:12px;opacity:0.3;"></i>' +
+            '<p style="font-size:0.9rem;">Tidak ada data untuk nasabah <strong>' + escapeHtml(namaNasabah) + '</strong></p>' +
+            '<p style="font-size:0.7rem;color:var(--text-muted);">Pastikan nama nasabah sudah diverifikasi</p>' +
             '</div>';
         return;
     }
@@ -735,7 +754,6 @@ function renderBukuTabunganTamuWithFilter() {
     renderDetailTabunganForTamu(data, container);
 }
 
-// ==================== RENDER DETAIL TABUNGAN DENGAN 3 FOTO ====================
 function renderDetailTabunganForTamu(data, container) {
     var html = '<div class="tabungan-card">' +
         '<div class="tabungan-header">' +
@@ -745,11 +763,11 @@ function renderDetailTabunganForTamu(data, container) {
         '<div class="tabungan-saldo">' +
         '<div class="saldo-label">Total Saldo</div>' +
         '<div class="saldo-value">' + formatRupiah(data.totalSaldo) + '</div>' +
-        '<div style="font-size:0.7rem;color:var(--text-muted);">Total Transaksi: ' + data.totalTransaksi + ' | Total Berat: ' + data.totalBerat.toFixed(2) + ' kg</div>' +
+        '<div style="font-size:0.6rem;color:var(--text-muted);">Total Transaksi: ' + data.totalTransaksi + ' | Total Berat: ' + data.totalBerat.toFixed(1) + ' kg</div>' +
         '</div>' +
-        '<div style="overflow-x:auto;">' +
+        '<div class="tabungan-table-wrapper">' +
         '<table class="tabungan-table">' +
-        '<thead><tr><th>No</th><th>Tanggal</th><th>Nama Sampah</th><th>RW/RT</th><th>Berat (kg)</th><th>Harga/kg</th><th>Nilai</th><th>Saldo</th><th>Foto</th></tr></thead>' +
+        '<thead><tr><th>No</th><th>Tanggal</th><th>Nama Sampah</th><th>RW/RT</th><th>Berat</th><th>Harga</th><th>Nilai</th><th>Saldo</th><th>Foto</th></tr></thead>' +
         '<tbody>';
     
     for (var i = 0; i < data.history.length; i++) {
@@ -769,7 +787,7 @@ function renderDetailTabunganForTamu(data, container) {
             '<td>' + tgl + '</td>' +
             '<td class="sampah-cell"><strong>' + escapeHtml(item.namaSampah) + '</strong></td>' +
             '<td>' + escapeHtml(item.rw) + ' - ' + escapeHtml(item.rt) + '</td>' +
-            '<td>' + item.berat.toFixed(2) + '</td>' +
+            '<td>' + item.berat.toFixed(1) + '</td>' +
             '<td>' + formatRupiah(item.hargaPerKg) + '</td>' +
             '<td class="debit">' + formatRupiah(item.nilai) + '</td>' +
             '<td><strong>' + formatRupiah(item.saldo) + '</strong></td>' +
@@ -779,16 +797,16 @@ function renderDetailTabunganForTamu(data, container) {
     
     html += '</tbody></table>' +
         '</div>' +
-        '<div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
-        '<div style="font-size:0.7rem;color:var(--text-muted);">' +
-        'Dicetak: ' + formatTanggalIndo(new Date().toISOString()) +
+        '<div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">' +
+        '<div style="font-size:0.6rem;color:var(--text-muted);">Dicetak: ' + formatTanggalIndo(new Date().toISOString()) + '</div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+        '<button onclick="exportTabunganTamuPDF(\'' + escapeHtml(data.namaNasabah) + '\')" style="padding:6px 14px;background:linear-gradient(135deg,#dc3545,#c82333);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.7rem;touch-action:manipulation;">' +
+        '<i class="fas fa-file-pdf"></i> PDF' +
+        '</button>' +
+        '<button onclick="exportTabunganTamuExcel(\'' + escapeHtml(data.namaNasabah) + '\')" style="padding:6px 14px;background:linear-gradient(135deg,#1e7e34,#28a745);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.7rem;touch-action:manipulation;">' +
+        '<i class="fas fa-file-excel"></i> Excel' +
+        '</button>' +
         '</div>' +
-        '<button onclick="exportTabunganTamuPDF(\'' + escapeHtml(data.namaNasabah) + '\')" style="padding:8px 20px;background:linear-gradient(135deg,#dc3545,#c82333);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.8rem;">' +
-        '<i class="fas fa-file-pdf"></i> Ekspor PDF' +
-        '</button>' +
-        '<button onclick="exportTabunganTamuExcel(\'' + escapeHtml(data.namaNasabah) + '\')" style="padding:8px 20px;background:linear-gradient(135deg,#1e7e34,#28a745);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.8rem;">' +
-        '<i class="fas fa-file-excel"></i> Ekspor Excel' +
-        '</button>' +
         '</div>' +
         '</div>';
     
@@ -840,9 +858,9 @@ function renderRekapTabunganForTamu(searchTerm) {
     }
     
     if (rekapData.length === 0) {
-        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:60px 20px;">' +
-            '<i class="fas fa-file-invoice" style="font-size:2.5rem;display:block;margin-bottom:16px;opacity:0.3;"></i>' +
-            '<p style="font-size:1rem;">Belum ada data nasabah</p>' +
+        container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px 16px;">' +
+            '<i class="fas fa-file-invoice" style="font-size:2rem;display:block;margin-bottom:12px;opacity:0.3;"></i>' +
+            '<p style="font-size:0.9rem;">Belum ada data nasabah</p>' +
             '</div>';
         return;
     }
@@ -861,14 +879,14 @@ function renderRekapTabunganForTamu(searchTerm) {
         '<h3><i class="fas fa-users"></i> REKAP SEMUA NASABAH</h3>' +
         '<span class="no-rek">' + currentUserBSU + ' | ' + rekapData.length + ' nasabah</span>' +
         '</div>' +
-        '<div style="background:linear-gradient(135deg, var(--primary), var(--primary-light));color:white;padding:16px 20px;border-radius:var(--radius-sm);margin-bottom:16px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">' +
-        '<div><span style="opacity:0.8;font-size:0.75rem;">Total Keseluruhan</span><br><strong style="font-size:1.2rem;">' + formatRupiah(grandTotalNilai) + '</strong></div>' +
-        '<div><span style="opacity:0.8;font-size:0.75rem;">Total Berat</span><br><strong style="font-size:1.2rem;">' + grandTotalBerat.toFixed(2) + ' kg</strong></div>' +
-        '<div><span style="opacity:0.8;font-size:0.75rem;">Total Transaksi</span><br><strong style="font-size:1.2rem;">' + grandTotalTransaksi + '</strong></div>' +
+        '<div style="background:linear-gradient(135deg, var(--primary), var(--primary-light));color:white;padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:10px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;">' +
+        '<div><span style="opacity:0.8;font-size:0.6rem;">Total</span><br><strong style="font-size:1rem;">' + formatRupiah(grandTotalNilai) + '</strong></div>' +
+        '<div><span style="opacity:0.8;font-size:0.6rem;">Berat</span><br><strong style="font-size:1rem;">' + grandTotalBerat.toFixed(1) + ' kg</strong></div>' +
+        '<div><span style="opacity:0.8;font-size:0.6rem;">Transaksi</span><br><strong style="font-size:1rem;">' + grandTotalTransaksi + '</strong></div>' +
         '</div>' +
-        '<div style="overflow-x:auto;">' +
+        '<div class="tabungan-table-wrapper">' +
         '<table class="tabungan-table">' +
-        '<thead><tr><th>No</th><th>Nama Nasabah</th><th>RW/RT</th><th>Berat (kg)</th><th>Transaksi</th><th>Total Tabungan</th><th>Terakhir</th></tr></thead>' +
+        '<thead><tr><th>No</th><th>Nama Nasabah</th><th>RW/RT</th><th>Berat</th><th>Transaksi</th><th>Tabungan</th><th>Terakhir</th></tr></thead>' +
         '<tbody>';
     
     for (var i = 0; i < rekapData.length; i++) {
@@ -879,229 +897,32 @@ function renderRekapTabunganForTamu(searchTerm) {
             '<td>' + (i + 1) + '</td>' +
             '<td class="nasabah-name-cell"><strong>' + escapeHtml(n.nama) + '</strong></td>' +
             '<td>' + n.rw + ' - ' + n.rt + '</td>' +
-            '<td>' + n.totalBerat.toFixed(2) + '</td>' +
+            '<td>' + n.totalBerat.toFixed(1) + '</td>' +
             '<td>' + n.totalTransaksi + '</td>' +
             '<td class="debit">' + formatRupiah(n.totalNilai) + '</td>' +
-            '<td style="font-size:0.65rem;color:var(--text-muted);">' + tgl + '</td>' +
+            '<td style="font-size:0.55rem;color:var(--text-muted);">' + tgl + '</td>' +
             '</tr>';
     }
     
     html += '</tbody></table>' +
         '</div>' +
-        '<div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
-        '<div style="font-size:0.7rem;color:var(--text-muted);">Dicetak: ' + formatTanggalIndo(new Date().toISOString()) + '</div>' +
-        '<button onclick="exportRekapTamuExcel()" style="padding:8px 20px;background:linear-gradient(135deg,#1e7e34,#28a745);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.8rem;">' +
-        '<i class="fas fa-file-excel"></i> Ekspor Excel' +
+        '<div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">' +
+        '<div style="font-size:0.6rem;color:var(--text-muted);">Dicetak: ' + formatTanggalIndo(new Date().toISOString()) + '</div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+        '<button onclick="exportRekapTamuExcel()" style="padding:6px 14px;background:linear-gradient(135deg,#1e7e34,#28a745);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.7rem;touch-action:manipulation;">' +
+        '<i class="fas fa-file-excel"></i> Excel' +
         '</button>' +
-        '<button onclick="printRekapTamuPDF()" style="padding:8px 20px;background:linear-gradient(135deg,#dc3545,#c82333);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.8rem;">' +
-        '<i class="fas fa-file-pdf"></i> Cetak PDF' +
+        '<button onclick="printRekapTamuPDF()" style="padding:6px 14px;background:linear-gradient(135deg,#dc3545,#c82333);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.7rem;touch-action:manipulation;">' +
+        '<i class="fas fa-file-pdf"></i> PDF' +
         '</button>' +
+        '</div>' +
         '</div>' +
         '</div>';
     
     container.innerHTML = html;
 }
 
-// ==================== EKSPORT FUNGSI ====================
-function exportTabunganTamuPDF(namaNasabah) {
-    if (!namaNasabah || namaNasabah === 'all' || namaNasabah === 'undefined') {
-        var filterSelect = document.getElementById('tabunganFilterSelect');
-        var selectedValue = filterSelect ? filterSelect.value : 'all';
-        if (selectedValue !== 'all' && selectedValue !== '__separator__') {
-            namaNasabah = selectedValue;
-        } else {
-            showToast('Pilih nama nasabah terlebih dahulu!', true);
-            return;
-        }
-    }
-    
-    var data = generateTabunganNasabah(namaNasabah);
-    
-    if (data.history.length === 0) {
-        showToast('Tidak ada data untuk nasabah ini!', true);
-        return;
-    }
-    
-    var tglCetak = formatTanggalIndo(new Date().toISOString());
-    var admin = sessionStorage.getItem('adminName') || 'BSU';
-    
-    var tabelDetail = '';
-    for (var i = 0; i < data.history.length; i++) {
-        var item = data.history[i];
-        var tgl = item.tanggal ? formatTanggalIndo(item.tanggal) : '-';
-        var bgColor = (i % 2 === 0) ? '#ffffff' : '#f9f9f9';
-        
-        var fotoHtml = '-';
-        var fotoList = [];
-        if (item.fotoTimbang) fotoList.push('<a href="' + item.fotoTimbang + '" target="_blank">📷</a>');
-        if (item.fotoHasil) fotoList.push('<a href="' + item.fotoHasil + '" target="_blank">📸</a>');
-        if (item.fotoBukti) fotoList.push('<a href="' + item.fotoBukti + '" target="_blank">📋</a>');
-        if (fotoList.length > 0) fotoHtml = fotoList.join(' ');
-        
-        tabelDetail += '<tr style="background:' + bgColor + ';">' +
-            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:center;">' + (i+1) + '</td>' +
-            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:center;">' + tgl + '</td>' +
-            '<td style="border:1px solid #ddd;padding:6px 10px;"><strong>' + escapeHtml(item.namaSampah) + '</strong></td>' +
-            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:center;">' + escapeHtml(item.rw) + ' - ' + escapeHtml(item.rt) + '</td>' +
-            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:right;">' + item.berat.toFixed(2) + '</td>' +
-            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:right;">' + formatRupiah(item.hargaPerKg) + '</td>' +
-            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:right;">' + formatRupiah(item.nilai) + '</td>' +
-            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:right;"><strong>' + formatRupiah(item.saldo) + '</strong></td>' +
-            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:center;">' + fotoHtml + '</td>' +
-            '</tr>';
-    }
-    
-    var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Buku Tabungan - ' + escapeHtml(namaNasabah) + '</title><style>' +
-        'body { font-family: "Times New Roman", Arial, sans-serif; padding: 30px; }' +
-        '.header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #2e7d32; padding-bottom: 20px; }' +
-        'h1 { color: #2e7d32; margin-bottom: 5px; font-size: 24px; }' +
-        '.subtitle { color: #666; font-size: 14px; }' +
-        '.info-nasabah { background: #e8f5e9; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0; }' +
-        '.info-nasabah .nasabah-name { font-size: 20px; color: #1a5e2a; font-weight: bold; }' +
-        '.info-nasabah .nasabah-detail { font-size: 14px; color: #2e7d32; margin-top: 4px; }' +
-        '.saldo-box { background: linear-gradient(135deg, #2e7d32, #4caf7a); color: white; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; }' +
-        '.saldo-box .label { font-size: 12px; opacity: 0.8; }' +
-        '.saldo-box .value { font-size: 28px; font-weight: bold; }' +
-        '.saldo-box .detail { font-size: 12px; opacity: 0.9; margin-top: 5px; }' +
-        'table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 11px; }' +
-        'th { background: #2e7d32; color: white; padding: 10px; text-align: center; }' +
-        'td { padding: 6px 10px; border-bottom: 1px solid #ddd; }' +
-        '.footer { margin-top: 40px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }' +
-        '.signature { margin-top: 40px; display: flex; justify-content: space-around; }' +
-        '.signature-box { text-align: center; }' +
-        '.signature-line { margin-top: 40px; width: 200px; border-top: 1px solid #000; margin: 0 auto; }' +
-        '.signature-box p { margin-top: 8px; font-size: 12px; }' +
-        '</style></head><body>' +
-        '<div class="header">' +
-        '<h1>BANK SAMPAH DIGITAL</h1>' +
-        '<div class="subtitle">BSI Mandiri - Desa Gunung Putri</div>' +
-        '</div>' +
-        '<div class="info-nasabah">' +
-        '<div style="font-size:14px;color:#666;margin-bottom:4px;">📘 BUKU TABUNGAN</div>' +
-        '<div class="nasabah-name">' + escapeHtml(namaNasabah) + '</div>' +
-        '<div class="nasabah-detail">BSU: ' + currentUserBSU + '</div>' +
-        '</div>' +
-        '<div class="saldo-box">' +
-        '<div class="label">TOTAL SALDO</div>' +
-        '<div class="value">' + formatRupiah(data.totalSaldo) + '</div>' +
-        '<div class="detail">Total Transaksi: ' + data.totalTransaksi + ' | Total Berat: ' + data.totalBerat.toFixed(2) + ' kg</div>' +
-        '</div>' +
-        '<table><thead><tr><th>No</th><th>Tanggal</th><th>Nama Sampah</th><th>RW/RT</th><th>Berat (kg)</th><th>Harga/kg</th><th>Nilai</th><th>Saldo</th><th>Foto</th></tr></thead><tbody>' +
-        tabelDetail + '</tbody></table>' +
-        '<div class="footer">' +
-        '<p>Dicetak pada: ' + tglCetak + '</p>' +
-        '<p>Bank Sampah Digital - Kelola Sampah, Selamatkan Bumi</p>' +
-        '</div>' +
-        '<div class="signature">' +
-        '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Kepala Bank Sampah</p></div>' +
-        '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Ketua BSU</p></div>' +
-        '</div>' +
-        '</body></html>';
-    
-    try {
-        var blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-        var link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'Buku_Tabungan_' + escapeHtml(namaNasabah) + '.html';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(function() { URL.revokeObjectURL(link.href); }, 100);
-        showToast('Buku tabungan berhasil diunduh! Buka di browser untuk print/save PDF.', false);
-    } catch(e) {
-        var win = window.open('', '_blank', 'width=800,height=600');
-        if (win) {
-            win.document.write(htmlContent);
-            win.document.close();
-            setTimeout(function() { win.print(); }, 500);
-        } else {
-            showToast('Popup diblokir! Silakan izinkan popup.', true);
-        }
-    }
-}
-
-function exportTabunganTamuExcel(namaNasabah) {
-    if (!namaNasabah || namaNasabah === 'all' || namaNasabah === 'undefined') {
-        var filterSelect = document.getElementById('tabunganFilterSelect');
-        var selectedValue = filterSelect ? filterSelect.value : 'all';
-        if (selectedValue !== 'all' && selectedValue !== '__separator__') {
-            namaNasabah = selectedValue;
-        } else {
-            showToast('Pilih nama nasabah terlebih dahulu!', true);
-            return;
-        }
-    }
-    
-    var data = generateTabunganNasabah(namaNasabah);
-    
-    if (data.history.length === 0) {
-        showToast('Tidak ada data untuk nasabah ini!', true);
-        return;
-    }
-    
-    var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
-        'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
-        'xmlns="http://www.w3.org/TR/REC-html40">' +
-        '<head><meta charset="UTF-8">' +
-        '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>' +
-        '<x:ExcelWorksheet><x:Name>Tabungan</x:Name><x:WorksheetOptions>' +
-        '<x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>' +
-        '</x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->' +
-        '<style>' +
-        'body { font-family: Arial, sans-serif; }' +
-        'h1 { color: #2e7d32; text-align: center; font-size: 18px; }' +
-        'th { background: #2e7d32; color: white; padding: 10px; border: 1px solid #ddd; }' +
-        'td { padding: 8px; border: 1px solid #ddd; }' +
-        '.total-row { background: #e8f5e9; font-weight: bold; }' +
-        '</style>' +
-        '</head><body>' +
-        '<h1>BUKU TABUNGAN</h1>' +
-        '<p style="text-align:center;">Nama Nasabah: <strong>' + escapeHtml(namaNasabah) + '</strong></p>' +
-        '<p style="text-align:center;">BSU: ' + currentUserBSU + '</p>' +
-        '<p style="text-align:center;">Periode: ' + formatTanggalIndo(new Date().toISOString()) + '</p>' +
-        '<br>' +
-        '<table>' +
-        '<tr><th>No</th><th>Tanggal</th><th>Nama Sampah</th><th>RW/RT</th><th>Berat (kg)</th><th>Harga/kg</th><th>Nilai (Rp)</th><th>Saldo (Rp)</th></tr>';
-    
-    for (var i = 0; i < data.history.length; i++) {
-        var item = data.history[i];
-        html += '<tr>' +
-            '<td>' + (i + 1) + '</td>' +
-            '<td>' + (item.tanggal ? formatTanggalIndo(item.tanggal) : '-') + '</td>' +
-            '<td><strong>' + escapeHtml(item.namaSampah) + '</strong></td>' +
-            '<td>' + escapeHtml(item.rw) + ' - ' + escapeHtml(item.rt) + '</td>' +
-            '<td>' + item.berat.toFixed(2) + '</td>' +
-            '<td>' + formatRupiah(item.hargaPerKg) + '</td>' +
-            '<td>' + formatRupiah(item.nilai) + '</td>' +
-            '<td><strong>' + formatRupiah(item.saldo) + '</strong></td>' +
-            '</tr>';
-    }
-    
-    html += '<tr class="total-row">' +
-        '<td colspan="7" style="text-align:right;">TOTAL</td>' +
-        '<td>' + formatRupiah(data.totalSaldo) + '</td>' +
-        '</tr>' +
-        '</table>' +
-        '<p style="text-align:center;margin-top:30px;">Dicetak: ' + formatTanggalIndo(new Date().toISOString()) + '</p>' +
-        '</body></html>';
-    
-    try {
-        var blob = new Blob([html], { type: 'application/vnd.ms-excel' });
-        var link = document.createElement('a');
-        var url = URL.createObjectURL(blob);
-        link.href = url;
-        link.download = 'Buku_Tabungan_' + escapeHtml(namaNasabah) + '.xls';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(function() { URL.revokeObjectURL(url); }, 100);
-        showToast('Buku tabungan berhasil diekspor ke Excel!', false);
-    } catch(e) {
-        showToast('Gagal ekspor Excel: ' + e.message, true);
-    }
-}
-
-// ==================== TAMBAH DATA TAMU (FIX - SIMPAN KE ADMIN) ====================
+// ==================== TAMBAH DATA TAMU ====================
 function tambahDataTamu() {
     var namaNasabah = document.getElementById('tamuNamaNasabah').value;
     var namaSampah = document.getElementById('tamuNamaSampah').value;
@@ -1131,7 +952,7 @@ function tambahDataTamu() {
         return;
     }
     if (!bsu.trim()) {
-        showToast('BSU tidak terdeteksi! Silakan login ulang.', true);
+        showToast('BSU tidak terdeteksi!', true);
         return;
     }
     if (!ketua.trim()) {
@@ -1157,15 +978,12 @@ function tambahDataTamu() {
     showToast('Mengupload data...', false);
     
     try {
-        // Ambil data foto sebagai base64
         var fotoTimbangData = fotoTimbang.src;
         var fotoHasilData = fotoHasil.src;
         var fotoBuktiData = fotoBukti.src;
         
-        // Buat ID unik
         var newId = Date.now() + Math.floor(Math.random() * 1000);
         
-        // Simpan ke localStorage dengan key yang sama dengan admin
         var newItem = {
             id: newId,
             namaNasabah: namaNasabah.trim(),
@@ -1186,52 +1004,15 @@ function tambahDataTamu() {
             createdAt: new Date().toISOString()
         };
         
-        // Tambahkan ke array
         dataTamuMenunggu.push(newItem);
         saveTamuDataLocal();
         
-        // ===== KIRIM SINYAL KE ADMIN VIA LOCALSTORAGE =====
-        // Data sudah tersimpan di localStorage dengan key 'bankSampahTamuData'
-        // Admin akan membaca dari key yang sama
         localStorage.setItem('tamuDataPending', JSON.stringify({
             count: dataTamuMenunggu.filter(function(item) { return item.status === 'pending'; }).length,
             lastUpdate: new Date().toISOString(),
             latestData: newItem
         }));
         
-        // ===== COBA KIRIM KE SUPABASE =====
-        try {
-            if (typeof supabaseInsert === 'function') {
-                var insertData = {
-                    rw: rw,
-                    rt: rt,
-                    berat_kg: berat,
-                    harga_per_kg: 0,
-                    total_nilai: 0,
-                    jenis: 'nonorganik',
-                    tanggal_transaksi: tanggal || new Date().toISOString(),
-                    nama_nasabah: namaNasabah.trim(),
-                    status: 'pending',
-                    foto_timbang: fotoTimbangData,
-                    foto_hasil: fotoHasilData,
-                    foto_bukti: fotoBuktiData,
-                    bsu_nama: bsu.trim(),
-                    ketua_bsu: ketua.trim()
-                };
-                
-                supabaseInsert('transaksi_sampah', insertData)
-                    .then(function(result) {
-                        console.log('Data saved to Supabase:', result);
-                    })
-                    .catch(function(err) {
-                        console.error('Error saving to Supabase:', err);
-                    });
-            }
-        } catch (supabaseError) {
-            console.error('Supabase error:', supabaseError);
-        }
-        
-        // Reset form
         document.getElementById('tamuNamaNasabah').value = '';
         document.getElementById('tamuNamaSampah').value = '';
         document.getElementById('tamuBeratSampah').value = '1';
@@ -1243,7 +1024,7 @@ function tambahDataTamu() {
         renderHistory();
         updateDashboard();
         
-        showToast('✅ Data berhasil dikirim untuk verifikasi! Admin akan melihat data Anda.', false);
+        showToast('✅ Data berhasil dikirim untuk verifikasi!', false);
         
     } catch (error) {
         console.error('Error tambah data:', error);
@@ -1253,13 +1034,13 @@ function tambahDataTamu() {
 
 // ==================== UPLOAD FOTO ====================
 function setupUploadFoto() {
-    // Foto 1: Timbang
     var uploadTimbang = document.getElementById('uploadFotoTimbang');
     var inputTimbang = document.getElementById('fotoTimbang');
     var previewTimbang = document.getElementById('previewFotoTimbang');
     
     if (uploadTimbang && inputTimbang) {
-        uploadTimbang.addEventListener('click', function() {
+        uploadTimbang.addEventListener('click', function(e) {
+            e.preventDefault();
             inputTimbang.click();
         });
         inputTimbang.addEventListener('change', function(e) {
@@ -1273,13 +1054,13 @@ function setupUploadFoto() {
         });
     }
     
-    // Foto 2: Hasil
     var uploadHasil = document.getElementById('uploadFotoHasil');
     var inputHasil = document.getElementById('fotoHasil');
     var previewHasil = document.getElementById('previewFotoHasil');
     
     if (uploadHasil && inputHasil) {
-        uploadHasil.addEventListener('click', function() {
+        uploadHasil.addEventListener('click', function(e) {
+            e.preventDefault();
             inputHasil.click();
         });
         inputHasil.addEventListener('change', function(e) {
@@ -1293,13 +1074,13 @@ function setupUploadFoto() {
         });
     }
     
-    // Foto 3: Bukti
     var uploadBukti = document.getElementById('uploadFotoBukti');
     var inputBukti = document.getElementById('fotoBukti');
     var previewBukti = document.getElementById('previewFotoBukti');
     
     if (uploadBukti && inputBukti) {
-        uploadBukti.addEventListener('click', function() {
+        uploadBukti.addEventListener('click', function(e) {
+            e.preventDefault();
             inputBukti.click();
         });
         inputBukti.addEventListener('change', function(e) {
@@ -1344,7 +1125,7 @@ function renderHistory() {
         var statusText = '';
         var statusClass = '';
         if (item.status === 'pending') {
-            statusText = '⏳ Menunggu Verifikasi';
+            statusText = '⏳ Menunggu';
             statusClass = 'pending';
         } else if (item.status === 'verified') {
             statusText = '✅ Diverifikasi';
@@ -1363,7 +1144,7 @@ function renderHistory() {
         html += '<div class="history-item">' +
             '<div class="item-info">' +
                 '<div class="item-name">' + escapeHtml(item.nama) + '</div>' +
-                '<div class="item-detail">' + item.berat.toFixed(2) + ' kg | ' + escapeHtml(item.namaNasabah || '-') + ' | ' + item.tanggal + ' | Foto: ' + fotoInfo + '</div>' +
+                '<div class="item-detail">' + item.berat.toFixed(1) + ' kg | ' + escapeHtml(item.namaNasabah || '-') + ' | ' + item.tanggal + ' | Foto: ' + fotoInfo + '</div>' +
             '</div>' +
             '<span class="item-status ' + statusClass + '">' + statusText + '</span>' +
         '</div>';
@@ -1443,6 +1224,492 @@ function confirmLogout() {
     window.location.href = 'menu_login.html';
 }
 
+// ==================== EXPORT FUNCTIONS ====================
+function exportTabunganTamuPDF(namaNasabah) {
+    if (!namaNasabah || namaNasabah === 'all' || namaNasabah === 'undefined') {
+        var filterSelect = document.getElementById('tabunganFilterSelect');
+        var selectedValue = filterSelect ? filterSelect.value : 'all';
+        if (selectedValue !== 'all' && selectedValue !== '__separator__') {
+            namaNasabah = selectedValue;
+        } else {
+            showToast('Pilih nama nasabah terlebih dahulu!', true);
+            return;
+        }
+    }
+    
+    var data = generateTabunganNasabah(namaNasabah);
+    
+    if (data.history.length === 0) {
+        showToast('Tidak ada data untuk nasabah ini!', true);
+        return;
+    }
+    
+    var tglCetak = formatTanggalIndo(new Date().toISOString());
+    var admin = sessionStorage.getItem('adminName') || 'BSU';
+    
+    var tabelDetail = '';
+    for (var i = 0; i < data.history.length; i++) {
+        var item = data.history[i];
+        var tgl = item.tanggal ? formatTanggalIndo(item.tanggal) : '-';
+        var bgColor = (i % 2 === 0) ? '#ffffff' : '#f9f9f9';
+        
+        var fotoHtml = '-';
+        var fotoList = [];
+        if (item.fotoTimbang) fotoList.push('<a href="' + item.fotoTimbang + '" target="_blank">📷</a>');
+        if (item.fotoHasil) fotoList.push('<a href="' + item.fotoHasil + '" target="_blank">📸</a>');
+        if (item.fotoBukti) fotoList.push('<a href="' + item.fotoBukti + '" target="_blank">📋</a>');
+        if (fotoList.length > 0) fotoHtml = fotoList.join(' ');
+        
+        tabelDetail += '<tr style="background:' + bgColor + ';">' +
+            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:center;">' + (i+1) + '</td>' +
+            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:center;">' + tgl + '</td>' +
+            '<td style="border:1px solid #ddd;padding:6px 10px;"><strong>' + escapeHtml(item.namaSampah) + '</strong></td>' +
+            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:center;">' + escapeHtml(item.rw) + ' - ' + escapeHtml(item.rt) + '</td>' +
+            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:right;">' + item.berat.toFixed(1) + '</td>' +
+            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:right;">' + formatRupiah(item.hargaPerKg) + '</td>' +
+            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:right;">' + formatRupiah(item.nilai) + '</td>' +
+            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:right;"><strong>' + formatRupiah(item.saldo) + '</strong></td>' +
+            '<td style="border:1px solid #ddd;padding:6px 10px;text-align:center;">' + fotoHtml + '</td>' +
+            '</tr>';
+    }
+    
+    var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Buku Tabungan - ' + escapeHtml(namaNasabah) + '</title><style>' +
+        'body { font-family: "Times New Roman", Arial, sans-serif; padding: 30px; }' +
+        '.header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #2e7d32; padding-bottom: 20px; }' +
+        'h1 { color: #2e7d32; margin-bottom: 5px; font-size: 22px; }' +
+        '.subtitle { color: #666; font-size: 13px; }' +
+        '.info-nasabah { background: #e8f5e9; padding: 12px; border-radius: 8px; text-align: center; margin: 16px 0; }' +
+        '.info-nasabah .nasabah-name { font-size: 18px; color: #1a5e2a; font-weight: bold; }' +
+        '.info-nasabah .nasabah-detail { font-size: 13px; color: #2e7d32; margin-top: 4px; }' +
+        '.saldo-box { background: linear-gradient(135deg, #2e7d32, #4caf7a); color: white; padding: 16px; border-radius: 10px; text-align: center; margin: 16px 0; }' +
+        '.saldo-box .label { font-size: 11px; opacity: 0.8; }' +
+        '.saldo-box .value { font-size: 24px; font-weight: bold; }' +
+        '.saldo-box .detail { font-size: 11px; opacity: 0.9; margin-top: 4px; }' +
+        'table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 10px; }' +
+        'th { background: #2e7d32; color: white; padding: 8px; text-align: center; }' +
+        'td { padding: 5px 8px; border-bottom: 1px solid #ddd; }' +
+        '.footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 16px; }' +
+        '.signature { margin-top: 30px; display: flex; justify-content: space-around; }' +
+        '.signature-box { text-align: center; }' +
+        '.signature-line { margin-top: 30px; width: 160px; border-top: 1px solid #000; margin: 0 auto; }' +
+        '.signature-box p { margin-top: 6px; font-size: 11px; }' +
+        '</style></head><body>' +
+        '<div class="header">' +
+        '<h1>BANK SAMPAH DIGITAL</h1>' +
+        '<div class="subtitle">BSI Mandiri - Desa Gunung Putri</div>' +
+        '</div>' +
+        '<div class="info-nasabah">' +
+        '<div style="font-size:13px;color:#666;margin-bottom:4px;">📘 BUKU TABUNGAN</div>' +
+        '<div class="nasabah-name">' + escapeHtml(namaNasabah) + '</div>' +
+        '<div class="nasabah-detail">BSU: ' + currentUserBSU + '</div>' +
+        '</div>' +
+        '<div class="saldo-box">' +
+        '<div class="label">TOTAL SALDO</div>' +
+        '<div class="value">' + formatRupiah(data.totalSaldo) + '</div>' +
+        '<div class="detail">Total Transaksi: ' + data.totalTransaksi + ' | Total Berat: ' + data.totalBerat.toFixed(1) + ' kg</div>' +
+        '</div>' +
+        '<table><thead><tr><th>No</th><th>Tanggal</th><th>Nama Sampah</th><th>RW/RT</th><th>Berat (kg)</th><th>Harga/kg</th><th>Nilai</th><th>Saldo</th><th>Foto</th></tr></thead><tbody>' +
+        tabelDetail + '</tbody></table>' +
+        '<div class="footer">' +
+        '<p>Dicetak pada: ' + tglCetak + '</p>' +
+        '<p>Bank Sampah Digital - Kelola Sampah, Selamatkan Bumi</p>' +
+        '</div>' +
+        '<div class="signature">' +
+        '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Kepala Bank Sampah</p></div>' +
+        '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Ketua BSU</p></div>' +
+        '</div>' +
+        '</body></html>';
+    
+    try {
+        var blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'Buku_Tabungan_' + escapeHtml(namaNasabah) + '.html';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function() { URL.revokeObjectURL(link.href); }, 100);
+        showToast('Buku tabungan berhasil diunduh!', false);
+    } catch(e) {
+        var win = window.open('', '_blank', 'width=800,height=600');
+        if (win) {
+            win.document.write(htmlContent);
+            win.document.close();
+            setTimeout(function() { win.print(); }, 500);
+        } else {
+            showToast('Popup diblokir! Silakan izinkan popup.', true);
+        }
+    }
+}
+
+function exportTabunganTamuExcel(namaNasabah) {
+    if (!namaNasabah || namaNasabah === 'all' || namaNasabah === 'undefined') {
+        var filterSelect = document.getElementById('tabunganFilterSelect');
+        var selectedValue = filterSelect ? filterSelect.value : 'all';
+        if (selectedValue !== 'all' && selectedValue !== '__separator__') {
+            namaNasabah = selectedValue;
+        } else {
+            showToast('Pilih nama nasabah terlebih dahulu!', true);
+            return;
+        }
+    }
+    
+    var data = generateTabunganNasabah(namaNasabah);
+    
+    if (data.history.length === 0) {
+        showToast('Tidak ada data untuk nasabah ini!', true);
+        return;
+    }
+    
+    var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
+        'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
+        'xmlns="http://www.w3.org/TR/REC-html40">' +
+        '<head><meta charset="UTF-8">' +
+        '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>' +
+        '<x:ExcelWorksheet><x:Name>Tabungan</x:Name><x:WorksheetOptions>' +
+        '<x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>' +
+        '</x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->' +
+        '<style>' +
+        'body { font-family: Arial, sans-serif; }' +
+        'h1 { color: #2e7d32; text-align: center; font-size: 16px; }' +
+        'th { background: #2e7d32; color: white; padding: 8px; border: 1px solid #ddd; }' +
+        'td { padding: 6px; border: 1px solid #ddd; }' +
+        '.total-row { background: #e8f5e9; font-weight: bold; }' +
+        '</style>' +
+        '</head><body>' +
+        '<h1>BUKU TABUNGAN</h1>' +
+        '<p style="text-align:center;">Nama Nasabah: <strong>' + escapeHtml(namaNasabah) + '</strong></p>' +
+        '<p style="text-align:center;">BSU: ' + currentUserBSU + '</p>' +
+        '<p style="text-align:center;">Periode: ' + formatTanggalIndo(new Date().toISOString()) + '</p>' +
+        '<br>' +
+        '<table>' +
+        '<tr><th>No</th><th>Tanggal</th><th>Nama Sampah</th><th>RW/RT</th><th>Berat (kg)</th><th>Harga/kg</th><th>Nilai (Rp)</th><th>Saldo (Rp)</th></tr>';
+    
+    for (var i = 0; i < data.history.length; i++) {
+        var item = data.history[i];
+        html += '<tr>' +
+            '<td>' + (i + 1) + '</td>' +
+            '<td>' + (item.tanggal ? formatTanggalIndo(item.tanggal) : '-') + '</td>' +
+            '<td><strong>' + escapeHtml(item.namaSampah) + '</strong></td>' +
+            '<td>' + escapeHtml(item.rw) + ' - ' + escapeHtml(item.rt) + '</td>' +
+            '<td>' + item.berat.toFixed(1) + '</td>' +
+            '<td>' + formatRupiah(item.hargaPerKg) + '</td>' +
+            '<td>' + formatRupiah(item.nilai) + '</td>' +
+            '<td><strong>' + formatRupiah(item.saldo) + '</strong></td>' +
+            '</tr>';
+    }
+    
+    html += '<tr class="total-row">' +
+        '<td colspan="7" style="text-align:right;">TOTAL</td>' +
+        '<td>' + formatRupiah(data.totalSaldo) + '</td>' +
+        '</tr>' +
+        '</table>' +
+        '<p style="text-align:center;margin-top:20px;">Dicetak: ' + formatTanggalIndo(new Date().toISOString()) + '</p>' +
+        '</body></html>';
+    
+    try {
+        var blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+        var link = document.createElement('a');
+        var url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = 'Buku_Tabungan_' + escapeHtml(namaNasabah) + '.xls';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function() { URL.revokeObjectURL(url); }, 100);
+        showToast('Buku tabungan berhasil diekspor ke Excel!', false);
+    } catch(e) {
+        showToast('Gagal ekspor Excel: ' + e.message, true);
+    }
+}
+
+function exportRekapTamuExcel() {
+    var dataBsu = getDataBSUWithTamu();
+    var nasabahMap = {};
+    
+    for (var i = 0; i < dataBsu.length; i++) {
+        var item = dataBsu[i];
+        var nama = item.namaNasabah || '-';
+        if (nama !== '-' && nama !== 'undefined' && nama !== 'null' && String(nama).trim() !== '') {
+            if (!nasabahMap[nama]) {
+                nasabahMap[nama] = {
+                    nama: nama,
+                    totalBerat: 0,
+                    totalNilai: 0,
+                    totalTransaksi: 0,
+                    rw: item.rw || '-',
+                    rt: item.rt || '-',
+                    bsu: item.bsu || currentUserBSU || '-',
+                    detail: [],
+                    fotoTimbang: null,
+                    fotoHasil: null,
+                    fotoBukti: null
+                };
+            }
+            var harga = item.hargaPerKg || getHargaByNamaSampah(item.nama);
+            var nilai = item.berat * harga;
+            nasabahMap[nama].totalBerat += item.berat;
+            nasabahMap[nama].totalNilai += nilai;
+            nasabahMap[nama].totalTransaksi++;
+            nasabahMap[nama].detail.push({
+                tanggal: item.tanggal || '-',
+                namaSampah: item.nama || 'Tidak Diketahui',
+                berat: item.berat,
+                harga: harga,
+                nilai: nilai,
+                fotoTimbang: item.foto_timbang || null,
+                fotoHasil: item.foto_hasil || null,
+                fotoBukti: item.foto_bukti || null
+            });
+            if (item.foto_timbang) nasabahMap[nama].fotoTimbang = item.foto_timbang;
+            if (item.foto_hasil) nasabahMap[nama].fotoHasil = item.foto_hasil;
+            if (item.foto_bukti) nasabahMap[nama].fotoBukti = item.foto_bukti;
+        }
+    }
+    
+    var rekapData = Object.values(nasabahMap);
+    rekapData.sort(function(a, b) { return b.totalNilai - a.totalNilai; });
+    
+    if (rekapData.length === 0) {
+        showToast('Tidak ada data untuk diekspor!', true);
+        return;
+    }
+    
+    var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" ' +
+        'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
+        'xmlns="http://www.w3.org/TR/REC-html40">' +
+        '<head><meta charset="UTF-8">' +
+        '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>' +
+        '<x:ExcelWorksheet><x:Name>Rekap_Tabungan</x:Name><x:WorksheetOptions>' +
+        '<x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>' +
+        '</x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->' +
+        '<style>' +
+        'body { font-family: Arial, sans-serif; padding: 20px; }' +
+        '.main-title { background: #2e7d32; color: white; padding: 16px; text-align: center; font-size: 16px; font-weight: bold; }' +
+        '.sub-title { background: #e8f5e9; padding: 10px; text-align: center; font-size: 11px; }' +
+        '.bsu-header { background: #4caf7a; color: white; padding: 10px; font-size: 13px; font-weight: bold; margin-top: 16px; }' +
+        '.nasabah-title { background: #e8f5e9; padding: 6px 10px; font-size: 12px; font-weight: bold; color: #1a5e2a; margin-top: 8px; border-left: 4px solid #2e7d32; }' +
+        'table { border-collapse: collapse; width: 100%; margin: 6px 0; }' +
+        'th { background: #2e7d32; color: white; padding: 6px; border: 1px solid #ddd; font-weight: bold; text-align: center; font-size: 10px; }' +
+        'td { padding: 5px 6px; border: 1px solid #ddd; text-align: center; font-size: 9px; }' +
+        '.total-row { background: #e8f5e9; font-weight: bold; }' +
+        '.sampah-cell { text-align: left; font-weight: 600; }' +
+        '.nasabah-name { text-align: left; font-weight: bold; color: #1a5e2a; }' +
+        '.foto-cell { text-align: center; }' +
+        '.grand-total { background: #2e7d32; color: white; padding: 10px; text-align: center; font-size: 13px; font-weight: bold; margin-top: 16px; }' +
+        '.footer { text-align: center; font-size: 9px; color: #999; padding: 12px; border-top: 1px solid #ddd; margin-top: 12px; }' +
+        '.sub-total-row { background: #c8e6c9; font-weight: bold; }' +
+        '</style>' +
+        '</head><body>' +
+        '<div class="main-title">REKAP TABUNGAN SEMUA NASABAH</div>' +
+        '<div class="sub-title">' +
+        'Bank Sampah Digital - BSI Mandiri | Desa Gunung Putri<br>' +
+        'Periode: ' + formatTanggalIndo(new Date()) +
+        ' | BSU: ' + currentUserBSU +
+        '</div>' +
+        '<table>' +
+        '<tr><th>No</th><th>Nama Nasabah</th><th>RW/RT</th><th>Total Berat (kg)</th><th>Total Transaksi</th><th>Total Tabungan</th><th>Foto</th></tr>';
+    
+    var grandTotalNilai = 0;
+    var grandTotalBerat = 0;
+    var grandTotalTransaksi = 0;
+    
+    for (var i = 0; i < rekapData.length; i++) {
+        var n = rekapData[i];
+        var fotoText = '-';
+        var fotoList = [];
+        if (n.fotoTimbang) fotoList.push('Timbang');
+        if (n.fotoHasil) fotoList.push('Hasil');
+        if (n.fotoBukti) fotoList.push('Bukti');
+        if (fotoList.length > 0) fotoText = fotoList.join(', ');
+        
+        html += '<tr>' +
+            '<td>' + (i + 1) + '</td>' +
+            '<td class="nasabah-name">' + n.nama + '</td>' +
+            '<td>' + n.rw + ' - ' + n.rt + '</td>' +
+            '<td>' + n.totalBerat.toFixed(1) + '</td>' +
+            '<td>' + n.totalTransaksi + '</td>' +
+            '<td>' + formatRupiah(n.totalNilai) + '</td>' +
+            '<td class="foto-cell">' + fotoText + '</td>' +
+            '</tr>';
+        grandTotalNilai += n.totalNilai;
+        grandTotalBerat += n.totalBerat;
+        grandTotalTransaksi += n.totalTransaksi;
+    }
+    
+    html += '<tr class="total-row">' +
+        '<td colspan="5" style="text-align:right;">GRAND TOTAL</td>' +
+        '<td>' + formatRupiah(grandTotalNilai) + '</td>' +
+        '<td></td>' +
+        '</tr>' +
+        '</table><br>';
+    
+    for (var i = 0; i < rekapData.length; i++) {
+        var n = rekapData[i];
+        html += '<div class="nasabah-title">Detail Transaksi: ' + n.nama + ' (' + n.rw + ' - ' + n.rt + ')</div>';
+        html += '<table>' +
+            '<tr><th>No</th><th>Tanggal</th><th>Nama Sampah</th><th>Berat (kg)</th><th>Harga/kg</th><th>Nilai (Rp)</th><th>Timbang</th><th>Hasil</th><th>Bukti</th></tr>';
+        
+        for (var j = 0; j < n.detail.length; j++) {
+            var d = n.detail[j];
+            var fotoTimbang = d.fotoTimbang ? 'Ada' : '-';
+            var fotoHasil = d.fotoHasil ? 'Ada' : '-';
+            var fotoBukti = d.fotoBukti ? 'Ada' : '-';
+            
+            html += '<tr>' +
+                '<td>' + (j + 1) + '</td>' +
+                '<td>' + (d.tanggal ? formatTanggalIndo(d.tanggal) : '-') + '</td>' +
+                '<td class="sampah-cell">' + d.namaSampah + '</td>' +
+                '<td>' + d.berat.toFixed(1) + '</td>' +
+                '<td>' + formatRupiah(d.harga) + '</td>' +
+                '<td>' + formatRupiah(d.nilai) + '</td>' +
+                '<td class="foto-cell">' + fotoTimbang + '</td>' +
+                '<td class="foto-cell">' + fotoHasil + '</td>' +
+                '<td class="foto-cell">' + fotoBukti + '</td>' +
+                '</tr>';
+        }
+        
+        html += '<tr class="sub-total-row">' +
+            '<td colspan="5" style="text-align:right;">Sub Total ' + n.nama + '</td>' +
+            '<td>' + formatRupiah(n.totalNilai) + '</td>' +
+            '<td colspan="3"></td>' +
+            '</tr>' +
+            '</table><br>';
+    }
+    
+    html += '<div class="grand-total">' +
+        'GRAND TOTAL KESELURUHAN<br>' +
+        formatRupiah(grandTotalNilai) + ' | Total Berat: ' + grandTotalBerat.toFixed(1) + ' kg | Total Transaksi: ' + grandTotalTransaksi +
+        '</div>' +
+        '<div class="footer">' +
+        'Dicetak: ' + formatTanggalIndo(new Date()) + '<br>' +
+        'Bank Sampah Digital - Kelola Sampah, Selamatkan Bumi' +
+        '</div>' +
+        '</body></html>';
+    
+    try {
+        var blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+        var link = document.createElement('a');
+        var url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = 'Rekap_Tabungan_Nasabah.xls';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function() { URL.revokeObjectURL(url); }, 100);
+        showToast('Rekap tabungan berhasil diekspor!', false);
+    } catch(e) {
+        showToast('Gagal ekspor: ' + e.message, true);
+    }
+}
+
+function printRekapTamuPDF() {
+    var dataBsu = getDataBSUWithTamu();
+    var nasabahMap = {};
+    
+    for (var i = 0; i < dataBsu.length; i++) {
+        var item = dataBsu[i];
+        var nama = item.namaNasabah || '-';
+        if (nama !== '-' && nama !== 'undefined' && nama !== 'null' && String(nama).trim() !== '') {
+            if (!nasabahMap[nama]) {
+                nasabahMap[nama] = {
+                    nama: nama,
+                    totalBerat: 0,
+                    totalNilai: 0,
+                    totalTransaksi: 0,
+                    rw: item.rw || '-',
+                    rt: item.rt || '-'
+                };
+            }
+            var harga = item.hargaPerKg || getHargaByNamaSampah(item.nama);
+            var nilai = item.berat * harga;
+            nasabahMap[nama].totalBerat += item.berat;
+            nasabahMap[nama].totalNilai += nilai;
+            nasabahMap[nama].totalTransaksi++;
+        }
+    }
+    
+    var rekapData = Object.values(nasabahMap);
+    rekapData.sort(function(a, b) { return b.totalNilai - a.totalNilai; });
+    
+    if (rekapData.length === 0) {
+        showToast('Tidak ada data untuk dicetak!', true);
+        return;
+    }
+    
+    var tglCetak = formatTanggalIndo(new Date().toISOString());
+    var admin = sessionStorage.getItem('adminName') || 'BSU';
+    
+    var tabelDetail = '';
+    var grandTotal = 0;
+    for (var i = 0; i < rekapData.length; i++) {
+        var n = rekapData[i];
+        grandTotal += n.totalNilai;
+        var bgColor = (i % 2 === 0) ? '#ffffff' : '#f9f9f9';
+        tabelDetail += '<tr style="background:' + bgColor + ';">' +
+            '<td style="border:1px solid #ddd;padding:6px 8px;text-align:center;">' + (i + 1) + '</td>' +
+            '<td style="border:1px solid #ddd;padding:6px 8px;"><strong>' + escapeHtml(n.nama) + '</strong></td>' +
+            '<td style="border:1px solid #ddd;padding:6px 8px;text-align:center;">' + n.rw + ' - ' + n.rt + '</td>' +
+            '<td style="border:1px solid #ddd;padding:6px 8px;text-align:right;">' + n.totalBerat.toFixed(1) + ' kg</td>' +
+            '<td style="border:1px solid #ddd;padding:6px 8px;text-align:center;">' + n.totalTransaksi + '</td>' +
+            '<td style="border:1px solid #ddd;padding:6px 8px;text-align:right;">' + formatRupiah(n.totalNilai) + '</td>' +
+            '</tr>';
+    }
+    
+    var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rekap Tabungan - ' + currentUserBSU + '</title><style>' +
+        'body { font-family: "Times New Roman", Arial, sans-serif; padding: 20px; }' +
+        '.header { text-align: center; margin-bottom: 20px; border-bottom: 3px solid #2e7d32; padding-bottom: 16px; }' +
+        'h1 { color: #2e7d32; margin-bottom: 4px; font-size: 20px; }' +
+        '.subtitle { color: #666; font-size: 12px; }' +
+        '.info { text-align: center; margin: 16px 0; padding: 10px; background: #e8f5e9; border-radius: 6px; }' +
+        'table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 10px; }' +
+        'th { background: #2e7d32; color: white; padding: 8px; text-align: center; }' +
+        'td { padding: 6px 8px; border-bottom: 1px solid #ddd; }' +
+        '.total-row { background: #e8f5e9; font-weight: bold; }' +
+        '.footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 14px; }' +
+        '.signature { margin-top: 30px; display: flex; justify-content: space-around; }' +
+        '.signature-box { text-align: center; }' +
+        '.signature-line { margin-top: 30px; width: 160px; border-top: 1px solid #000; margin: 0 auto; }' +
+        '.signature-box p { margin-top: 6px; font-size: 10px; }' +
+        '</style></head><body>' +
+        '<div class="header">' +
+        '<h1>BANK SAMPAH DIGITAL</h1>' +
+        '<div class="subtitle">BSI Mandiri - Desa Gunung Putri</div>' +
+        '</div>' +
+        '<div class="info">' +
+        '<strong>REKAP TABUNGAN SEMUA NASABAH</strong><br>' +
+        'BSU: ' + currentUserBSU + '<br>' +
+        'Periode: ' + tglCetak +
+        '</div>' +
+        '<table><thead><tr><th>No</th><th>Nama Nasabah</th><th>RW/RT</th><th>Total Berat</th><th>Transaksi</th><th>Total Tabungan</th></tr></thead><tbody>' +
+        tabelDetail +
+        '<tr class="total-row"><td colspan="5" style="text-align:right;">TOTAL KESELURUHAN</td><td style="text-align:right;">' + formatRupiah(grandTotal) + '</td></tr>' +
+        '</tbody></table>' +
+        '<div class="footer">' +
+        '<p>Dicetak pada: ' + tglCetak + '</p>' +
+        '<p>Bank Sampah Digital - Kelola Sampah, Selamatkan Bumi</p>' +
+        '</div>' +
+        '<div class="signature">' +
+        '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Kepala Bank Sampah</p></div>' +
+        '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Ketua BSU</p></div>' +
+        '</div>' +
+        '</body></html>';
+    
+    try {
+        var win = window.open('', '_blank', 'width=800,height=600');
+        if (win) {
+            win.document.write(htmlContent);
+            win.document.close();
+            setTimeout(function() { win.print(); }, 500);
+            showToast('PDF siap dicetak', false);
+        } else {
+            showToast('Popup diblokir! Silakan izinkan popup.', true);
+        }
+    } catch(e) {
+        showToast('Gagal cetak PDF: ' + e.message, true);
+    }
+}
+
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Tamu page loaded');
@@ -1485,9 +1752,10 @@ document.addEventListener('DOMContentLoaded', function() {
         rwrtInput.value = currentUserRW + ' - ' + (currentUserRT === 'all' ? 'Semua RT' : currentUserRT);
     }
     
-    // Load data
-    loadTamuData();
+    // Setup Android input handling
+    setupAndroidInputHandling();
     
+    loadTamuData();
     populateSampahDatalist();
     setupUploadFoto();
     setupTabs();
@@ -1497,7 +1765,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateDashboard();
     }, 100);
     
-    // ===== EVENT LISTENERS =====
+    // EVENT LISTENERS
     var tambahBtn = document.getElementById('tambahTamuBtn');
     if (tambahBtn) {
         tambahBtn.addEventListener('click', tambahDataTamu);
@@ -1531,7 +1799,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // PDF Export
     var exportPdfBtn = document.getElementById('exportTabunganTamuPDF');
     if (exportPdfBtn) {
         exportPdfBtn.addEventListener('click', function() {
@@ -1546,7 +1813,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Excel Export
     var exportExcelBtn = document.getElementById('exportTabunganTamuExcel');
     if (exportExcelBtn) {
         exportExcelBtn.addEventListener('click', function() {
@@ -1561,7 +1827,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Nasabah search
     var nasabahSearchBtn = document.getElementById('nasabahSearchBtn');
     if (nasabahSearchBtn) {
         nasabahSearchBtn.addEventListener('click', function() {
@@ -1624,7 +1889,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Auto refresh setiap 30 detik untuk sync data
+    // Auto refresh
     setInterval(function() {
         loadTamuDataLocal();
         updateNasabahDatalist();
@@ -1633,296 +1898,3 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Tamu page initialized with BSU:', currentUserBSU);
 });
-
-// ==================== EKSPOR REKAP EXCEL (TAMU) ====================
-function exportRekapTamuExcel() {
-    var dataBsu = getDataBSUWithTamu();
-    var nasabahMap = {};
-    
-    for (var i = 0; i < dataBsu.length; i++) {
-        var item = dataBsu[i];
-        var nama = item.namaNasabah || '-';
-        if (nama !== '-' && nama !== 'undefined' && nama !== 'null' && String(nama).trim() !== '') {
-            if (!nasabahMap[nama]) {
-                nasabahMap[nama] = {
-                    nama: nama,
-                    totalBerat: 0,
-                    totalNilai: 0,
-                    totalTransaksi: 0,
-                    rw: item.rw || '-',
-                    rt: item.rt || '-',
-                    bsu: item.bsu || currentUserBSU || '-',
-                    detail: [],
-                    fotoTimbang: null,
-                    fotoHasil: null,
-                    fotoBukti: null
-                };
-            }
-            var harga = item.hargaPerKg || getHargaByNamaSampah(item.nama);
-            var nilai = item.berat * harga;
-            nasabahMap[nama].totalBerat += item.berat;
-            nasabahMap[nama].totalNilai += nilai;
-            nasabahMap[nama].totalTransaksi++;
-            nasabahMap[nama].detail.push({
-                tanggal: item.tanggal || '-',
-                namaSampah: item.nama || 'Tidak Diketahui',
-                berat: item.berat,
-                harga: harga,
-                nilai: nilai,
-                fotoTimbang: item.foto_timbang || null,
-                fotoHasil: item.foto_hasil || null,
-                fotoBukti: item.foto_bukti || null
-            });
-            if (item.foto_timbang) nasabahMap[nama].fotoTimbang = item.foto_timbang;
-            if (item.foto_hasil) nasabahMap[nama].fotoHasil = item.foto_hasil;
-            if (item.foto_bukti) nasabahMap[nama].fotoBukti = item.foto_bukti;
-        }
-    }
-    
-    var rekapData = Object.values(nasabahMap);
-    rekapData.sort(function(a, b) { return b.totalNilai - a.totalNilai; });
-    
-    if (rekapData.length === 0) {
-        showToast('Tidak ada data untuk diekspor!', true);
-        return;
-    }
-    
-    var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" ';
-    html += 'xmlns:x="urn:schemas-microsoft-com:office:excel" ';
-    html += 'xmlns="http://www.w3.org/TR/REC-html40">';
-    html += '<head><meta charset="UTF-8">';
-    html += '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>';
-    html += '<x:ExcelWorksheet><x:Name>Rekap_Tabungan</x:Name><x:WorksheetOptions>';
-    html += '<x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>';
-    html += '</x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->';
-    html += '<style>';
-    html += 'body { font-family: Arial, sans-serif; padding: 20px; }';
-    html += '.main-title { background: #2e7d32; color: white; padding: 20px; text-align: center; font-size: 18px; font-weight: bold; }';
-    html += '.sub-title { background: #e8f5e9; padding: 12px; text-align: center; font-size: 12px; }';
-    html += '.bsu-header { background: #4caf7a; color: white; padding: 12px; font-size: 14px; font-weight: bold; margin-top: 20px; }';
-    html += '.nasabah-title { background: #e8f5e9; padding: 8px 12px; font-size: 13px; font-weight: bold; color: #1a5e2a; margin-top: 10px; border-left: 4px solid #2e7d32; }';
-    html += 'table { border-collapse: collapse; width: 100%; margin: 8px 0; }';
-    html += 'th { background: #2e7d32; color: white; padding: 8px; border: 1px solid #ddd; font-weight: bold; text-align: center; font-size: 11px; }';
-    html += 'td { padding: 6px 8px; border: 1px solid #ddd; text-align: center; font-size: 10px; }';
-    html += '.total-row { background: #e8f5e9; font-weight: bold; }';
-    html += '.sampah-cell { text-align: left; font-weight: 600; }';
-    html += '.nasabah-name { text-align: left; font-weight: bold; color: #1a5e2a; }';
-    html += '.foto-cell { text-align: center; }';
-    html += '.grand-total { background: #2e7d32; color: white; padding: 12px; text-align: center; font-size: 15px; font-weight: bold; margin-top: 20px; }';
-    html += '.footer { text-align: center; font-size: 10px; color: #999; padding: 15px; border-top: 1px solid #ddd; margin-top: 15px; }';
-    html += '.sub-total-row { background: #c8e6c9; font-weight: bold; }';
-    html += '</style>';
-    html += '</head><body>';
-    
-    html += '<div class="main-title">REKAP TABUNGAN SEMUA NASABAH</div>';
-    html += '<div class="sub-title">';
-    html += 'Bank Sampah Digital - BSI Mandiri | Desa Gunung Putri<br>';
-    html += 'Periode: ' + formatTanggalIndo(new Date());
-    html += ' | BSU: ' + currentUserBSU;
-    html += '</div>';
-    
-    var grandTotalNilai = 0;
-    var grandTotalBerat = 0;
-    var grandTotalTransaksi = 0;
-    
-    // Tabel Ringkasan
-    html += '<table>';
-    html += '<tr><th>No</th><th>Nama Nasabah</th><th>RW/RT</th><th>Total Berat (kg)</th><th>Total Transaksi</th><th>Total Tabungan</th><th>Foto</th></tr>';
-    
-    for (var i = 0; i < rekapData.length; i++) {
-        var n = rekapData[i];
-        var fotoText = '-';
-        var fotoList = [];
-        if (n.fotoTimbang) fotoList.push('Timbang');
-        if (n.fotoHasil) fotoList.push('Hasil');
-        if (n.fotoBukti) fotoList.push('Bukti');
-        if (fotoList.length > 0) fotoText = fotoList.join(', ');
-        
-        html += '<tr>' +
-            '<td>' + (i + 1) + '</td>' +
-            '<td class="nasabah-name">' + n.nama + '</td>' +
-            '<td>' + n.rw + ' - ' + n.rt + '</td>' +
-            '<td>' + n.totalBerat.toFixed(2) + '</td>' +
-            '<td>' + n.totalTransaksi + '</td>' +
-            '<td>' + formatRupiah(n.totalNilai) + '</td>' +
-            '<td class="foto-cell">' + fotoText + '</td>' +
-            '</tr>';
-        grandTotalNilai += n.totalNilai;
-        grandTotalBerat += n.totalBerat;
-        grandTotalTransaksi += n.totalTransaksi;
-    }
-    
-    html += '<tr class="total-row">' +
-        '<td colspan="5" style="text-align:right;">GRAND TOTAL</td>' +
-        '<td>' + formatRupiah(grandTotalNilai) + '</td>' +
-        '<td></td>' +
-        '</tr>';
-    html += '</table><br>';
-    
-    // Detail per nasabah
-    for (var i = 0; i < rekapData.length; i++) {
-        var n = rekapData[i];
-        html += '<div class="nasabah-title">Detail Transaksi: ' + n.nama + ' (' + n.rw + ' - ' + n.rt + ')</div>';
-        html += '<table>';
-        html += '<tr><th>No</th><th>Tanggal</th><th>Nama Sampah</th><th>Berat (kg)</th><th>Harga/kg</th><th>Nilai (Rp)</th><th>Timbang</th><th>Hasil</th><th>Bukti</th></tr>';
-        
-        for (var j = 0; j < n.detail.length; j++) {
-            var d = n.detail[j];
-            var fotoTimbang = d.fotoTimbang ? 'Ada' : '-';
-            var fotoHasil = d.fotoHasil ? 'Ada' : '-';
-            var fotoBukti = d.fotoBukti ? 'Ada' : '-';
-            
-            html += '<tr>' +
-                '<td>' + (j + 1) + '</td>' +
-                '<td>' + (d.tanggal ? formatTanggalIndo(d.tanggal) : '-') + '</td>' +
-                '<td class="sampah-cell">' + d.namaSampah + '</td>' +
-                '<td>' + d.berat.toFixed(2) + '</td>' +
-                '<td>' + formatRupiah(d.harga) + '</td>' +
-                '<td>' + formatRupiah(d.nilai) + '</td>' +
-                '<td class="foto-cell">' + fotoTimbang + '</td>' +
-                '<td class="foto-cell">' + fotoHasil + '</td>' +
-                '<td class="foto-cell">' + fotoBukti + '</td>' +
-                '</tr>';
-        }
-        
-        html += '<tr class="sub-total-row">' +
-            '<td colspan="5" style="text-align:right;">Sub Total ' + n.nama + '</td>' +
-            '<td>' + formatRupiah(n.totalNilai) + '</td>' +
-            '<td colspan="3"></td>' +
-            '</tr>';
-        html += '</table><br>';
-    }
-    
-    html += '<div class="grand-total">';
-    html += 'GRAND TOTAL KESELURUHAN<br>';
-    html += formatRupiah(grandTotalNilai) + ' | Total Berat: ' + grandTotalBerat.toFixed(2) + ' kg | Total Transaksi: ' + grandTotalTransaksi;
-    html += '</div>';
-    
-    html += '<div class="footer">';
-    html += 'Dicetak: ' + formatTanggalIndo(new Date()) + '<br>';
-    html += 'Bank Sampah Digital - Kelola Sampah, Selamatkan Bumi';
-    html += '</div>';
-    
-    html += '</body></html>';
-    
-    try {
-        var blob = new Blob([html], { type: 'application/vnd.ms-excel' });
-        var link = document.createElement('a');
-        var url = URL.createObjectURL(blob);
-        link.href = url;
-        link.download = 'Rekap_Tabungan_Nasabah.xls';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(function() { URL.revokeObjectURL(url); }, 100);
-        showToast('Rekap tabungan berhasil diekspor!', false);
-    } catch(e) {
-        showToast('Gagal ekspor: ' + e.message, true);
-    }
-}
-function printRekapTamuPDF() {
-    var dataBsu = getDataBSUWithTamu();
-    var nasabahMap = {};
-    
-    for (var i = 0; i < dataBsu.length; i++) {
-        var item = dataBsu[i];
-        var nama = item.namaNasabah || '-';
-        if (nama !== '-' && nama !== 'undefined' && nama !== 'null' && String(nama).trim() !== '') {
-            if (!nasabahMap[nama]) {
-                nasabahMap[nama] = {
-                    nama: nama,
-                    totalBerat: 0,
-                    totalNilai: 0,
-                    totalTransaksi: 0,
-                    rw: item.rw || '-',
-                    rt: item.rt || '-'
-                };
-            }
-            var harga = item.hargaPerKg || getHargaByNamaSampah(item.nama);
-            var nilai = item.berat * harga;
-            nasabahMap[nama].totalBerat += item.berat;
-            nasabahMap[nama].totalNilai += nilai;
-            nasabahMap[nama].totalTransaksi++;
-        }
-    }
-    
-    var rekapData = Object.values(nasabahMap);
-    rekapData.sort(function(a, b) { return b.totalNilai - a.totalNilai; });
-    
-    if (rekapData.length === 0) {
-        showToast('Tidak ada data untuk dicetak!', true);
-        return;
-    }
-    
-    var tglCetak = formatTanggalIndo(new Date().toISOString());
-    var admin = sessionStorage.getItem('adminName') || 'BSU';
-    
-    var tabelDetail = '';
-    var grandTotal = 0;
-    for (var i = 0; i < rekapData.length; i++) {
-        var n = rekapData[i];
-        grandTotal += n.totalNilai;
-        var bgColor = (i % 2 === 0) ? '#ffffff' : '#f9f9f9';
-        tabelDetail += '<tr style="background:' + bgColor + ';">' +
-            '<td style="border:1px solid #ddd;padding:8px;text-align:center;">' + (i + 1) + '</td>' +
-            '<td style="border:1px solid #ddd;padding:8px;"><strong>' + escapeHtml(n.nama) + '</strong></td>' +
-            '<td style="border:1px solid #ddd;padding:8px;text-align:center;">' + n.rw + ' - ' + n.rt + '</td>' +
-            '<td style="border:1px solid #ddd;padding:8px;text-align:right;">' + n.totalBerat.toFixed(2) + ' kg</td>' +
-            '<td style="border:1px solid #ddd;padding:8px;text-align:center;">' + n.totalTransaksi + '</td>' +
-            '<td style="border:1px solid #ddd;padding:8px;text-align:right;">' + formatRupiah(n.totalNilai) + '</td>' +
-            '</tr>';
-    }
-    
-    var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rekap Tabungan - ' + currentUserBSU + '</title><style>' +
-        'body { font-family: "Times New Roman", Arial, sans-serif; padding: 30px; }' +
-        '.header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #2e7d32; padding-bottom: 20px; }' +
-        'h1 { color: #2e7d32; margin-bottom: 5px; font-size: 24px; }' +
-        '.subtitle { color: #666; font-size: 14px; }' +
-        '.info { text-align: center; margin: 20px 0; padding: 12px; background: #e8f5e9; border-radius: 8px; }' +
-        'table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px; }' +
-        'th { background: #2e7d32; color: white; padding: 10px; text-align: center; }' +
-        'td { padding: 8px; border-bottom: 1px solid #ddd; }' +
-        '.total-row { background: #e8f5e9; font-weight: bold; }' +
-        '.footer { margin-top: 40px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #ddd; padding-top: 20px; }' +
-        '.signature { margin-top: 40px; display: flex; justify-content: space-around; }' +
-        '.signature-box { text-align: center; }' +
-        '.signature-line { margin-top: 40px; width: 200px; border-top: 1px solid #000; margin: 0 auto; }' +
-        '.signature-box p { margin-top: 8px; font-size: 12px; }' +
-        '</style></head><body>' +
-        '<div class="header">' +
-        '<h1>BANK SAMPAH DIGITAL</h1>' +
-        '<div class="subtitle">BSI Mandiri - Desa Gunung Putri</div>' +
-        '</div>' +
-        '<div class="info">' +
-        '<strong>REKAP TABUNGAN SEMUA NASABAH</strong><br>' +
-        'BSU: ' + currentUserBSU + '<br>' +
-        'Periode: ' + tglCetak +
-        '</div>' +
-        '<table><thead><tr><th>No</th><th>Nama Nasabah</th><th>RW/RT</th><th>Total Berat</th><th>Transaksi</th><th>Total Tabungan</th></tr></thead><tbody>' +
-        tabelDetail +
-        '<tr class="total-row"><td colspan="5" style="text-align:right;">TOTAL KESELURUHAN</td><td style="text-align:right;">' + formatRupiah(grandTotal) + '</td></tr>' +
-        '</tbody></table>' +
-        '<div class="footer">' +
-        '<p>Dicetak pada: ' + tglCetak + '</p>' +
-        '<p>Bank Sampah Digital - Kelola Sampah, Selamatkan Bumi</p>' +
-        '</div>' +
-        '<div class="signature">' +
-        '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Kepala Bank Sampah</p></div>' +
-        '<div class="signature-box"><div class="signature-line"></div><p>Mengetahui,<br>Ketua BSU</p></div>' +
-        '</div>' +
-        '</body></html>';
-    
-    try {
-        var win = window.open('', '_blank', 'width=800,height=600');
-        if (win) {
-            win.document.write(htmlContent);
-            win.document.close();
-            setTimeout(function() { win.print(); }, 500);
-            showToast('PDF siap dicetak', false);
-        } else {
-            showToast('Popup diblokir! Silakan izinkan popup.', true);
-        }
-    } catch(e) {
-        showToast('Gagal cetak PDF: ' + e.message, true);
-    }
-}
