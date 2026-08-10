@@ -84,6 +84,7 @@
                     <i class="fas fa-chart-line"></i>
                     <span>Statistik</span>
                 </a>
+                
 
                 <!-- ===== MANAJEMEN ===== -->
                 <div class="menu-label">Manajemen</div>
@@ -110,10 +111,7 @@
                     <span>Verifikasi Data</span>
                     <span class="menu-badge pending-badge" id="verifikasiBadge">0</span>
                 </a>
-                <a href="#" class="menu-item" data-page="laporan">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Laporan & Tabungan</span>
-                </a>
+
 
                 <!-- ===== PENGATURAN ===== -->
                 <div class="menu-label">Pengaturan</div>
@@ -128,7 +126,7 @@
                 </a>
             </div>
             <div class="sidebar-footer">
-                <div class="role-display" id="roleDisplay">👑 Admin</div>
+                <div class="role-display" id="roleDisplay"> Admin</div>
                 <button id="logoutBtn" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Keluar</span>
@@ -149,7 +147,7 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    <span class="role-badge" id="roleBadge">👑 Admin</span>
+                    <span class="role-badge" id="roleBadge"> Admin</span>
                     <div class="profile-avatar tooltip-trigger">
                         <i class="fas fa-user-circle"></i>
                         <span class="online-dot"></span>
@@ -168,7 +166,7 @@
                     </div>
 
                     <div class="welcome-card animate-fade-up">
-                        <div class="welcome-emoji">🌱</div>
+
                         <div class="welcome-text">
                             <h2>Selamat datang di BSI Mandiri <span id="welcomeName">Admin</span>!</h2>
                             <p> Anda login sebagai <strong>Administrator</strong> dengan akses penuh</p>
@@ -343,22 +341,49 @@
                         </div>
                     </div>
 
-                    <!-- ===== LAPORAN BUTTONS ===== -->
-                    <div class="laporan-buttons animate-fade-up delay-5">
-                        <button id="btnLaporanMingguan" class="btn-laporan mingguan">
-                            <i class="fas fa-calendar-week"></i> Laporan Mingguan
-                        </button>
-                        <button id="btnLaporanBulanan" class="btn-laporan bulanan">
-                            <i class="fas fa-calendar-alt"></i> Laporan Bulanan
-                        </button>
-                        <button id="btnLaporanTahunan" class="btn-laporan tahunan">
-                            <i class="fas fa-calendar-year"></i> Laporan Tahunan
-                        </button>
-                        <button id="btnPrintLaporan" class="btn-laporan" style="background:linear-gradient(135deg,#5a6a7a,#7a8a9a);">
-                            <i class="fas fa-print"></i> Print Langsung
-                        </button>
-                    </div>
-
+<!-- ===== LAPORAN BUTTONS ===== -->
+<div class="laporan-buttons animate-fade-up delay-5">
+    <!-- MINGGUAN -->
+    <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:100px;">
+        <div style="background:linear-gradient(135deg,#2e7d32,#4caf7a);color:white;padding:6px 10px;border-radius:6px 6px 0 0;text-align:center;font-size:0.7rem;font-weight:700;">
+            <i class="fas fa-calendar-week"></i> MINGGUAN
+        </div>
+        <div style="display:flex;gap:4px;background:#f0f0f0;border-radius:0 0 6px 6px;padding:4px;">
+            <button onclick="exportLaporanMingguanExcel()" style="flex:1;padding:6px 4px;background:#28a745;color:white;border:none;border-radius:4px;font-size:0.7rem;cursor:pointer;font-weight:700;">Excel</button>
+            <button onclick="exportLaporanMingguanPDF()" style="flex:1;padding:6px 4px;background:#dc3545;color:white;border:none;border-radius:4px;font-size:0.7rem;cursor:pointer;font-weight:700;">PDF</button>
+            <button onclick="exportLaporanMingguanWord()" style="flex:1;padding:6px 4px;background:#0d6efd;color:white;border:none;border-radius:4px;font-size:0.7rem;cursor:pointer;font-weight:700;">Word</button>
+        </div>
+    </div>
+    
+    <!-- BULANAN -->
+    <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:100px;">
+        <div style="background:linear-gradient(135deg,#f9a825,#ffb300);color:#333;padding:6px 10px;border-radius:6px 6px 0 0;text-align:center;font-size:0.7rem;font-weight:700;">
+            <i class="fas fa-calendar-alt"></i> BULANAN
+        </div>
+        <div style="display:flex;gap:4px;background:#f0f0f0;border-radius:0 0 6px 6px;padding:4px;">
+            <button onclick="exportLaporanBulananExcel()" style="flex:1;padding:6px 4px;background:#28a745;color:white;border:none;border-radius:4px;font-size:0.7rem;cursor:pointer;font-weight:700;">Excel</button>
+            <button onclick="exportLaporanBulananPDF()" style="flex:1;padding:6px 4px;background:#dc3545;color:white;border:none;border-radius:4px;font-size:0.7rem;cursor:pointer;font-weight:700;">PDF</button>
+            <button onclick="exportLaporanBulananWord()" style="flex:1;padding:6px 4px;background:#0d6efd;color:white;border:none;border-radius:4px;font-size:0.7rem;cursor:pointer;font-weight:700;">Word</button>
+        </div>
+    </div>
+    
+    <!-- TAHUNAN -->
+    <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:100px;">
+        <div style="background:linear-gradient(135deg,#1a4a6a,#2a6a8a);color:white;padding:6px 10px;border-radius:6px 6px 0 0;text-align:center;font-size:0.7rem;font-weight:700;">
+            <i class="fas fa-calendar-year"></i> TAHUNAN
+        </div>
+        <div style="display:flex;gap:4px;background:#f0f0f0;border-radius:0 0 6px 6px;padding:4px;">
+            <button onclick="exportLaporanTahunanExcel()" style="flex:1;padding:6px 4px;background:#28a745;color:white;border:none;border-radius:4px;font-size:0.7rem;cursor:pointer;font-weight:700;">Excel</button>
+            <button onclick="exportLaporanTahunanPDF()" style="flex:1;padding:6px 4px;background:#dc3545;color:white;border:none;border-radius:4px;font-size:0.7rem;cursor:pointer;font-weight:700;">PDF</button>
+            <button onclick="exportLaporanTahunanWord()" style="flex:1;padding:6px 4px;background:#0d6efd;color:white;border:none;border-radius:4px;font-size:0.7rem;cursor:pointer;font-weight:700;">Word</button>
+        </div>
+    </div>
+    
+    <!-- REKAP NASABAH -->
+    <button onclick="exportAdminNasabahRekap()" style="background:linear-gradient(135deg,#6c757d,#5a6268);color:white;border:none;border-radius:6px;min-width:80px;font-size:0.7rem;padding:6px 10px;font-weight:700;cursor:pointer;">
+        <i class="fas fa-users"></i> Rekap
+    </button>
+</div>
                     <!-- ===== DATA TABLE ===== -->
                     <div class="data-table-card animate-fade-up delay-5">
                         <div class="card-header">
