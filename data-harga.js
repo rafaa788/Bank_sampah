@@ -1,8 +1,8 @@
 // =====================================================
-// DATA HARGA SAMPAH - JANGAN DIUBAH!
+// DATA HARGA SAMPAH 
 // =====================================================
 
-// Preset Sampah dan Harga (TETAP)
+// Data Sampah dan Harga 
 var presetSampah = {
     plastik: [
         "Pet A - Botol TANPA tutup dan label + Galon Le Mineral",
@@ -63,7 +63,7 @@ var presetSampah = {
     ]
 };
 
-// HARGA SAMPAH - JANGAN DIUBAH!
+// HARGA SAMPAH 
 var hargaSampahDetail = {
     "Pet A - Botol TANPA tutup dan label + Galon Le Mineral": 3500,
     "Pet B - Masih berlabel dan tutup": 2000,
